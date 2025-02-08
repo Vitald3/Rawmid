@@ -1,0 +1,42 @@
+import 'dart:async';
+import 'package:email_validator/email_validator.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
+import '../../utils/helper.dart';
+import '../api/login.dart';
+import 'navigation.dart';
+
+class RegisterController extends GetxController {
+  RxBool submit = false.obs;
+  RxBool valid = false.obs;
+  RxBool isPasswordVisible = false.obs;
+  RxBool isPasswordConfirmVisible = false.obs;
+  final TextEditingController emailField = TextEditingController();
+  final TextEditingController passwordField = TextEditingController();
+  final TextEditingController confirmField = TextEditingController();
+  final navController = Get.find<NavigationController>();
+
+  Future register() async {
+    if (valid.value && !submit.value) {
+      submit.value = true;
+      Helper.closeKeyboard();
+
+      final user = await LoginApi.register({
+        'email': emailField.text,
+        'password': passwordField.text,
+        'firstname': emailField.text.split('@')[0]
+      });
+
+      if (user != null) {
+        navController.user.value = user;
+        Get.offAllNamed('home');
+      }
+
+      submit.value = false;
+    }
+  }
+
+  Future validate() async {
+    valid.value = emailField.text.isNotEmpty && EmailValidator.validate(emailField.text) && passwordField.text.isNotEmpty && confirmField.text.isNotEmpty && passwordField.text == confirmField.text;
+  }
+}
