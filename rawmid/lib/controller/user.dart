@@ -4,10 +4,12 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/api/profile.dart';
 import 'package:rawmid/controller/navigation.dart';
+import '../api/login.dart';
 import '../model/country.dart';
-import '../model/profile.dart';
+import '../model/profile/profile.dart';
 import '../utils/helper.dart';
 
 class UserController extends GetxController {
@@ -33,6 +35,8 @@ class UserController extends GetxController {
     'lastname': TextEditingController(),
     'firstname': TextEditingController()
   };
+  final phoneField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.RU, nsn: ''));
+  final phoneBuhField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.RU, nsn: ''));
   final Map<String, TextEditingController> controllersAddress = {
     'city': TextEditingController(),
     'postcode': TextEditingController(),
@@ -49,8 +53,7 @@ class UserController extends GetxController {
     'uraddress': TextEditingController(),
     'address_buh': TextEditingController(),
     'email_buh': TextEditingController(),
-    'phone_buh': TextEditingController(),
-    'edo': TextEditingController()
+    'phone_buh': TextEditingController()
   };
   final Map<String, String> controllerHints = {
     'inn': 'Инн *',
@@ -63,8 +66,7 @@ class UserController extends GetxController {
     'uraddress': 'Юридический адрес *',
     'address_buh': 'Почтовый адрес организации *',
     'email_buh': 'E-mail бухгалтерии *',
-    'phone_buh': '+7 (___) ___ __ __',
-    'edo': 'ЭДО'
+    'phone_buh': '+7 (___) ___ __ __'
   };
   final Map<String, FocusNode> focusNodeUrAddress = {
     'inn': FocusNode(),
@@ -97,11 +99,30 @@ class UserController extends GetxController {
   Rxn<File> imageFile = Rxn<File>();
   final ImagePicker picker = ImagePicker();
   final scrollController = ScrollController();
+  RxMap<String, String? Function(String?)> validators = <String, String? Function(String?)>{}.obs;
+  RxBool usEmailValidate = false.obs;
+  RxBool fizEmailValidate = false.obs;
+  Rxn<String> edo = Rxn();
 
   @override
   void onInit() {
     super.onInit();
     initialize();
+  }
+
+  Future validateEmailX(String val) async {
+    if (val.isNotEmpty && EmailValidator.validate(val)) {
+      final api = await LoginApi.checkEmail(val);
+
+      if (tab.value == 1) {
+        usEmailValidate.value = !api;
+      } else {
+        fizEmailValidate.value = !api;
+      }
+    } else {
+      fizEmailValidate.value = false;
+      usEmailValidate.value = false;
+    }
   }
 
   @override
@@ -126,92 +147,100 @@ class UserController extends GetxController {
     );
   }
 
-  final Map<String, String? Function(String?)> validators = {
-    'telephone': (value) {
-      if (value == null || value.isEmpty) {
-        return 'Введите номер телефона';
-      }
-
-      String digits = value.replaceAll(RegExp(r'\D'), '');
-
-      if (digits.length != 11 || !digits.startsWith('7')) {
-        return 'Введите корректный номер';
-      }
-
-      return null;
-    },
-    'email': (value) {
-      if (value == null || value.isEmpty) return 'Введите email';
-      return EmailValidator.validate(value) ? null : 'Некорректный email';
-    },
-    'firstname': (value) {
-      if (value == null || value.isEmpty) return 'Введите имя';
-      return null;
-    },
-    'lastname': (value) {
-      if (value == null || value.isEmpty) return 'Введите фамилию';
-      return null;
-    },
-    'city': (value) {
-      if (value == null || value.isEmpty) return 'Заполните город';
-      return null;
-    },
-    'address': (value) {
-      if (value == null || value.isEmpty) return 'Заполните адрес';
-      return null;
-    },
-    'inn': (value) {
-      if (value == null || value.isEmpty) return 'Заполните ИНН';
-      return null;
-    },
-    'company': (value) {
-      if (value == null || value.isEmpty) return 'Заполните название компании';
-      return null;
-    },
-    'ogrn': (value) {
-      if (value == null || value.isEmpty) return 'Заполните ОГРН';
-      return null;
-    },
-    'rs': (value) {
-      if (value == null || value.isEmpty) return 'Заполните рассчетный счет';
-      return null;
-    },
-    'bank': (value) {
-      if (value == null || value.isEmpty) return 'Заполните банк';
-      return null;
-    },
-    'bik': (value) {
-      if (value == null || value.isEmpty) return 'Заполните БИК';
-      return null;
-    },
-    'kpp': (value) {
-      if (value == null || value.isEmpty) return 'Заполните КПП';
-      return null;
-    },
-    'uraddress': (value) {
-      if (value == null || value.isEmpty) return 'Заполните адрес';
-      return null;
-    },
-    'email_buh': (value) {
-      if (value == null || value.isEmpty) return 'Заполните E-mail';
-      return null;
-    },
-    'phone_buh': (value) {
-      if (value == null || value.isEmpty) {
-        return 'Введите номер телефона';
-      }
-
-      String digits = value.replaceAll(RegExp(r'\D'), '');
-
-      if (digits.length != 11 || !digits.startsWith('7')) {
-        return 'Введите корректный номер';
-      }
-
-      return null;
-    }
-  };
-
   Future initialize() async {
+    validators.value = {
+      'telephone': (value) {
+        if (value == null || value.isEmpty) {
+          return 'Введите номер телефона';
+        }
+
+        String digits = value.replaceAll(RegExp(r'\D'), '');
+
+        if (digits.length != 11 || !digits.startsWith('7')) {
+          return 'Введите корректный номер';
+        }
+
+        return null;
+      },
+      'email': (value) {
+        String? item;
+
+        if (value == null || value.isEmpty) item = 'Введите email';
+        if (value != null && !EmailValidator.validate(value)) item = 'Некорректный email';
+
+        return item;
+      },
+      'firstname': (value) {
+        if (value == null || value.isEmpty) return 'Введите имя';
+        return null;
+      },
+      'lastname': (value) {
+        if (value == null || value.isEmpty) return 'Введите фамилию';
+        return null;
+      },
+      'city': (value) {
+        if (value == null || value.isEmpty) return 'Заполните город';
+        return null;
+      },
+      'address_1': (value) {
+        if (value == null || value.isEmpty) return 'Заполните адрес';
+        return null;
+      },
+      'postcode': (value) {
+        if (value == null || value.isEmpty) return 'Заполните индекс';
+        return null;
+      },
+      'inn': (value) {
+        if (value == null || value.isEmpty) return 'Заполните ИНН';
+        return null;
+      },
+      'company': (value) {
+        if (value == null || value.isEmpty) return 'Заполните название компании';
+        return null;
+      },
+      'ogrn': (value) {
+        if (value == null || value.isEmpty) return 'Заполните ОГРН';
+        return null;
+      },
+      'rs': (value) {
+        if (value == null || value.isEmpty) return 'Заполните рассчетный счет';
+        return null;
+      },
+      'bank': (value) {
+        if (value == null || value.isEmpty) return 'Заполните банк';
+        return null;
+      },
+      'bik': (value) {
+        if (value == null || value.isEmpty) return 'Заполните БИК';
+        return null;
+      },
+      'kpp': (value) {
+        if (value == null || value.isEmpty) return 'Заполните КПП';
+        return null;
+      },
+      'uraddress': (value) {
+        if (value == null || value.isEmpty) return 'Заполните адрес';
+        return null;
+      },
+      'email_buh': (value) {
+        if (value == null || value.isEmpty) return 'Заполните E-mail';
+        return null;
+      },
+      'phone_buh': (value) {
+        if (value == null || value.isEmpty) {
+          return 'Введите номер телефона';
+        }
+
+        String digits = value.replaceAll(RegExp(r'\D'), '');
+
+        if (digits.length != 11 || !digits.startsWith('7')) {
+          return 'Введите корректный номер';
+        }
+
+        return null;
+      }
+    };
+
     focusNodes.forEach((key, focusNode) {
       focusNode.addListener(() {
         activeField.value = focusNode.hasFocus ? key : '';
@@ -224,7 +253,12 @@ class UserController extends GetxController {
       user.value = api;
       newsSubscription.value = api.subscription;
       pushNotifications.value = api.push;
-      controllers['telephone']!.text = api.phone;
+      try {
+        phoneField.value = PhoneNumber.parse(api.phone);
+        phoneBuhField.value = PhoneNumber.parse(api.ur.phoneBuh);
+      } catch(e) {
+        //
+      }
       controllers['firstname']!.text = api.firstname;
       controllers['lastname']!.text = api.lastname;
       controllers['email']!.text = api.email;
@@ -238,8 +272,9 @@ class UserController extends GetxController {
       controllerUr['uraddress']!.text = api.ur.urAddress;
       controllerUr['address_buh']!.text = api.ur.addressBuh;
       controllerUr['email_buh']!.text = api.ur.emailBuh;
-      controllerUr['phone_buh']!.text = api.ur.phoneBuh;
-      controllerUr['edo']!.text = api.ur.edo;
+      if (api.ur.edo.isNotEmpty && ['ДИАДОК', 'СБИС', 'НЕТ'].contains(api.ur.edo)) {
+        edo.value = api.ur.edo;
+      }
       tab.value = api.type ? 1 : 0;
     } else {
       Helper.prefs.setString('PHPSESSID', '');
@@ -363,7 +398,7 @@ class UserController extends GetxController {
       controllers.forEach((key, controller) {
         if (controller.text.isNotEmpty) {
           if (key == 'telephone') {
-            body.putIfAbsent(key, () => controller.text.replaceAll(' (', '').replaceAll(') ', '').replaceAll(' ', '-'));
+            body.putIfAbsent(key, () => '+${phoneField.value.countryCode}${phoneField.value.nsn}');
           } else {
             body.putIfAbsent(key, () => controller.text);
           }
@@ -371,6 +406,7 @@ class UserController extends GetxController {
       });
       body.putIfAbsent('customer_group_id', () => '8');
       ProfileApi.save(body);
+      Helper.closeKeyboard();
     }
   }
 
@@ -380,7 +416,7 @@ class UserController extends GetxController {
       controllerUr.forEach((key, controller) {
         if (controller.text.isNotEmpty) {
           if (key == 'telephone_buh') {
-            body.putIfAbsent('telephone', () => controller.text.replaceAll(' (', '').replaceAll(') ', '').replaceAll(' ', '-'));
+            body.putIfAbsent('telephone_buh', () => '+${phoneBuhField.value.countryCode}${phoneBuhField.value.nsn}');
           } else {
             body.putIfAbsent(key, () => controller.text);
           }

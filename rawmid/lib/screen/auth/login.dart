@@ -75,8 +75,9 @@ class LoginView extends StatelessWidget {
                                           )),
                                           h(4),
                                           TextFormField(
+                                              cursorHeight: 15,
                                               controller: controller.emailField,
-                                              decoration: decorationInput(hint: 'E-mail', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                              decoration: decorationInput(error: controller.validateEmail.value ? dangerColor : null, hint: 'E-mail', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                                               autovalidateMode: AutovalidateMode.onUserInteraction,
                                               validator: (val) {
                                                 if ((val ?? '').isEmpty) {
@@ -87,7 +88,22 @@ class LoginView extends StatelessWidget {
 
                                                 return null;
                                               },
-                                              onChanged: (val) => controller.validate()
+                                              onChanged: (val) {
+                                                controller.validate();
+                                                controller.validateEmailX();
+                                              }
+                                          ),
+                                          if (controller.validateEmail.value) Padding(
+                                              padding: const EdgeInsets.only(top: 4, left: 16),
+                                              child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                        'E-mail не существует',
+                                                        style: TextStyle(color: dangerColor, fontSize: 12)
+                                                    )
+                                                  ]
+                                              )
                                           )
                                         ]
                                     ),
@@ -98,6 +114,7 @@ class LoginView extends StatelessWidget {
                                           Text('Пароль', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                           h(4),
                                           TextFormField(
+                                              cursorHeight: 15,
                                               controller: controller.passwordField,
                                               obscureText: controller.isPasswordVisible.value,
                                               autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -153,7 +170,7 @@ class LoginView extends StatelessWidget {
                                     ),
                                     Center(
                                         child: TextButton(
-                                            onPressed: () => Get.offNamed('login'),
+                                            onPressed: () => Get.toNamed('register'),
                                             child: Text('Зарегистрироваться', style: TextStyle(color: Colors.blue))
                                         )
                                     )

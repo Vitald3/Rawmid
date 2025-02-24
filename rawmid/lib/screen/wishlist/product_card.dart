@@ -6,6 +6,9 @@ import '../../utils/helper.dart';
 import '../../widget/h.dart';
 import '../../widget/primary_button.dart';
 import '../../widget/w.dart';
+import 'package:get/get.dart';
+import '../product/product.dart';
+import '../reviews.dart';
 
 class ProductCardList extends StatelessWidget {
   const ProductCardList({super.key, required this.product, required this.addWishlist, required this.buy});
@@ -13,110 +16,121 @@ class ProductCardList extends StatelessWidget {
   final ProductModel product;
   final Function() addWishlist;
   final Function() buy;
-  
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          alignment: Alignment.center,
-          width: 100,
-          height: 110,
-          child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                    decoration: BoxDecoration(
-                      color: secondColor,
-                      borderRadius: BorderRadius.circular(8)
-                    ),
-                    child: CachedNetworkImage(
-                        imageUrl: product.image,
-                        errorWidget: (c, e, i) {
-                          return Image.asset('assets/image/no_image.png');
-                        },
-                        height: 100,
-                        width: double.infinity,
-                        fit: BoxFit.cover
-                    )
-                ),
-                if (product.category.isNotEmpty) Positioned(
-                    top: 0,
-                    left: 0,
-                    child: Container(
-                        constraints: BoxConstraints(maxWidth: 70),
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3))
-                            ]
+    return GestureDetector(
+        onTap: () => Get.to(() => ProductView(id: product.id)),
+        child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                  alignment: Alignment.center,
+                  width: 100,
+                  height: 110,
+                  child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                            decoration: BoxDecoration(
+                                color: secondColor,
+                                borderRadius: BorderRadius.circular(8)
+                            ),
+                            child: CachedNetworkImage(
+                                imageUrl: product.image,
+                                errorWidget: (c, e, i) {
+                                  return Image.asset('assets/image/no_image.png');
+                                },
+                                height: 100,
+                                width: double.infinity,
+                                fit: BoxFit.cover
+                            )
                         ),
-                        child: Text(product.category, style: TextStyle(color: primaryColor, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis)
-                    )
-                ),
-                Positioned(
-                    top: 0,
-                    right: 0,
-                    child: InkWell(
-                        onTap: addWishlist,
-                        child: Icon(Helper.wishlist.value.contains(product.id) ? Icons.favorite : Icons.favorite_border, color: Helper.wishlist.value.contains(product.id) ? primaryColor : Colors.black, size: 18)
-                    )
-                )
-              ]
-          )
-        ),
-        w(12),
-        Expanded(
-          child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(product.title, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold), maxLines: 3, overflow: TextOverflow.ellipsis),
-                          if (product.color.isNotEmpty) h(4),
-                          if (product.color.isNotEmpty) Text('Цвет: ${product.color}', style: TextStyle(color: Colors.grey)),
-                          h(4),
-                          Image.asset('assets/icon/rat.png'),
-                          Spacer(),
-                          InkWell(
-                            onTap: () {},
-                            child: Text('Отзывы', style: TextStyle(
-                                color: Color(0xFF8A95A8),
-                                fontSize: 10,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                decoration: TextDecoration.underline
-                            ))
-                          ),
-                          h(8)
-                        ]
-                    )
-                ),
-                w(12),
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          if (product.special != null) Text(product.special!, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, height: 1)),
-                          if (product.price != null) Text(product.price!, style: TextStyle(fontSize: 14, color: Colors.grey, decoration: TextDecoration.lineThrough)),
-                          (product.rating ?? 0) > 0 ? Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [1,2,3,4,5].map((e) => Icon(e <= product.rating! ? Icons.star : Icons.star_border, color: Colors.amber, size: 16)).toList()
-                          ) : SizedBox(height: 16),
-                          h(8),
-                          PrimaryButton(text: 'Купить', loader: true, onPressed: buy, height: 38)
-                        ]
-                    )
-                )
-              ]
-          )
+                        if (product.category.isNotEmpty) Positioned(
+                            top: 0,
+                            left: 0,
+                            child: Container(
+                                constraints: BoxConstraints(maxWidth: 70),
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3))
+                                    ]
+                                ),
+                                child: Text(product.category, style: TextStyle(color: primaryColor, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis)
+                            )
+                        ),
+                        Positioned(
+                            top: 0,
+                            right: 0,
+                            child: InkWell(
+                                onTap: addWishlist,
+                                child: Icon(Helper.wishlist.value.contains(product.id) ? Icons.favorite : Icons.favorite_border, color: Helper.wishlist.value.contains(product.id) ? primaryColor : Colors.black, size: 18)
+                            )
+                        )
+                      ]
+                  )
+              ),
+              w(12),
+              Expanded(
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(product.title, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold), maxLines: 3, overflow: TextOverflow.ellipsis),
+                                  if (product.color.isNotEmpty) h(4),
+                                  if (product.color.isNotEmpty) Text('Цвет: ${product.color}', style: TextStyle(color: Colors.grey)),
+                                  h(4),
+                                  InkWell(
+                                      onTap: () => Helper.addCompare(product.id),
+                                      child: Image.asset('assets/icon/rat${Helper.compares.value.contains(product.id) ? '2' : ''}.png', width: 14, fit: BoxFit.cover)
+                                  ),
+                                  Spacer(),
+                                  InkWell(
+                                      onTap: () => Get.to(() => ReviewsView(product: product)),
+                                      child: Text('Отзывы', style: TextStyle(
+                                          color: Color(0xFF8A95A8),
+                                          fontSize: 10,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w500,
+                                          decoration: TextDecoration.underline
+                                      ))
+                                  ),
+                                  h(8)
+                                ]
+                            )
+                        ),
+                        w(12),
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  (product.special ?? '').isEmpty ? Text(product.price ?? '', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, height: 1)) : Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        if ((product.special ?? '').isNotEmpty) Text(product.special!, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, height: 1)),
+                                        if ((product.price ?? '').isNotEmpty) Text(product.price!, style: TextStyle(fontSize: 14, color: Colors.grey, decoration: TextDecoration.lineThrough))
+                                      ]
+                                  ),
+                                  (product.rating ?? 0) > 0 ? Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [1,2,3,4,5].map((e) => Icon(e <= product.rating! ? Icons.star : Icons.star_half, color: Colors.amber, size: 16)).toList()
+                                  ) : SizedBox(height: 16),
+                                  h(8),
+                                  PrimaryButton(text: 'Купить', loader: true, onPressed: buy, height: 38)
+                                ]
+                            )
+                        )
+                      ]
+                  )
+              )
+            ]
         )
-      ]
     );
   }
 }

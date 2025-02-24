@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/screen/user/address.dart';
 import 'package:rawmid/screen/user/profile.dart';
 import 'package:rawmid/utils/constant.dart';
 import '../../../widget/h.dart';
 import '../../controller/user.dart';
-import '../../utils/classes.dart';
 import '../../utils/utils.dart';
 import 'account_setting.dart';
 import 'fiz_field.dart';
@@ -20,18 +20,27 @@ class UserView extends StatelessWidget {
         builder: (controller) => Scaffold(
           appBar: AppBar(
                 backgroundColor: Colors.white,
-                titleSpacing: 20,
+                titleSpacing: 0,
                 leadingWidth: 0,
                 leading: SizedBox.shrink(),
-                title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      InkWell(
-                          onTap: Get.back,
-                          child: Image.asset('assets/icon/left.png')
-                      ),
-                      Image.asset('assets/image/logo.png', width: 70)
-                    ]
+                title: Padding(
+                  padding: const EdgeInsets.only(right: 20),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                            onPressed: () {
+                              if (controller.edit.value) {
+                                controller.edit.value = false;
+                              } else {
+                                Get.back();
+                              }
+                            },
+                            icon: Image.asset('assets/icon/left.png')
+                        ),
+                        Image.asset('assets/image/logo.png', width: 70)
+                      ]
+                  )
                 )
             ),
           backgroundColor: Colors.white,
@@ -59,18 +68,70 @@ class UserView extends StatelessWidget {
                             children: [
                               controller.tab.value == 0 ? FizFieldView() : Wrap(
                                 runSpacing: 16,
-                                children: controller.controllerUr.entries.map((item) => TextFormField(
-                                    controller: item.value,
-                                    focusNode: controller.focusNodeUrAddress[item.key],
-                                    validator: (value) => controller.activeField.value == item.key ? controller.validators[item.key]!(value) : null,
-                                    decoration: decorationInput(prefixIcon: item.key == 'phone_buh' ? Image.asset('assets/icon/rph.png') : null, hint: controller.controllerHints[item.key], contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                                    inputFormatters: item.key == 'phone_buh' ? [PhoneNumberFormatter()] : null,
-                                    keyboardType: item.key == 'phone_buh' ? TextInputType.number : TextInputType.text,
-                                    textInputAction: TextInputAction.next,
-                                    onEditingComplete: controller.saveUz,
-                                    onSaved: (val) => controller.saveUz(),
-                                    onTap: controller.saveUz
+                                children: controller.controllerUr.entries.map((item) => Column(
+                                  children: [
+                                    item.key == 'phone_buh' ? PhoneFormField(
+                                      controller: controller.phoneField,
+                                      validator: PhoneValidator.compose([PhoneValidator.required(Get.context!, errorText: 'Номер телефона обязателен'), PhoneValidator.validMobile(Get.context!, errorText: 'Номер телефона некорректен')]),
+                                      countrySelectorNavigator: const CountrySelectorNavigator.draggableBottomSheet(),
+                                      isCountrySelectionEnabled: true,
+                                      isCountryButtonPersistent: true,
+                                      autofillHints: const [AutofillHints.telephoneNumber],
+                                      countryButtonStyle: const CountryButtonStyle(
+                                          showDialCode: true,
+                                          showIsoCode: false,
+                                          showFlag: true,
+                                          showDropdownIcon: false,
+                                          flagSize: 20
+                                      ),
+                                      decoration: decorationInput(contentPadding: const EdgeInsets.symmetric(horizontal: 8)),
+                                    ) :
+                                    TextFormField(
+                                        controller: item.value,
+                                        cursorHeight: 15,
+                                        focusNode: controller.focusNodeUrAddress[item.key],
+                                        validator: (value) => controller.activeField.value == item.key ? controller.validators[item.key]!(value) : null,
+                                        decoration: decorationInput(error: item.key == 'email' && controller.usEmailValidate.value ? dangerColor : null, prefixIcon: item.key == 'phone_buh' ? Image.asset('assets/icon/rph.png', width: 20) : null, hint: controller.controllerHints[item.key], contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                                        keyboardType: TextInputType.text,
+                                        textInputAction: TextInputAction.next,
+                                        onChanged: (val) async {
+                                          if (item.key == 'email') {
+                                            controller.validateEmailX(val);
+                                          }
+                                        },
+                                        onEditingComplete: controller.saveUz,
+                                        onSaved: (val) => controller.saveUz(),
+                                        onTap: controller.saveUz
+                                    ),
+                                    if (item.key == 'email' && controller.usEmailValidate.value) Padding(
+                                        padding: const EdgeInsets.only(top: 4, left: 16),
+                                        child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                  'E-mail не существует',
+                                                  style: TextStyle(color: dangerColor, fontSize: 12)
+                                              )
+                                            ]
+                                        )
+                                    ),
+                                    h(16),
+                                    DropdownButtonFormField<String?>(
+                                        value: controller.edo.value,
+                                        isExpanded: true,
+                                        decoration: decorationInput(hint: 'ЭДО', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
+                                        items: ['ДИАДОК', 'СБИС', 'НЕТ'].map((item) {
+                                          return DropdownMenuItem<String?>(
+                                              value: item,
+                                              child: Text(item, style: TextStyle(fontSize: 14))
+                                          );
+                                        }).toList(),
+                                        onChanged: (newValue) {
+                                          controller.edo.value = newValue;
+                                        }
+                                    )
+                                  ]
                                 )).toList()
                               ),
                               h(16),

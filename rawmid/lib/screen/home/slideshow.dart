@@ -5,9 +5,10 @@ import '../../widget/h.dart';
 import 'banner.dart';
 
 class SlideshowView extends StatefulWidget {
-  const SlideshowView({super.key, required this.banners});
+  const SlideshowView({super.key, required this.banners, this.button});
 
   final List<BannerModel> banners;
+  final bool? button;
 
   @override
   State<SlideshowView> createState() => SlideshowViewState();
@@ -22,14 +23,15 @@ class SlideshowViewState extends State<SlideshowView> {
     return Column(
         children: [
           h(40),
-          SizedBox(
-              height: 300,
+          Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              height: 328,
               child: PageView(
                 controller: pageController,
                 onPageChanged: (val) => setState(() {
                   activeIndex = val;
                 }),
-                children: widget.banners.map((banner) => BannerCard(banner: banner)).toList(),
+                children: widget.banners.map((banner) => BannerCard(banner: banner, button: widget.button)).toList(),
               )
           ),
           if (widget.banners.length > 1) h(16),

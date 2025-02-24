@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'constant.dart';
 
-InputDecoration decorationInput({String? hint, Widget? suffixIcon, Widget? prefixIcon, EdgeInsets? contentPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 14)}) {
+InputDecoration decorationInput({String? hint, Color? error, Widget? suffixIcon, Widget? prefixIcon, EdgeInsets? contentPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 14)}) {
   return InputDecoration(
       hintText: hint,
       contentPadding: contentPadding,
@@ -18,9 +18,9 @@ InputDecoration decorationInput({String? hint, Widget? suffixIcon, Widget? prefi
           borderRadius: BorderRadius.circular(8)
       ),
       focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(
+          borderSide: BorderSide(
               width: 2,
-              color: Color(0xFFDDE8EA)
+              color: error ?? Color(0xFFDDE8EA)
           ),
           borderRadius: BorderRadius.circular(8)
       ),
@@ -32,9 +32,9 @@ InputDecoration decorationInput({String? hint, Widget? suffixIcon, Widget? prefi
           borderRadius: BorderRadius.circular(8)
       ),
       enabledBorder: OutlineInputBorder(
-          borderSide: const BorderSide(
+          borderSide: BorderSide(
               width: 2,
-              color: Color(0xFFDDE8EA)
+              color: error ?? Color(0xFFDDE8EA)
           ),
           borderRadius: BorderRadius.circular(8)
       ),

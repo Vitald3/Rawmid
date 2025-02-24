@@ -1,0 +1,48 @@
+import 'package:get/get.dart';
+import 'package:rawmid/controller/navigation.dart';
+import 'package:rawmid/utils/helper.dart';
+import '../api/cart.dart';
+import '../model/cart.dart';
+
+class CartController extends GetxController {
+  final navController = Get.find<NavigationController>();
+  RxList<String> wishlist = (Helper.prefs.getStringList('wishlist') ?? <String>[]).obs;
+  RxList<CartModel> cartProducts = <CartModel>[].obs;
+  RxBool isLoading = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    initialize();
+  }
+
+  Future initialize() async {
+    CartApi.getProducts().then((e) {
+      cartProducts.value = e;
+      navController.cartProducts.value = e;
+    });
+  }
+
+  Future updateCart(CartModel cart) async {
+    CartApi.updateCart({
+      'key': cart.key,
+      'quantity': cart.quantity
+    }).then((e) {
+      cartProducts.value = e;
+      navController.cartProducts.value = e;
+    });
+  }
+
+  Future addWishlist(String id) async {
+    if (wishlist.contains(id)) {
+      wishlist.remove(id);
+    } else {
+      wishlist.add(id);
+    }
+
+    Helper.prefs.setStringList('wishlist', wishlist);
+    Helper.wishlist.value = wishlist;
+    Helper.trigger.value++;
+    navController.wishlist.value = wishlist;
+  }
+}

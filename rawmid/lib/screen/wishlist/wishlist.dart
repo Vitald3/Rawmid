@@ -66,8 +66,8 @@ class WishlistView extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   controller.isLoading.value ? Expanded(
-                                      child: ValueListenableBuilder<List<String>>(
-                                          valueListenable: Helper.wishlist,
+                                      child: ValueListenableBuilder<int>(
+                                          valueListenable: Helper.trigger,
                                           builder: (context, items, child) => controller.tab.value == 0 ? GridView.builder(
                                               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                   crossAxisCount: 2,
@@ -82,9 +82,7 @@ class WishlistView extends StatelessWidget {
                                                     child: ProductCard(
                                                         product: controller.products[index],
                                                         addWishlist: () => controller.removeWishlist(controller.products[index].id),
-                                                        buy: () {
-
-                                                        },
+                                                        buy: () => controller.navController.addCart(controller.products[index].id),
                                                         margin: false
                                                     )
                                                 );
@@ -98,9 +96,7 @@ class WishlistView extends StatelessWidget {
                                                     child: ProductCardList(
                                                         product: controller.products[index],
                                                         addWishlist: () => controller.removeWishlist(controller.products[index].id),
-                                                        buy: () {
-
-                                                        }
+                                                        buy: () => controller.navController.addCart(controller.products[index].id)
                                                     )
                                                 );
                                               }

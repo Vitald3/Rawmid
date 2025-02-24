@@ -6,16 +6,17 @@ import '../../widget/module_title.dart';
 import 'news_card.dart';
 
 class RecipesSection extends StatefulWidget {
-  const RecipesSection({super.key, required this.recipes});
+  const RecipesSection({super.key, required this.recipes, required this.callback});
 
   final List<NewsModel> recipes;
+  final Function() callback;
 
   @override
   State<RecipesSection> createState() => RecipesSectionState();
 }
 
 class RecipesSectionState extends State<RecipesSection> {
-  final pageController = PageController(viewportFraction: 1);
+  final pageController = PageController(viewportFraction: 0.5);
   int activeIndex = 0;
 
   @override
@@ -28,32 +29,22 @@ class RecipesSectionState extends State<RecipesSection> {
               h(30),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: ModuleTitle(title: 'Рецепты', callback: () {}, type: true),
+                child: ModuleTitle(title: 'Рецепты', callback: widget.callback, type: true),
               ),
               h(15),
               Container(
                   padding: const EdgeInsets.only(left: 4, right: 20),
-                  height: 284,
+                  height: 256,
                   child: PageView.builder(
                       clipBehavior: Clip.none,
                       controller: pageController,
                       onPageChanged: (val) => setState(() {
                         activeIndex = val;
                       }),
-                      itemCount: (widget.recipes.length / 2).ceil(),
+                      padEnds: false,
+                      itemCount: widget.recipes.length,
                       itemBuilder: (context, index) {
-                        return Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: List.generate(2, (colIndex) {
-                              int productIndex = index * 2 + colIndex;
-
-                              if (productIndex < widget.recipes.length) {
-                                return Expanded(child: NewsCard(news: widget.recipes[productIndex]));
-                              } else {
-                                return Spacer();
-                              }
-                            })
-                        );
+                        return NewsCard(news: widget.recipes[index], button: true);
                       }
                   )
               ),

@@ -15,6 +15,7 @@ class RegisterController extends GetxController {
   final TextEditingController passwordField = TextEditingController();
   final TextEditingController confirmField = TextEditingController();
   final navController = Get.find<NavigationController>();
+  RxBool validateEmail = false.obs;
 
   Future register() async {
     if (valid.value && !submit.value) {
@@ -38,5 +39,14 @@ class RegisterController extends GetxController {
 
   Future validate() async {
     valid.value = emailField.text.isNotEmpty && EmailValidator.validate(emailField.text) && passwordField.text.isNotEmpty && confirmField.text.isNotEmpty && passwordField.text == confirmField.text;
+  }
+
+  Future validateEmailX() async {
+    if (emailField.text.isNotEmpty && EmailValidator.validate(emailField.text)) {
+      final api = await LoginApi.checkEmail(emailField.text);
+      validateEmail.value = !api;
+    } else {
+      validateEmail.value = false;
+    }
   }
 }

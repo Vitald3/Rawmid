@@ -25,6 +25,14 @@ class WishlistController extends GetxController {
       isLoading.value = false;
       WishlistApi.getWishlist(wishlist.join(',')).then((e) {
         products.addAll(e);
+
+        if (e.isNotEmpty) {
+          navController.wishlist.value = e.map((item) => item.id).toList();
+        } else {
+          navController.wishlist.clear();
+          Helper.prefs.setStringList('wishlist', []);
+        }
+
         isLoading.value = true;
       });
     }
@@ -35,5 +43,6 @@ class WishlistController extends GetxController {
     Helper.prefs.setStringList('wishlist', wishlist);
     Helper.wishlist.value = wishlist;
     products.removeWhere((e) => e.id == id);
+    navController.wishlist.value = wishlist;
   }
 }

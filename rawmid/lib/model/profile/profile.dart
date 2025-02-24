@@ -1,5 +1,4 @@
 import 'package:rawmid/model/ur.dart';
-
 import 'address.dart';
 
 class ProfileModel {

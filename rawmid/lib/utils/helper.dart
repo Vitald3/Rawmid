@@ -1,25 +1,40 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:rawmid/api/home.dart';
+import 'package:rawmid/screen/news/news.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../screen/product/product.dart';
 import 'constant.dart';
 import 'package:get/get.dart';
+import 'dart:ui' as ui;
 
 class Helper {
   static Future initialize() async {
     prefs = await SharedPreferences.getInstance();
+    final session = Helper.prefs.getString('PHPSESSID');
+
+    if (session == null) {
+      Helper.prefs.setString('PHPSESSID', '0');
+    }
+
     wishlist.value = Helper.prefs.getStringList('wishlist') ?? [];
+    compares.value = Helper.prefs.getStringList('compares') ?? [];
   }
 
   static late final SharedPreferences prefs;
   static ValueNotifier<List<String>> wishlist = ValueNotifier([]);
+  static ValueNotifier<List<String>> compares = ValueNotifier([]);
+  static ValueNotifier<int> trigger = ValueNotifier(0);
 
-  static void snackBar({String text = '', String title = '', String yes = 'OK', bool notTitle = false, bool error = false, bool prev = false, Function? callback, Function? callback2}) {
+  static void snackBar({String text = '', String title = '', String yes = 'OK', bool notTitle = false, bool hide = false, bool error = false, bool prev = false, Function? callback, Function? callback2}) {
     showDialog(context: Get.context!, builder: (_) {
       return CupertinoAlertDialog(
-        title: notTitle ? null : Text(error ? 'Ошибка' : (title != '' ? title : 'Успешно')),
+        title: notTitle ? null : Text(error ? 'Внимание!' : (title != '' ? title : 'Успешно')),
         actions: [
           if (prev) CupertinoDialogAction(onPressed: () {
             Get.back();
@@ -43,6 +58,13 @@ class Helper {
         callback();
       }
     });
+
+    if (hide) {
+      Timer.periodic(const Duration(seconds: 2), (timer) {
+        timer.cancel();
+        Get.back();
+      });
+    }
   }
 
   static void closeKeyboard() {
@@ -71,14 +93,49 @@ class Helper {
   }
 
   static Future openLink(String link) async {
-    if (link.contains('madeindream.com')) {
-      final api = await HomeApi.getUrlProduct(link);
+    if (link == '[states]') {
+      Get.toNamed('/blog');
+      return;
+    }
 
-      if (api > 0) {
-        //Get.to(ProductView(id: api));
+    if (link.contains('madeindream.com')) {
+      final api = await HomeApi.getUrlType(link);
+
+      if (api.key.isNotEmpty) {
+        if (api.key == 'product') {
+          Get.to(() => ProductView(id: '${api.value}'));
+        } else {
+          Get.to(() => NewsView(id: '${api.value}'));
+        }
       } else {
         Helper.launchInBrowser(link);
       }
     }
+  }
+
+  static String formatPrice(double val) {
+    var formatter = NumberFormat.currency(locale: 'ru_RU', symbol: '₽', decimalDigits: 0);
+    return formatter.format(val);
+  }
+
+  static addCompare(String id) {
+    if (compares.value.contains(id)) {
+      compares.value.remove(id);
+    } else {
+      compares.value.add(id);
+    }
+
+    Helper.prefs.setStringList('compares', compares.value);
+    trigger.value++;
+  }
+
+  static double getTextHeight(String text, TextStyle style, double maxWidth) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      maxLines: null,
+      textDirection: ui.TextDirection.ltr
+    )..layout(maxWidth: maxWidth);
+
+    return textPainter.height;
   }
 }

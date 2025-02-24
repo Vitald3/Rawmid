@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rawmid/controller/home.dart';
+import 'package:rawmid/model/home/product.dart';
 import 'package:rawmid/utils/extension.dart';
 import '../../utils/helper.dart';
 import '../../widget/h.dart';
@@ -7,9 +7,13 @@ import '../../widget/module_title.dart';
 import '../../widget/product_card.dart';
 
 class StoreSection extends StatefulWidget {
-  const StoreSection({super.key, required this.controller});
+  const StoreSection({super.key, required this.products, required this.addWishlist, required this.buy, this.showMore, this.title});
 
-  final HomeController controller;
+  final List<ProductModel> products;
+  final Function()? showMore;
+  final Function(String) addWishlist;
+  final Function(String) buy;
+  final String? title;
 
   @override
   State<StoreSection> createState() => StoreSectionState();
@@ -29,11 +33,11 @@ class StoreSectionState extends State<StoreSection> {
           h(30),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ModuleTitle(title: 'Магазин', callback: () {}, type: true),
+            child: ModuleTitle(title: widget.title ?? 'Магазин', callback: widget.showMore, type: true),
           ),
           h(15),
-          ValueListenableBuilder<List<String>>(
-              valueListenable: Helper.wishlist,
+          ValueListenableBuilder<int>(
+              valueListenable: Helper.trigger,
               builder: (context, items, child) => Container(
                   padding: const EdgeInsets.only(left: 4, right: 20),
                   constraints: BoxConstraints(minHeight: 300, maxHeight: 340),
@@ -43,34 +47,33 @@ class StoreSectionState extends State<StoreSection> {
                       onPageChanged: (val) => setState(() {
                         activeIndex = val;
                       }),
-                      itemCount: (widget.controller.shopProducts.length / 2).ceil(),
+                      itemCount: (widget.products.length / 2).ceil(),
                       itemBuilder: (context, index) {
                         return Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: List.generate(2, (colIndex) {
                               int productIndex = index * 2 + colIndex;
 
-                              if (productIndex < widget.controller.shopProducts.length) {
+                              if (productIndex < widget.products.length) {
                                 return Expanded(child: ProductCard(
-                                    product: widget.controller.shopProducts[productIndex],
-                                    addWishlist: () => widget.controller.addWishlist(widget.controller.shopProducts[productIndex].id),
-                                    buy: () {},
+                                    product: widget.products[productIndex],
+                                    addWishlist: () => widget.addWishlist(widget.products[productIndex].id),
+                                    buy: () => widget.buy(widget.products[productIndex].id),
                                     margin: true
                                 ));
                               } else {
                                 return Spacer();
                               }
-                            }
-                            )
+                            })
                         );
                       }
                   )
               )
           ),
-          if (widget.controller.shopProducts.length > 1) h(16),
-          if (widget.controller.shopProducts.length > 1) Row(
+          if (widget.products.length > 1) h(16),
+          if (widget.products.length > 1) Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate((widget.controller.shopProducts.length / 2).ceil(), (index) => GestureDetector(
+            children: List.generate((widget.products.length / 2).ceil(), (index) => GestureDetector(
                 onTap: () async {
                   await pageController.animateToPage(index, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
 

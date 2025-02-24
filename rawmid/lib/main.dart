@@ -5,7 +5,13 @@ import 'package:get/get.dart';
 import 'package:rawmid/screen/auth/login.dart';
 import 'package:rawmid/screen/auth/login_code.dart';
 import 'package:rawmid/screen/auth/register.dart';
+import 'package:rawmid/screen/checkout/checkout.dart';
+import 'package:rawmid/screen/compare.dart';
 import 'package:rawmid/screen/main.dart';
+import 'package:rawmid/screen/news/blog.dart';
+import 'package:rawmid/screen/support/support.dart';
+import 'package:rawmid/screen/order/order.dart';
+import 'package:rawmid/screen/user/reviews.dart';
 import 'package:rawmid/screen/user/user.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/utils/helper.dart';
@@ -32,7 +38,13 @@ class App extends StatelessWidget {
           GetPage(name: '/register', page: () => const RegisterView()),
           GetPage(name: '/login', page: () => const LoginView()),
           GetPage(name: '/login_code', page: () => const LoginCodeView()),
-          GetPage(name: '/user', page: () => const UserView())
+          GetPage(name: '/user', page: () => const UserView()),
+          GetPage(name: '/checkout', page: () => const CheckoutView()),
+          GetPage(name: '/reviews', page: () => const MyReviewsView()),
+          GetPage(name: '/blog', page: () => const BlogView()),
+          GetPage(name: '/support', page: () => const SupportView()),
+          GetPage(name: '/orders', page: () => const OrderView()),
+          GetPage(name: '/compare', page: () => const CompareView()),
         ],
         theme: theme,
         debugShowCheckedModeBanner: false,

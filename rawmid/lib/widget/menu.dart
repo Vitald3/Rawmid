@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/widget/w.dart';
+import '../screen/home/city.dart';
 import 'h.dart';
 import 'package:get/get.dart';
 
@@ -25,18 +26,26 @@ class MenuView extends StatelessWidget {
                       children: [
                         h(4),
                         _buildSection('Покупки', [
-                          if (controller.user.value != null) _buildDrawerItem(Icons.local_shipping, 'Мои заказы', () {}),
-                          if (controller.user.value != null) _buildDrawerItem(Icons.store, 'Мои товары', () {}),
-                          _buildDrawerItem(Icons.shopping_bag, 'Магазин', () {}),
-                          _buildDrawerItem(Icons.percent, 'Акции', () {}, divider: false),
+                          if (controller.user.value != null) _buildDrawerItem('order', 'Мои заказы', () => Get.toNamed('/orders')),
+                          if (controller.user.value != null) _buildDrawerItem('my_product', 'Мои товары', () {}),
+                          if (controller.user.value != null) _buildDrawerItem('rev', 'Мои отзывы', () => Get.toNamed('/reviews')),
+                          _buildDrawerItem('shop', 'Магазин', () {
+                            controller.onItemTapped(1);
+                            Scaffold.of(context).closeDrawer();
+                          }),
+                          _buildDrawerItem('compare', 'Сравнение товаров', () {
+                            Get.toNamed('/compare');
+                            Scaffold.of(context).closeDrawer();
+                          }),
+                          _buildDrawerItem('special', 'Акции', () {}, divider: false),
                         ]),
                         _buildSection('Информация', [
-                          _buildDrawerItem(Icons.article, 'Статьи', () {}),
-                          _buildDrawerItem(Icons.restaurant_menu, 'Рецепты', () {}, divider: false),
+                          _buildDrawerItem('news', 'Статьи', () {}),
+                          _buildDrawerItem('receipe', 'Рецепты', () {}, divider: false),
                         ]),
                         _buildSection('Профиль', [
-                          if (controller.user.value != null) _buildDrawerItem(Icons.settings, 'Настройки', () => Get.toNamed('user')),
-                          _buildDrawerItem(Icons.support, 'Поддержка', () {}, divider: false),
+                          if (controller.user.value != null) _buildDrawerItem('setting', 'Настройки', () => Get.toNamed('user')),
+                          _buildDrawerItem('support', 'Поддержка', () => Get.toNamed('/support'), divider: false),
                         ])
                       ]
                   )
@@ -44,7 +53,7 @@ class MenuView extends StatelessWidget {
             ),
             Padding(
                 padding: const EdgeInsets.only(left: 20),
-                child: _buildDrawerItem(controller.user.value != null ? Icons.logout : Icons.login, controller.user.value != null ? 'Выйти' : 'Войти', () {
+                child: _buildDrawerItem(controller.user.value != null ? 'logout' : 'login', controller.user.value != null ? 'Выйти' : 'Войти', () {
                   if (controller.user.value != null) {
                     controller.logout();
                   } else {
@@ -109,7 +118,24 @@ class MenuView extends StatelessWidget {
             ),
             if (controller.city.value.isNotEmpty) h(14),
             if (controller.city.value.isNotEmpty) InkWell(
-                onTap: () {},
+                onTap: () {
+                  showModalBottomSheet(
+                      context: Get.context!,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      useRootNavigator: true,
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+                      ),
+                      builder: (context) {
+                        return CitySearch();
+                      }
+                  ).then((_) {
+                    controller.filteredCities.value = controller.cities;
+                    controller.filteredLocation.clear();
+                  });
+                },
                 child: Row(
                     children: [
                       Icon(Icons.location_on_rounded, color: Color(0xFF14BFFF)),
@@ -143,11 +169,11 @@ class MenuView extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerItem(IconData icon, String title, Function() callback, {Color color = Colors.black, bool divider = true}) {
+  Widget _buildDrawerItem(String icon, String title, Function() callback, {Color color = Colors.black, bool divider = true}) {
     return Column(
       children: [
         ListTile(
-            leading: Icon(icon, color: color),
+            leading: Image.asset('assets/icon/$icon.png', width: 17, height: 17),
             contentPadding: EdgeInsets.symmetric(horizontal: 0),
             title: Text(title, style: TextStyle(color: color, fontSize: 20)),
             onTap: callback

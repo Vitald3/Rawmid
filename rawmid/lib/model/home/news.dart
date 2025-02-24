@@ -4,20 +4,22 @@ class NewsModel {
   late String image;
   late String text;
   late String time;
+  late String date;
   late String link;
 
-  NewsModel({required this.id, required this.title, required this.image, required this.text, required this.time, required this.link});
+  NewsModel({required this.id, required this.title, required this.image, required this.text, required this.date, required this.time, required this.link});
 
   NewsModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     title = json['title'];
     image = json['image'];
     text = json['text'];
+    date = json['date_added'];
     time = getReadingTime(json['text']);
     link = json['link'];
   }
 
-  String getReadingTime(String text, {int wpm = 200}) {
+  String getReadingTime(String text, {int wpm = 400}) {
     String cleanText = text.replaceAll(RegExp(r'<[^>]*>'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
 
     List<String> words = RegExp(r'\b[А-Яа-яA-Za-z0-9]+\b', unicode: true)
@@ -40,7 +42,7 @@ class NewsModel {
     int minutes = totalSeconds ~/ 60;
     int seconds = totalSeconds % 60;
 
-    return minutes > 0 ? "$minutes мин. $seconds сек." : "$seconds сек.";
+    return minutes > 0 ? "$minutes мин. $seconds сек." : seconds > 0 ? '$seconds сек.' : '';
   }
 
   Map<String, dynamic> toJson() {
@@ -49,6 +51,7 @@ class NewsModel {
     data['title'] = title;
     data['image'] = image;
     data['text'] = text;
+    data['date_added'] = date;
     data['time'] = time;
     data['link'] = link;
     return data;

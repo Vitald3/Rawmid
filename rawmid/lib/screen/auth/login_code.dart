@@ -18,8 +18,8 @@ class LoginCodeView extends StatelessWidget {
     const fillColor = Color.fromRGBO(243, 246, 249, 0);
 
     final defaultPinTheme = PinTheme(
-        width: 40,
-        height: 44,
+        width: 60,
+        height: 54,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         textStyle: const TextStyle(color: primaryColor, fontSize: 20, fontWeight: FontWeight.w600),
         decoration: BoxDecoration(
@@ -67,7 +67,7 @@ class LoginCodeView extends StatelessWidget {
                               )
                           ),
                           child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
                                   'Вход',
@@ -136,12 +136,13 @@ class LoginCodeView extends StatelessWidget {
                                 ),
                                 h(8),
                                 Text(
-                                  'Код для доступа был отправлен на указанный \nвами EMAIL',
+                                  'Код для доступа был отправлен на указанный вами EMAIL',
                                   style: TextStyle(
                                     color: Color(0xFF8A95A8),
                                     fontSize: 12,
                                     letterSpacing: 0.24
-                                  )
+                                  ),
+                                  textAlign: TextAlign.center
                                 ),
                                 h(48),
                                 PrimaryButton(
@@ -179,7 +180,7 @@ class LoginCodeView extends StatelessWidget {
                                 ),
                                 Center(
                                     child: TextButton(
-                                        onPressed: () => Get.offNamed('login'),
+                                        onPressed: () => Get.toNamed('register'),
                                         child: Text('Зарегистрироваться', style: TextStyle(color: Colors.blue))
                                     )
                                 )

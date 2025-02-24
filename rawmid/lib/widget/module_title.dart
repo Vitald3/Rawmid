@@ -3,10 +3,10 @@ import '../../widget/h.dart';
 import '../../widget/w.dart';
 
 class ModuleTitle extends StatelessWidget {
-  const ModuleTitle({super.key, required this.title, required this.callback, this.type});
+  const ModuleTitle({super.key, required this.title, this.callback, this.type});
 
   final String title;
-  final Function() callback;
+  final Function()? callback;
   final bool? type;
 
   @override
@@ -16,11 +16,13 @@ class ModuleTitle extends StatelessWidget {
           Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                    title,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: !(type ?? false) ? Colors.white : null)
+                Expanded(
+                  child: Text(
+                      title,
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: !(type ?? false) ? Colors.white : null)
+                  )
                 ),
-                GestureDetector(
+                if (callback != null) GestureDetector(
                     onTap: callback,
                     child: Row(
                         children: [

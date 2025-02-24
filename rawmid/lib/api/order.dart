@@ -1,0 +1,43 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../model/order_history.dart';
+import '../utils/constant.dart';
+import '../utils/helper.dart';
+
+class OrderApi {
+  static Future<List<OrdersModel>> order() async {
+    List<OrdersModel> items = [];
+
+    try {
+      final response = await http.get(Uri.parse(getOrdersUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+      final json = jsonDecode(response.body);
+
+      if (json['orders'] != null) {
+        for (var i in json['orders']) {
+          items.add(OrdersModel.fromJson(i));
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<String> printStr(String link) async {
+    try {
+      final request = http.Request('GET', Uri.parse(link));
+      request.headers.addAll({'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'});
+      http.StreamedResponse response = await request.send();
+      return await response.stream.bytesToString();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return '';
+  }
+}

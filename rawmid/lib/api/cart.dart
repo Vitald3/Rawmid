@@ -1,0 +1,95 @@
+import 'dart:convert';
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
+import 'package:rawmid/utils/helper.dart';
+import '../model/cart.dart';
+import '../utils/constant.dart';
+
+class CartApi {
+  static Future<List<CartModel>> getProducts() async {
+    List<CartModel> items = [];
+
+    try {
+      final response = await http.get(Uri.parse(cartProductsUrl), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+      final json = jsonDecode(response.body);
+
+      if (json['products'] != null) {
+        for (var i in json['products']) {
+          items.add(CartModel.fromJson(i));
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<List<CartModel>> addCart(Map<String, dynamic> body) async {
+    List<CartModel> items = [];
+
+    try {
+      final response = await http.post(Uri.parse(addCartUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: body);
+      final json = jsonDecode(response.body);
+
+      if (json['message'] != null) {
+        Helper.snackBar(error: true, text: json['message']);
+        return [];
+      }
+
+      if (json['products'] != null) {
+        for (var i in json['products']) {
+          items.add(CartModel.fromJson(i));
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future clear() async {
+    try {
+      await http.get(Uri.parse(clearUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  static Future<List<CartModel>> updateCart(Map<String, dynamic> body) async {
+    List<CartModel> items = [];
+
+    try {
+      final response = await http.post(Uri.parse(updateCartUrl), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: jsonEncode(body));
+      final json = jsonDecode(response.body);
+
+      if (json['message'] != null) {
+        Helper.snackBar(error: true, text: json['message']);
+        return [];
+      }
+
+      if (json['products'] != null) {
+        for (var i in json['products']) {
+          items.add(CartModel.fromJson(i));
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+}

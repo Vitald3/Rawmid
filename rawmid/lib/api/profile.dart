@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:rawmid/model/country.dart';
-import 'package:rawmid/model/profile.dart';
+import 'package:rawmid/model/profile/reviews.dart';
+import 'package:rawmid/model/support/question.dart';
+import '../model/profile/profile.dart';
 import '../utils/constant.dart';
 import '../utils/helper.dart';
 
@@ -41,6 +44,31 @@ class ProfileApi {
       if (json['countries'] != null) {
         for (var i in json['countries']) {
           items.add(CountryModel.fromJson(i));
+        }
+
+        return items;
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<List<QuestionAnswerModel>> questions() async {
+    List<QuestionAnswerModel> items = [];
+
+    try {
+      final response = await http.get(Uri.parse(questionsUrl), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+
+      final json = jsonDecode(response.body);
+
+      if (json['questions'] != null) {
+        for (var i in json['questions']) {
+          items.add(QuestionAnswerModel.fromJson(i));
         }
 
         return items;
@@ -193,7 +221,69 @@ class ProfileApi {
     return false;
   }
 
-   static Future<bool> uploadImage(File image) async {
+  static Future<List<MyReviewModel>> getReviews() async {
+    List<MyReviewModel> items = [];
+
+    try {
+      final response = await http.get(Uri.parse(getMyReviewsUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+      final json = jsonDecode(response.body);
+
+      if (json['reviews'] != null) {
+        for (var i in json['reviews']) {
+          items.add(MyReviewModel.fromJson(i));
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<bool> sendForm(PlatformFile? file, Map<String, String> body) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse(supportUrl),
+      );
+
+      if (file != null) {
+        request.files.add(
+            await http.MultipartFile.fromPath(
+                'file',
+                file.path!,
+                filename: file.name
+            )
+        );
+      }
+
+      request.fields.addAll(body);
+
+      request.headers.addAll({
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+
+      final response = await request.send();
+      final json = jsonDecode(await response.stream.bytesToString());
+
+      if (json['message'] != null) {
+        Helper.snackBar(error: true, text: json['message']);
+        return false;
+      }
+
+      return json['status'] ?? false;
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return false;
+  }
+
+  static Future<bool> uploadImage(File image) async {
     try {
       final request = http.MultipartRequest('POST', Uri.parse(uploadAvatarUrl));
 

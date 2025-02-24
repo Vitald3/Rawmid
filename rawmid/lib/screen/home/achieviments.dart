@@ -8,13 +8,26 @@ import '../../widget/w.dart';
 import 'package:get/get.dart';
 
 class AchievementsSection extends StatelessWidget {
-  const AchievementsSection({super.key, required this.item});
+  const AchievementsSection({super.key, required this.item, required this.callback});
 
   final AchievimentModel item;
+  final Function() callback;
 
   @override
   Widget build(BuildContext context) {
     int colorIndex = 0;
+    int rIndex = 0;
+
+    for (var (index, i) in item.ranks.indexed) {
+      if (int.parse('${i.rewards ?? 0}') >= item.rang) {
+        rIndex = index - 1;
+        break;
+      }
+    }
+
+    if (rIndex < 0) {
+      rIndex = 0;
+    }
 
     return ColoredBox(
       color: Colors.white,
@@ -26,7 +39,7 @@ class AchievementsSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-                ModuleTitle(title: 'Достижения', callback: () {}, type: true),
+                ModuleTitle(title: 'Достижения', callback: callback, type: true),
                 Row(
                     children: [
                       Text(
@@ -61,7 +74,7 @@ class AchievementsSection extends StatelessWidget {
                       ),
                       Container(
                           height: 35,
-                          width: Get.width * 0.4,
+                          width: Get.width * (item.rang / item.max),
                           decoration: BoxDecoration(
                             color: Colors.blue,
                             borderRadius: BorderRadius.circular(34),
@@ -123,10 +136,10 @@ class AchievementsSection extends StatelessWidget {
             )
           ),
           if (item.ranks.isNotEmpty) h(30),
-          SizedBox(
+          if (item.ranks.isNotEmpty) SizedBox(
             height: 192,
             child: PageView.builder(
-              controller: PageController(viewportFraction: 0.5, initialPage: 1),
+              controller: PageController(viewportFraction: 0.5, initialPage: rIndex),
               itemCount: item.ranks.length,
               itemBuilder: (context, index) {
                 colorIndex++;
@@ -134,7 +147,7 @@ class AchievementsSection extends StatelessWidget {
               }
             )
           ),
-          h(30)
+          if (item.ranks.isNotEmpty) h(30)
         ]
       )
     );
@@ -165,7 +178,7 @@ class AchievementsSection extends StatelessWidget {
                   )
               ),
               h(8),
-              Text(e.title ?? '', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              Text(e.title ?? '', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
               h(4),
               Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -185,6 +198,7 @@ class AchievementsSection extends StatelessWidget {
               h(4),
               Text(e.description ?? '',
                   textAlign: TextAlign.center,
+                  maxLines: 2, overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: Colors.white, fontSize: 12)
               )
             ]

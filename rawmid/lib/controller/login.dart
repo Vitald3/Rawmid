@@ -6,7 +6,7 @@ import 'package:rawmid/api/profile.dart';
 import 'package:rawmid/controller/navigation.dart';
 import '../../utils/helper.dart';
 import '../api/login.dart';
-import '../model/profile.dart';
+import '../model/profile/profile.dart';
 
 class LoginController extends GetxController {
   RxBool valid = false.obs;
@@ -17,6 +17,7 @@ class LoginController extends GetxController {
   final FocusNode focusNode = FocusNode();
   RxString verificationCode = ''.obs;
   final navController = Get.find<NavigationController>();
+  RxBool validateEmail = false.obs;
 
   @override
   void dispose() {
@@ -24,7 +25,6 @@ class LoginController extends GetxController {
     focusNode.dispose();
     super.dispose();
   }
-
 
   Future login() async {
     if (valid.value) {
@@ -37,9 +37,8 @@ class LoginController extends GetxController {
 
       if (user != null) {
         navController.user.value = user;
+        update();
         Get.offAllNamed('home');
-      } else {
-        Helper.snackBar(error: true, text: 'Ошибка авторизации, попробуйте позже');
       }
     }
   }
@@ -82,5 +81,14 @@ class LoginController extends GetxController {
 
   Future validate() async {
     valid.value = emailField.text.isNotEmpty && EmailValidator.validate(emailField.text) && passwordField.text.isNotEmpty;
+  }
+
+  Future validateEmailX() async {
+    if (emailField.text.isNotEmpty && EmailValidator.validate(emailField.text)) {
+      final api = await LoginApi.checkEmail(emailField.text);
+      validateEmail.value = !api;
+    } else {
+      validateEmail.value = false;
+    }
   }
 }

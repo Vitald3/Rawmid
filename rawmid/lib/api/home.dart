@@ -5,12 +5,15 @@ import 'package:rawmid/model/home/banner.dart';
 import 'package:rawmid/model/home/news.dart';
 import '../model/home/product.dart';
 import '../model/home/rank.dart';
+import '../model/home/search.dart';
 import '../model/home/special.dart';
+import '../model/location.dart';
 import '../utils/constant.dart';
+import '../utils/helper.dart';
 
 class HomeApi {
   static Future<String> getCityByIP() async {
-    final response = await http.get(Uri.parse('http://ip-api.com/json/'));
+    final response = await http.get(Uri.parse('http://ip-api.com/json/?lang=ru'));
 
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
@@ -20,13 +23,32 @@ class HomeApi {
     return '';
   }
 
-  static Future<List<BannerModel>> getBanner() async {
+  static Future<List<Location>> searchCity(String query) async {
+    List<Location> items = [];
+
+    try {
+      final response = await http.get(Uri.parse('$searchCityUrl$query'), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      });
+
+      final extractedJson = response.body.replaceAll(RegExp(r'^[^(]*\(|\);?$'), '');
+      List<dynamic> jsonList = jsonDecode(extractedJson);
+      items = jsonList.map((e) => Location.fromJson(e)).toList();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<List<BannerModel>> getBanner(Map<String, dynamic> body) async {
     List<BannerModel> items = [];
 
     try {
-      final response = await http.get(Uri.parse(getBannerUrl), headers: {
-        'Content-Type': 'application/json'
-      });
+      final response = await http.post(Uri.parse(getBannerUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: body);
       final json = jsonDecode(response.body);
 
       if (json['banners'] != null) {
@@ -41,21 +63,38 @@ class HomeApi {
     return items;
   }
 
-  static Future<int> getUrlProduct(String link) async {
-    int id = 0;
-
+  static Future<SearchModel?> search(String query) async {
     try {
-      final response = await http.post(Uri.parse(getUrlProductUrl), headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }, body: {'link': link});
+      final response = await http.post(Uri.parse(searchUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'query': query});
       final json = jsonDecode(response.body);
 
-      return json['id'] ?? 0;
+      if (json['search'] != null) {
+        return SearchModel.fromJson(json['search']);
+      }
     } catch (e) {
       debugPrint(e.toString());
     }
 
-    return id;
+    return null;
+  }
+
+  static Future<MapEntry<String, int>> getUrlType(String link) async {
+    try {
+      final response = await http.post(Uri.parse(getUrlTypeUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'link': link});
+      final json = jsonDecode(response.body);
+
+      return MapEntry(json['type'] ?? '', json['id'] ?? 0);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return MapEntry('', 0);
   }
 
   static Future<List<RankModel>> getRanks() async {
@@ -63,7 +102,8 @@ class HomeApi {
 
     try {
       final response = await http.get(Uri.parse(getRanksUrl), headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
       final json = jsonDecode(response.body);
 
@@ -84,7 +124,8 @@ class HomeApi {
 
     try {
       final response = await http.get(Uri.parse(getFeaturedUrl), headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
       final json = jsonDecode(response.body);
 
@@ -105,7 +146,8 @@ class HomeApi {
 
     try {
       final response = await http.get(Uri.parse(getSernumUrl), headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
       final json = jsonDecode(response.body);
 
@@ -126,7 +168,8 @@ class HomeApi {
 
     try {
       final response = await http.get(Uri.parse(getRecordsUrl), headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
       final json = jsonDecode(response.body);
 
@@ -147,7 +190,8 @@ class HomeApi {
 
     try {
       final response = await http.get(Uri.parse(getNewsUrl), headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
       final json = jsonDecode(response.body);
 
@@ -168,7 +212,8 @@ class HomeApi {
 
     try {
       final response = await http.get(Uri.parse(getRecipesUrl), headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
       final json = jsonDecode(response.body);
 

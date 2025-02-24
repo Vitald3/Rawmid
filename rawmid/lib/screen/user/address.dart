@@ -36,7 +36,11 @@ class AddressView extends GetView<UserController> {
                                 groupValue: true,
                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 activeColor: primaryColor,
-                                onChanged: (value) {}
+                                onChanged: (value) {
+                                  if (value ?? false) {
+                                    controller.addressId.value = e.id;
+                                  }
+                                }
                             )
                         ),
                         w(8),
@@ -141,6 +145,7 @@ class AddressView extends GetView<UserController> {
               if (controller.regions.isNotEmpty) TextFormField(
                   controller: controller.controllersAddress['city'],
                   focusNode: controller.focusNodeAddress['city'],
+                  cursorHeight: 15,
                   validator: (value) => controller.activeField.value == 'city' ? controller.validators['city']!(value) : null,
                   decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                   autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -150,6 +155,7 @@ class AddressView extends GetView<UserController> {
               if (controller.regions.isNotEmpty) TextFormField(
                   controller: controller.controllersAddress['postcode'],
                   focusNode: controller.focusNodeAddress['postcode'],
+                  cursorHeight: 15,
                   decoration: decorationInput(hint: 'Индекс ', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                   autovalidateMode: AutovalidateMode.onUserInteraction,
                   textInputAction: TextInputAction.next
@@ -158,6 +164,7 @@ class AddressView extends GetView<UserController> {
               if (controller.regions.isNotEmpty) TextFormField(
                   controller: controller.controllersAddress['address_1'],
                   focusNode: controller.focusNodeAddress['address_1'],
+                  cursorHeight: 15,
                   validator: (value) => controller.activeField.value == 'address_1' ? controller.validators['address_1']!(value) : null,
                   decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                   autovalidateMode: AutovalidateMode.onUserInteraction,

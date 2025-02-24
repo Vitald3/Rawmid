@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/api/home.dart';
 import 'package:rawmid/controller/navigation.dart';
@@ -12,7 +11,6 @@ import '../model/home/special.dart';
 
 class HomeController extends GetxController {
   RxBool isLoading = false.obs;
-  final searchField = TextEditingController();
   RxList<BannerModel> banners = <BannerModel>[].obs;
   Rxn<AchievimentModel> achieviment = Rxn<AchievimentModel>();
   RxList<ProductModel> myProducts = <ProductModel>[].obs;
@@ -30,7 +28,7 @@ class HomeController extends GetxController {
   }
 
   Future initialize() async {
-    final banners = await HomeApi.getBanner();
+    final banners = await HomeApi.getBanner({});
     this.banners.addAll(banners);
 
     final items = await HomeApi.getRanks();
@@ -45,9 +43,9 @@ class HomeController extends GetxController {
     final user = navController.user.value;
 
     achieviment.value = AchievimentModel(
-        name: user?.rangStr ?? 'Новичок',
+        name: user?.rangStr ?? ranks.first.title ?? 'Пионер',
         rang: user?.rang ?? 0,
-        max: ranks.isNotEmpty ? int.tryParse('${ranks.last.rewards}') ?? 2000 : 2000,
+        max: ranks.isNotEmpty ? int.tryParse('${ranks.last.rewards}') ?? 12000 : 12000,
         ranks: ranks
     );
 
@@ -83,5 +81,7 @@ class HomeController extends GetxController {
 
     Helper.prefs.setStringList('wishlist', wishlist);
     Helper.wishlist.value = wishlist;
+    Helper.trigger.value++;
+    navController.wishlist.value = wishlist;
   }
 }

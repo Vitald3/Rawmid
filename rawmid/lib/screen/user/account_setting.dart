@@ -36,6 +36,7 @@ class AccountSettingView extends GetView<UserController> {
                         child: TextFormField(
                             controller: controller.changePasswordField,
                             obscureText: true,
+                            cursorHeight: 15,
                             autovalidateMode: AutovalidateMode.onUserInteraction,
                             onChanged: (val) {
                               controller.changePassValid.value = val.isNotEmpty;
@@ -75,18 +76,6 @@ class AccountSettingView extends GetView<UserController> {
             controller.pushNotifications.value = val;
             controller.setPush(val);
           }),
-          h(16),
-          Divider(color: Color(0xFFDDE8EA), height: 1),
-          h(16),
-          GestureDetector(
-              onTap: controller.delete,
-              child: Text('Удалить аккаунт', style: TextStyle(
-                  color: Color(0xFF8A95A8),
-                  fontSize: 14,
-                  height: 1.40,
-                  letterSpacing: 0.14
-              ))
-          ),
           h(16),
           Divider(color: Color(0xFFDDE8EA), height: 1)
         ]

@@ -6,55 +6,55 @@ import '../../widget/module_title.dart';
 import 'news_card.dart';
 
 class NewsSection extends StatefulWidget {
-  const NewsSection({super.key, required this.news});
+  const NewsSection({super.key, required this.news, this.callback, this.title, this.padding});
 
   final List<NewsModel> news;
+  final Function()? callback;
+  final String? title;
+  final bool? padding;
 
   @override
   State<NewsSection> createState() => NewsSectionState();
 }
 
 class NewsSectionState extends State<NewsSection> {
-  final pageController = PageController(viewportFraction: 1);
+  final pageController = PageController(viewportFraction: 0.5);
   int activeIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
+    return Container(
         color: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: (widget.padding ?? false) ? 20 : 0),
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               h(30),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: ModuleTitle(title: 'Статьи', callback: () {}, type: true),
-              ),
-              h(15),
-              Container(
-                  padding: const EdgeInsets.only(left: 4, right: 20),
+              ModuleTitle(title: widget.title ?? 'Статьи', callback: widget.callback, type: true),
+              SizedBox(
                   height: 264,
-                  child: PageView.builder(
+                  child: Stack(
                       clipBehavior: Clip.none,
-                      controller: pageController,
-                      onPageChanged: (val) => setState(() {
-                        activeIndex = val;
-                      }),
-                      itemCount: (widget.news.length / 2).ceil(),
-                      itemBuilder: (context, index) {
-                        return Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: List.generate(2, (colIndex) {
-                              int productIndex = index * 2 + colIndex;
-
-                              if (productIndex < widget.news.length) {
-                                return Expanded(child: NewsCard(news: widget.news[productIndex]));
-                              } else {
-                                return Spacer();
-                              }
-                            })
-                        );
-                      }
+                      children: [
+                        Positioned(
+                            left: -8,
+                            right: -8,
+                            top: 0,
+                            bottom: 0,
+                            child: PageView.builder(
+                                clipBehavior: Clip.none,
+                                controller: pageController,
+                                padEnds: false,
+                                onPageChanged: (val) => setState(() {
+                                  activeIndex = val;
+                                }),
+                                itemCount: widget.news.length,
+                                itemBuilder: (context, index) {
+                                  return NewsCard(news: widget.news[index]);
+                                }
+                            )
+                        )
+                      ]
                   )
               ),
               if (widget.news.length > 1) h(16),

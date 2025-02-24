@@ -6,9 +6,10 @@ import '../../model/home/special.dart';
 import '../../widget/h.dart';
 
 class PromotionsSection extends StatefulWidget {
-  const PromotionsSection({super.key, required this.specials});
+  const PromotionsSection({super.key, required this.specials, this.title});
 
   final List<SpecialModel> specials;
+  final String? title;
 
   @override
   State<PromotionsSection> createState() => PromotionsSectionState();
@@ -28,7 +29,7 @@ class PromotionsSectionState extends State<PromotionsSection> {
           h(20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ModuleTitle(title: 'Акции', callback: () {})
+            child: ModuleTitle(title: widget.title ?? 'Акции', callback: () {})
           ),
           h(10),
           SizedBox(
@@ -47,7 +48,7 @@ class PromotionsSectionState extends State<PromotionsSection> {
           if (widget.specials.length > 1) h(16),
           if (widget.specials.length > 1) Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate((widget.specials.length / 2).ceil(), (index) => GestureDetector(
+              children: List.generate(widget.specials.length, (index) => GestureDetector(
                   onTap: () async {
                     await pageController.animateToPage(index, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
 

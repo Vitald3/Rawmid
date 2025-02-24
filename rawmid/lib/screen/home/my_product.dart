@@ -6,6 +6,7 @@ import 'package:rawmid/model/home/product.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/widget/module_title.dart';
 import '../../widget/h.dart';
+import '../product/product.dart';
 
 class MyProductsSection extends GetView<HomeController> {
   const MyProductsSection({super.key, required this.products});
@@ -98,10 +99,10 @@ class MyProductsSection extends GetView<HomeController> {
             overflow: TextOverflow.ellipsis
           ),
           if (product.color.isNotEmpty) h(4),
-          if (product.color.isNotEmpty) Text(
+          product.color.isNotEmpty ? Text(
             'Цвет: ${product.color}',
             style: TextStyle(color: Colors.white70, fontSize: 12),
-          ),
+          ) : h(20),
           h(8),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -111,7 +112,7 @@ class MyProductsSection extends GetView<HomeController> {
               ),
               minimumSize: Size(double.infinity, 36),
             ),
-            onPressed: () {},
+            onPressed: () => Get.to(() => ProductView(id: product.id)),
             child: Text('К товару', style: TextStyle(fontSize: 14, color: Colors.white))
           )
         ]

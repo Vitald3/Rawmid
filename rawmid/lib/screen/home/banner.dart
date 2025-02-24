@@ -6,18 +6,20 @@ import '../../utils/helper.dart';
 import '../../widget/h.dart';
 
 class BannerCard extends StatelessWidget {
-  const BannerCard({super.key, required this.banner});
+  const BannerCard({super.key, required this.banner, this.button});
 
   final BannerModel banner;
+  final bool? button;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20),
+      margin: EdgeInsets.symmetric(horizontal: !(button ?? false) ? 20 : 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.grey
+        color: Color(0xFFF0F0F0)
       ),
+      alignment: Alignment.center,
       child: Stack(
         alignment: Alignment.bottomCenter,
         children: [
@@ -32,7 +34,7 @@ class BannerCard extends StatelessWidget {
                   width: double.infinity
               )
           ),
-          Padding(
+          if (!(button ?? false)) Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -65,7 +65,7 @@ class ProfileSection extends GetView<UserController> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))
                     ),
                     child: Text(
-                        (controller.user.value?.type ?? false) ? 'Юридическое лицо' : 'Физичское лицо',
+                        (controller.user.value?.type ?? false) ? 'Юридическое лицо' : 'Физическое лицо',
                         style: TextStyle(
                             color: Color(0xFF0D80D9),
                             fontSize: 14
