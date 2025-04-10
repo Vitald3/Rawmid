@@ -12,7 +12,6 @@ class CompareController extends GetxController {
   RxList<GlobalKey> keys = <GlobalKey>[].obs;
   RxList<GlobalKey> keys2 = <GlobalKey>[].obs;
   RxMap<int, double> height = <int, double>{}.obs;
-  RxInt rowIndex = (-1).obs;
   final navController = Get.find<NavigationController>();
 
   @override
@@ -30,6 +29,7 @@ class CompareController extends GetxController {
   }
 
   Future initialize() async {
+    isLoading.value = false;
     final ids = Helper.compares.value.join(',');
 
     if (ids.isNotEmpty) {

@@ -39,9 +39,7 @@ class CategoryController extends GetxController {
     MapEntry('price_asc', 'Цена (по возрастанию)'),
     MapEntry('price_desc', 'Цена (по убыванию)'),
     MapEntry('rating_desc', 'Рейтинг (по убыванию)'),
-    MapEntry('rating_asc', 'Рейтинг (по возрастанию)'),
-    MapEntry('model_asc', 'Модель (А -> Я)'),
-    MapEntry('model_desc', 'Модель (Я -> А)'),
+    MapEntry('rating_asc', 'Рейтинг (по возрастанию)')
   ];
   RxString sort = 'sort_order_asc'.obs;
 
@@ -103,6 +101,11 @@ class CategoryController extends GetxController {
       }
     }
 
+    if (!filter.containsKey('min_price')) {
+      filter.putIfAbsent('min_price', () => minPrice.value);
+      filter.putIfAbsent('max_price', () => maxPrice.value);
+    }
+
     filter.refresh();
   }
 
@@ -129,6 +132,11 @@ class CategoryController extends GetxController {
       } else {
         item['$attrId'] = {'min': '${val.start}', 'max': '${val.end}'};
       }
+    }
+
+    if (!filter.containsKey('min_price')) {
+      filter.putIfAbsent('min_price', () => minPrice.value.toInt());
+      filter.putIfAbsent('max_price', () => maxPrice.value.toInt());
     }
 
     filter.refresh();
@@ -181,6 +189,11 @@ class CategoryController extends GetxController {
     Map<String, dynamic> body = {'category_id': category.id};
 
     if (!clear) {
+      if (!filter.containsKey('min_price')) {
+        filter.putIfAbsent('min_price', () => minPrice.value.toInt());
+        filter.putIfAbsent('max_price', () => maxPrice.value.toInt());
+      }
+
       filter.forEach((key, val) {
         body.putIfAbsent(key, () => val);
       });

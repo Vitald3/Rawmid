@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import '../api/product.dart';
 import '../model/home/product.dart';
@@ -9,6 +10,7 @@ class ReviewsController extends GetxController {
   RxBool isLoading = false.obs;
   RxList<ReviewModel> reviews = <ReviewModel>[].obs;
   RxInt isChecked = (-1).obs;
+  var keys = <GlobalKey>[].obs;
 
   @override
   void onInit() {
@@ -18,6 +20,11 @@ class ReviewsController extends GetxController {
 
   Future initialize() async {
     reviews.value = await ProductApi.getReviews(product.id, mes: false);
+
+    for (var _ in reviews) {
+      keys.add(GlobalKey());
+    }
+
     isLoading.value = true;
   }
 

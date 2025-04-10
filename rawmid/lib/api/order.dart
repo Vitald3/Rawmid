@@ -28,6 +28,24 @@ class OrderApi {
     return items;
   }
 
+  static Future<OrdersModel?> getOrder(int id) async {
+    try {
+      final response = await http.post(Uri.parse(getOrderUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'id': '$id'});
+      final json = jsonDecode(response.body);
+
+      if (json['order'] != null) {
+        return OrdersModel.fromJson(json['order']);
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return null;
+  }
+
   static Future<String> printStr(String link) async {
     try {
       final request = http.Request('GET', Uri.parse(link));

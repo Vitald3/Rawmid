@@ -24,7 +24,7 @@ class RankModel {
     image = json['image'];
     description = json['description'];
     sortOrder = json['sort_order'];
-    rewards = json['rewards'];
+    rewards = json['value'];
     rewardPercent = json['reward_percent'];
     features = json['features'];
   }
@@ -36,7 +36,7 @@ class RankModel {
     data['image'] = image;
     data['description'] = description;
     data['sort_order'] = sortOrder;
-    data['rewards'] = rewards;
+    data['value'] = rewards;
     data['reward_percent'] = rewardPercent;
     data['features'] = features;
     return data;

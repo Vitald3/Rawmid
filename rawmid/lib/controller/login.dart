@@ -38,6 +38,14 @@ class LoginController extends GetxController {
       if (user != null) {
         navController.user.value = user;
         update();
+
+        final param = Get.parameters;
+
+        if ((param['route'] ?? '').isNotEmpty) {
+          Get.toNamed('/${param['route']}');
+          return;
+        }
+
         Get.offAllNamed('home');
       }
     }
@@ -58,6 +66,15 @@ class LoginController extends GetxController {
 
       if (user != null) {
         navController.user.value = user;
+        update();
+
+        final param = Get.parameters;
+
+        if ((param['route'] ?? '').isNotEmpty) {
+          Get.toNamed('/${param['route']}');
+          return;
+        }
+
         Get.offAllNamed('home');
       }
     }
@@ -70,7 +87,14 @@ class LoginController extends GetxController {
       final register = await LoginApi.sendCode(emailField.text);
 
       if (register) {
-        Get.toNamed('login_code');
+        final param = Get.parameters;
+        Map<String, String> newParam = {};
+
+        if ((param['route'] ?? '').isNotEmpty) {
+          newParam = {'route': param['route']!};
+        }
+
+        Get.toNamed('/login_code', parameters: newParam);
       } else {
         Helper.snackBar(error: true, text: 'Ошибка отправки кода');
       }

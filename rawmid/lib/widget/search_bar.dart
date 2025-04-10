@@ -13,6 +13,7 @@ class SearchBarView extends GetView<NavigationController> {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: TextFormField(
             autocorrect: false,
+            controller: TextEditingController(text: controller.searchText.value),
             cursorHeight: 15,
             style: const TextStyle(
               color: firstColor,

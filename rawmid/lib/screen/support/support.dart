@@ -1,7 +1,9 @@
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
+import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/widget/module_title.dart';
 import 'package:rawmid/widget/primary_button.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,14 +16,14 @@ import '../../widget/search.dart';
 import '../../widget/search_bar.dart';
 import 'package:flutter_map/flutter_map.dart' as map;
 
-class SupportView extends StatelessWidget {
+class SupportView extends GetView<NavigationController> {
   const SupportView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return GetBuilder<SupportController>(
         init: SupportController(),
-        builder: (controller) => Scaffold(
+        builder: (support) => Scaffold(
             appBar: AppBar(
                 backgroundColor: Colors.white,
                 titleSpacing: 0,
@@ -49,7 +51,7 @@ class SupportView extends StatelessWidget {
                       SingleChildScrollView(
                           child: Stack(
                               children: [
-                                if (controller.isLoading.value) Container(
+                                if (support.isLoading.value) Container(
                                     color: Colors.white,
                                     child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,8 +80,8 @@ class SupportView extends StatelessWidget {
                                                           fontWeight: FontWeight.w700
                                                       )
                                                   ),
-                                                  h(controller.questions.isNotEmpty ? 32 : 6),
-                                                  if (controller.questions.isNotEmpty) Text(
+                                                  h(support.questions.isNotEmpty ? 32 : 6),
+                                                  if (support.questions.isNotEmpty) Text(
                                                     'Часто задаваемые вопросы',
                                                     style: TextStyle(
                                                       color: Color(0xFF1E1E1E),
@@ -87,14 +89,14 @@ class SupportView extends StatelessWidget {
                                                       fontWeight: FontWeight.w700
                                                     )
                                                   ),
-                                                  if (controller.questions.isNotEmpty) h(20),
-                                                  if (controller.questions.isNotEmpty) Wrap(
-                                                    children: List.generate(controller.questions.length, (index) {
+                                                  if (support.questions.isNotEmpty) h(20),
+                                                  if (support.questions.isNotEmpty) Wrap(
+                                                    children: List.generate(support.questions.length, (index) {
                                                       return Column(
                                                         children: [
                                                           GestureDetector(
                                                             onTap: () {
-                                                              controller.isExpandedList[index] = !controller.isExpandedList[index];
+                                                              support.isExpandedList[index] = !support.isExpandedList[index];
                                                             },
                                                             child: Container(
                                                               color: Colors.transparent,
@@ -103,7 +105,7 @@ class SupportView extends StatelessWidget {
                                                                 children: [
                                                                   ListTile(
                                                                     title: Text(
-                                                                      controller.questions[index].question,
+                                                                      support.questions[index].question,
                                                                       style: TextStyle(
                                                                         color: Color(0xFF1E1E1E),
                                                                         fontSize: 16,
@@ -111,7 +113,7 @@ class SupportView extends StatelessWidget {
                                                                       )
                                                                     ),
                                                                     trailing: AnimatedRotation(
-                                                                      turns: controller.isExpandedList[index] ? 0.5 : 0,
+                                                                      turns: support.isExpandedList[index] ? 0.5 : 0,
                                                                       duration: Duration(milliseconds: 300),
                                                                       child: Icon(
                                                                         Icons.expand_more,
@@ -123,12 +125,12 @@ class SupportView extends StatelessWidget {
                                                                   AnimatedSize(
                                                                     duration: Duration(milliseconds: 300),
                                                                     curve: Curves.easeInOut,
-                                                                    child: controller.isExpandedList[index] ? Transform.translate(
+                                                                    child: support.isExpandedList[index] ? Transform.translate(
                                                                       offset: Offset(-8, 0),
                                                                       child: Padding(
                                                                           padding: EdgeInsets.symmetric(vertical: 8),
                                                                           child: Html(
-                                                                              data: controller.questions[index].answer,
+                                                                              data: support.questions[index].answer,
                                                                               onLinkTap: (val, map, element) {
                                                                                 if ((val ?? '').isNotEmpty) {
                                                                                   Helper.openLink(val!);
@@ -147,8 +149,8 @@ class SupportView extends StatelessWidget {
                                                       );
                                                     }).toList()
                                                   ),
-                                                  if (controller.questions.isNotEmpty) h(20),
-                                                  if (controller.questions.isNotEmpty) Text(
+                                                  if (support.questions.isNotEmpty) h(20),
+                                                  if (support.questions.isNotEmpty) Text(
                                                     'Остались вопросы?',
                                                     style: TextStyle(
                                                       color: Color(0xFF1E1E1E),
@@ -158,30 +160,60 @@ class SupportView extends StatelessWidget {
                                                   ),
                                                   h(20),
                                                   DropdownButtonFormField<int>(
-                                                      value: controller.type.value,
+                                                      value: support.type.value,
                                                       isExpanded: true,
                                                       decoration: decorationInput(hint: 'Отдел', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
-                                                      items: List.generate(controller.types.length, (index) {
+                                                      items: List.generate(support.types.length, (index) {
                                                         return DropdownMenuItem<int>(
                                                             value: index,
-                                                            child: Text(controller.types[index], style: TextStyle(fontSize: 14))
+                                                            child: Text(support.types[index], style: TextStyle(fontSize: 14))
                                                         );
                                                       }).toList(),
-                                                      onChanged: (val) => controller.type.value = val
+                                                      onChanged: (val) {
+                                                        support.type.value = val;
+                                                        support.subjectField.text = support.types[val!];
+                                                      }
                                                   ),
                                                   h(16),
+                                                  if (support.type.value == 1) Text.rich(
+                                                      TextSpan(
+                                                          children: [
+                                                            TextSpan(
+                                                                text: 'Для сервисного обращения необходимо ',
+                                                                style: TextStyle(
+                                                                    fontSize: 14,
+                                                                    fontWeight: FontWeight.w700,
+                                                                    letterSpacing: 0.30
+                                                                )
+                                                            ),
+                                                            TextSpan(
+                                                                text: 'авторизироваться',
+                                                                recognizer: TapGestureRecognizer()..onTap = () {
+                                                                  Get.toNamed('/login', parameters: {'route': 'support'});
+                                                                },
+                                                                style: TextStyle(
+                                                                    color: primaryColor,
+                                                                    fontSize: 15,
+                                                                    fontWeight: FontWeight.w700,
+                                                                    letterSpacing: 0.30
+                                                                )
+                                                            )
+                                                          ]
+                                                      )
+                                                  ),
+                                                  if (support.type.value == 1) h(16),
                                                   Form(
-                                                    key: controller.formKey,
+                                                    key: support.formKey,
                                                     child: Column(
                                                       children: [
                                                         TextFormField(
-                                                            key: controller.target,
+                                                            key: support.target,
                                                             cursorHeight: 15,
-                                                            autofocus: controller.orderId.value != null,
-                                                            controller: controller.emailField,
+                                                            autofocus: support.orderId.value != null,
+                                                            controller: support.emailField,
                                                             decoration: decorationInput(hint: 'E-mail *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                                                             autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                            onChanged: controller.validateEmailX,
+                                                            onChanged: support.validateEmailX,
                                                             validator: (value) {
                                                               String? item;
 
@@ -192,7 +224,7 @@ class SupportView extends StatelessWidget {
                                                             },
                                                             textInputAction: TextInputAction.next
                                                         ),
-                                                        if (controller.emailValidate.value) Padding(
+                                                        if (support.emailValidate.value) Padding(
                                                             padding: const EdgeInsets.only(top: 4, left: 16),
                                                             child: Row(
                                                                 mainAxisAlignment: MainAxisAlignment.start,
@@ -207,7 +239,7 @@ class SupportView extends StatelessWidget {
                                                         h(16),
                                                         TextFormField(
                                                             cursorHeight: 15,
-                                                            controller: controller.nameField,
+                                                            controller: support.nameField,
                                                             decoration: decorationInput(hint: 'Имя *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                                                             autovalidateMode: AutovalidateMode.onUserInteraction,
                                                             validator: (value) {
@@ -220,9 +252,17 @@ class SupportView extends StatelessWidget {
                                                             textInputAction: TextInputAction.next
                                                         ),
                                                         h(16),
+                                                        if (support.type.value == 0 || support.type.value == 6) TextFormField(
+                                                            cursorHeight: 15,
+                                                            controller: support.orderField,
+                                                            decoration: decorationInput(hint: 'Номер заказа', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                            textInputAction: TextInputAction.next
+                                                        ),
+                                                        if (support.type.value == 0 || support.type.value == 6) h(16),
                                                         TextFormField(
                                                             cursorHeight: 15,
-                                                            controller: controller.subjectField,
+                                                            controller: support.subjectField,
                                                             decoration: decorationInput(hint: 'Тема', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                                                             autovalidateMode: AutovalidateMode.onUserInteraction,
                                                             textInputAction: TextInputAction.next
@@ -230,7 +270,7 @@ class SupportView extends StatelessWidget {
                                                         h(16),
                                                         TextFormField(
                                                             cursorHeight: 15,
-                                                            controller: controller.textField,
+                                                            controller: support.textField,
                                                             maxLines: 3,
                                                             validator: (value) {
                                                               String? item;
@@ -248,6 +288,7 @@ class SupportView extends StatelessWidget {
                                                   ),
                                                   h(16),
                                                   GestureDetector(
+                                                    onTap: support.pickFile,
                                                     child: Container(
                                                         decoration: BoxDecoration(
                                                             image: DecorationImage(image: AssetImage('assets/image/dotted.png'), fit: BoxFit.fill)
@@ -272,10 +313,10 @@ class SupportView extends StatelessWidget {
                                                     )
                                                   ),
                                                   h(16),
-                                                  PrimaryButton(text: 'Задать вопрос', onPressed: controller.send, height: 40),
+                                                  PrimaryButton(text: 'Задать вопрос', onPressed: support.send, height: 40),
                                                   h(32),
-                                                  if (controller.locations.isNotEmpty) ModuleTitle(title: 'Карта магазинов', type: true),
-                                                  if (controller.locations.isNotEmpty) Container(
+                                                  if (support.locations.isNotEmpty) ModuleTitle(title: 'Карта магазинов', type: true),
+                                                  if (support.locations.isNotEmpty) Container(
                                                       decoration: BoxDecoration(
                                                         borderRadius: BorderRadius.circular(12)
                                                       ),
@@ -284,17 +325,17 @@ class SupportView extends StatelessWidget {
                                                       width: double.infinity,
                                                       child: map.FlutterMap(
                                                           options: map.MapOptions(
-                                                              initialCenter: controller.lng.value ?? controller.locations.first.lng,
+                                                              initialCenter: support.lng.value ?? support.locations.first.lng,
                                                               initialZoom: 12
                                                           ),
-                                                          mapController: controller.mapController,
+                                                          mapController: support.mapController,
                                                           children: [
                                                             map.TileLayer(
                                                                 urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                                                                 subdomains: ['a', 'b', 'c']
                                                             ),
                                                             map.MarkerLayer(
-                                                                markers: controller.locations.map((item) => map.Marker(
+                                                                markers: support.locations.map((item) => map.Marker(
                                                                     point: item.lng,
                                                                     width: 40,
                                                                     height: 40,
@@ -308,12 +349,12 @@ class SupportView extends StatelessWidget {
                                                           ]
                                                       )
                                                   ),
-                                                  if (controller.locations.isNotEmpty) h(20),
-                                                  if (controller.locations.isNotEmpty) Wrap(
+                                                  if (support.locations.isNotEmpty) h(20),
+                                                  if (support.locations.isNotEmpty) Wrap(
                                                     runSpacing: 16,
-                                                    children: controller.locations.map((item) => GestureDetector(
+                                                    children: support.locations.map((item) => GestureDetector(
                                                       onTap: () {
-                                                        controller.mapController.move(item.lng, 12);
+                                                        support.mapController.move(item.lng, 12);
                                                       },
                                                       child: Container(
                                                           width: double.infinity,
@@ -438,6 +479,12 @@ class SupportView extends StatelessWidget {
                                                       )
                                                     )).toList()
                                                   ),
+                                                  h(20),
+                                                  PrimaryButton(text: 'Вернуться на главную', height: 40, background: Colors.white, borderColor: primaryColor, borderWidth: 2, textStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.w700), onPressed: () {
+                                                    controller.onItemTapped(0);
+                                                    Get.back();
+                                                    Get.back();
+                                                  }),
                                                   h(20 + MediaQuery.of(context).padding.bottom)
                                                 ]
                                             )
@@ -445,11 +492,11 @@ class SupportView extends StatelessWidget {
                                         ]
                                     )
                                 ),
-                                if (controller.isLoading.value) SearchWidget()
+                                if (support.isLoading.value) SearchWidget()
                               ]
                           )
                       ),
-                      if (!controller.isLoading.value) Center(child: CircularProgressIndicator(color: primaryColor))
+                      if (!support.isLoading.value) Center(child: CircularProgressIndicator(color: primaryColor))
                     ]
                 ))
             )

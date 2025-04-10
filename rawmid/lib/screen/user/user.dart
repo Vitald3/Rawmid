@@ -4,6 +4,7 @@ import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/screen/user/address.dart';
 import 'package:rawmid/screen/user/profile.dart';
 import 'package:rawmid/utils/constant.dart';
+import 'package:rawmid/widget/primary_button.dart';
 import '../../../widget/h.dart';
 import '../../controller/user.dart';
 import '../../utils/utils.dart';
@@ -99,10 +100,7 @@ class UserView extends StatelessWidget {
                                           if (item.key == 'email') {
                                             controller.validateEmailX(val);
                                           }
-                                        },
-                                        onEditingComplete: controller.saveUz,
-                                        onSaved: (val) => controller.saveUz(),
-                                        onTap: controller.saveUz
+                                        }
                                     ),
                                     if (item.key == 'email' && controller.usEmailValidate.value) Padding(
                                         padding: const EdgeInsets.only(top: 4, left: 16),
@@ -115,25 +113,33 @@ class UserView extends StatelessWidget {
                                               )
                                             ]
                                         )
-                                    ),
-                                    h(16),
-                                    DropdownButtonFormField<String?>(
-                                        value: controller.edo.value,
-                                        isExpanded: true,
-                                        decoration: decorationInput(hint: 'ЭДО', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
-                                        items: ['ДИАДОК', 'СБИС', 'НЕТ'].map((item) {
-                                          return DropdownMenuItem<String?>(
-                                              value: item,
-                                              child: Text(item, style: TextStyle(fontSize: 14))
-                                          );
-                                        }).toList(),
-                                        onChanged: (newValue) {
-                                          controller.edo.value = newValue;
-                                        }
                                     )
                                   ]
                                 )).toList()
                               ),
+                              if (controller.tab.value == 1) h(16),
+                              if (controller.tab.value == 1) DropdownButtonFormField<String?>(
+                                  value: controller.edo.value,
+                                  isExpanded: true,
+                                  decoration: decorationInput(hint: 'ЭДО', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
+                                  items: ['ДИАДОК', 'СБИС', 'НЕТ'].map((item) {
+                                    return DropdownMenuItem<String?>(
+                                        value: item,
+                                        child: Text(item, style: TextStyle(fontSize: 14))
+                                    );
+                                  }).toList(),
+                                  onChanged: (newValue) {
+                                    controller.edo.value = newValue;
+                                  }
+                              ),
+                              h(16),
+                              PrimaryButton(text: 'Сохранить', height: 46, loader: true, onPressed: () async {
+                                if (controller.tab.value == 0) {
+                                  await controller.save();
+                                } else {
+                                  await controller.saveUz();
+                                }
+                              }),
                               h(16),
                               Container(
                                 height: 40,

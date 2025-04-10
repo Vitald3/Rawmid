@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/screen/product/product.dart';
 import 'package:rawmid/widget/module_title.dart';
@@ -79,8 +80,8 @@ class OrderInfoView extends GetView<OrderController> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Container(
-                                        width: 70,
-                                        height: 70,
+                                        width: 100,
+                                        height: 100,
                                         decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(10),
                                             image: DecorationImage(
@@ -129,8 +130,7 @@ class OrderInfoView extends GetView<OrderController> {
                               )
                             )
                         )).toList()
-                      )
-                      ),
+                      )),
                       ModuleTitle(title: 'Доставка', type: true),
                       Text.rich(
                         TextSpan(
@@ -183,34 +183,50 @@ class OrderInfoView extends GetView<OrderController> {
                               )
                             )
                           ),
-                          child: Row(
-                              spacing: 12,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: List.generate(order.history.length, (index) {
-                                final history = order.history[index];
+                          child: Builder(
+                            builder: (c) {
+                              List<HistoryOrder> items = [];
 
-                                return Container(
-                                    alignment: Alignment.center,
-                                    width: (Get.width / order.history.length).ceilToDouble() - 44,
-                                    child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        children: [
-                                          Icon(Icons.local_shipping, color: Colors.white),
-                                          Text(
-                                              history.status,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w700,
-                                                  height: 1,
-                                                  letterSpacing: 0.22
-                                              )
-                                          )
-                                        ]
-                                    )
-                                );
-                              }).toList()
+                              if (order.history.length > 3) {
+                                items.add(order.history[0]);
+                                items.add(order.history[(order.history.length/2).ceil()]);
+                                items.add(order.history.last);
+                              } else {
+                                items = order.history;
+                              }
+
+                              return Row(
+                                  spacing: 12,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: List.generate(items.length, (index) {
+                                    final history = items[index];
+
+                                    return Flexible(
+                                        child: Container(
+                                            alignment: Alignment.center,
+                                            width: double.infinity,
+                                            child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                children: [
+                                                  Icon(Icons.local_shipping, color: Colors.white),
+                                                  Text(
+                                                      history.status,
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 11,
+                                                          fontWeight: FontWeight.w700,
+                                                          height: 1,
+                                                          letterSpacing: 0.22
+                                                      )
+                                                  )
+                                                ]
+                                            )
+                                        )
+                                    );
+                                  }).toList()
+                              );
+                            }
                           )
                       ),
                       Container(
@@ -227,7 +243,7 @@ class OrderInfoView extends GetView<OrderController> {
                           ),
                           child: Column(
                             children: List.generate(order.history.length, (index) {
-                              final history = order.history[index];
+                              final history = order.history.reversed.toList()[index];
                               final isActive = index == 0;
 
                               return Row(
@@ -303,19 +319,19 @@ class OrderInfoView extends GetView<OrderController> {
                                       spacing: 14,
                                       children: [
                                         if (order.comment.isNotEmpty) Row(
+                                            spacing: 8,
                                             children: [
                                               Container(
                                                   width: 32,
                                                   height: 32,
                                                   decoration: ShapeDecoration(
                                                       image: DecorationImage(
-                                                        image: order.avatar.isNotEmpty ? CachedNetworkImageProvider(order.avatar) : AssetImage('assets/image/empty.png'),
+                                                        image: order.avatar.isNotEmpty ? CachedNetworkImageProvider(order.avatar) : AssetImage('assets/icon/us.png'),
                                                         fit: BoxFit.cover,
                                                       ),
                                                       shape: OvalBorder()
                                                   )
                                               ),
-                                              w(8),
                                               Text(
                                                   order.comment,
                                                   style: TextStyle(
@@ -335,7 +351,7 @@ class OrderInfoView extends GetView<OrderController> {
                                                   height: 32,
                                                   decoration: ShapeDecoration(
                                                       image: DecorationImage(
-                                                        image: AssetImage('assets/image/empty.png'),
+                                                        image: AssetImage('assets/icon/us.png'),
                                                         fit: BoxFit.cover,
                                                       ),
                                                       shape: OvalBorder()
@@ -343,14 +359,24 @@ class OrderInfoView extends GetView<OrderController> {
                                               ),
                                               Flexible(
                                                 child: Padding(
-                                                  padding: EdgeInsets.only(top: 6),
-                                                  child: Text(
+                                                  padding: EdgeInsets.only(top: !e.comment.contains('</') ? 6 : 0),
+                                                  child: !e.comment.contains('</') ? Text(
                                                       e.comment,
                                                       style: TextStyle(
                                                           color: Color(0xFF1E1E1E),
                                                           fontSize: 14,
                                                           fontWeight: FontWeight.w600
                                                       )
+                                                  ) : Transform.translate(
+                                                    offset: Offset(-6, -3),
+                                                    child: Html(
+                                                        data: e.comment,
+                                                        onLinkTap: (val, map, element) {
+                                                          if ((val ?? '').isNotEmpty) {
+                                                            Helper.openLink(val!);
+                                                          }
+                                                        }
+                                                    )
                                                   )
                                                 )
                                               )
@@ -414,7 +440,7 @@ class OrderInfoView extends GetView<OrderController> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Flexible(
-                                    child: Image.asset('assets/image/barcode.jpg', height: 40, width: 80)
+                                    child: Image.asset('assets/image/barcode.jpg', width: 160, height: 60, fit: BoxFit.fill)
                                   ),
                                   Flexible(
                                     flex: 2,

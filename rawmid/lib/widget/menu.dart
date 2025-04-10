@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/widget/w.dart';
+import '../controller/cart.dart';
+import '../controller/home.dart';
 import '../screen/home/city.dart';
 import 'h.dart';
 import 'package:get/get.dart';
@@ -40,8 +42,14 @@ class MenuView extends StatelessWidget {
                           _buildDrawerItem('special', 'Акции', () {}, divider: false),
                         ]),
                         _buildSection('Информация', [
-                          _buildDrawerItem('news', 'Статьи', () {}),
-                          _buildDrawerItem('receipe', 'Рецепты', () {}, divider: false),
+                          _buildDrawerItem('news', 'Статьи', () => Get.toNamed('/blog')),
+                          _buildDrawerItem('receipe', 'Рецепты', () {
+                            if (controller.user.value == null) {
+                              Get.toNamed('register');
+                            } else {
+                              Get.toNamed('/blog', arguments: true);
+                            }
+                          }, divider: false),
                         ]),
                         _buildSection('Профиль', [
                           if (controller.user.value != null) _buildDrawerItem('setting', 'Настройки', () => Get.toNamed('user')),
@@ -134,6 +142,16 @@ class MenuView extends StatelessWidget {
                   ).then((_) {
                     controller.filteredCities.value = controller.cities;
                     controller.filteredLocation.clear();
+
+                    if (Get.isRegistered<HomeController>()) {
+                      final home = Get.find<HomeController>();
+                      home.initialize();
+                    }
+
+                    if (Get.isRegistered<CartController>()) {
+                      final cart = Get.find<CartController>();
+                      cart.initialize();
+                    }
                   });
                 },
                 child: Row(

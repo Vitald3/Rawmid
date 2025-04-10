@@ -4,11 +4,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/api/product.dart';
+import 'package:rawmid/controller/home.dart';
 import 'package:rawmid/model/home/product.dart';
 import 'package:rawmid/model/product/product_item.dart';
 import 'package:rawmid/model/product/question.dart';
 import 'package:rawmid/model/product/review.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../api/home.dart';
 import '../api/login.dart';
 import '../model/home/news.dart';
 import '../utils/helper.dart';
@@ -57,6 +59,7 @@ class ProductController extends GetxController {
   RxList<NewsModel> rec = <NewsModel>[].obs;
   RxList<String> video = <String>[].obs;
   final questionField = TextEditingController();
+  final nameField = TextEditingController();
   final fioField = TextEditingController();
   final fioPreField = TextEditingController();
   final fioReviewField = TextEditingController();
@@ -70,17 +73,19 @@ class ProductController extends GetxController {
   final fioXField = TextEditingController();
   final priceField = TextEditingController();
   final ucKey = GlobalKey();
+  final attrKey = GlobalKey();
   final formKey = GlobalKey<FormState>();
   final formKey2 = GlobalKey<FormState>();
   final formKey3 = GlobalKey<FormState>();
   final formKey4 = GlobalKey<FormState>();
   final formKey5 = GlobalKey<FormState>();
   RxInt rating = 4.obs;
-  final phoneField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.RU, nsn: ''));
-  final phonePreField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.RU, nsn: ''));
+  final phoneField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.KZ, nsn: ''));
+  final phonePreField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.KZ, nsn: ''));
   RxList<ProductModel> childProducts = <ProductModel>[].obs;
   WebViewController? webController;
   WebViewController? webPersonalController;
+  var viewed = (Helper.prefs.getStringList('viewed') ?? <String>[]).obs;
 
   @override
   void onInit() {
@@ -123,7 +128,30 @@ class ProductController extends GetxController {
     );
   }
 
+  scrollToAttr() {
+    Scrollable.ensureVisible(
+        attrKey.currentContext!,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeInOut
+    );
+  }
+
   Future initialize() async {
+    timer?.cancel();
+    timer = null;
+
+    if (!viewed.contains(id)) {
+      viewed.add(id);
+    }
+
+    Helper.prefs.setStringList('viewed', viewed);
+
+    final home = Get.find<HomeController>();
+
+    HomeApi.getViewed(viewed).then((e) {
+      home.viewedList.value = e;
+    });
+
     final api = await ProductApi.getProduct(id);
     ProductApi.getAccessories(id).then((e) {
       accessories.value = e;
@@ -144,6 +172,8 @@ class ProductController extends GetxController {
       rec.value = api.rec;
       zap.value = api.zap;
       final now = DateTime.now();
+      phoneField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
+      phonePreField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
 
       if (api.text.isNotEmpty) {
         webController = WebViewController()
@@ -228,13 +258,16 @@ class ProductController extends GetxController {
       final api = await ProductApi.addQuestion({
         'product_id': id,
         'text': questionField.text,
-        'name': navController.user.value!.fio.isNotEmpty ? navController.user.value!.fio : navController.user.value!.firstname,
-        'email': navController.user.value!.email
+        'name': nameField.text,
+        'email': emailField.text
       });
 
       if (api) {
-        Timer.periodic(const Duration(seconds: 7), (t) {
+        Timer.periodic(const Duration(seconds: 3), (t) {
+          Get.back();
           questionField.clear();
+          emailField.clear();
+          nameField.clear();
 
           t.cancel();
         });
@@ -264,7 +297,7 @@ class ProductController extends GetxController {
           textField.clear();
           fioField.clear();
           emailField.clear();
-          phoneField.value = const PhoneNumber(isoCode: IsoCode.RU, nsn: '');
+          phoneField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
 
           t.cancel();
         });
@@ -294,7 +327,7 @@ class ProductController extends GetxController {
           textField.clear();
           fioField.clear();
           emailField.clear();
-          phoneField.value = const PhoneNumber(isoCode: IsoCode.RU, nsn: '');
+          phonePreField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
 
           t.cancel();
         });
@@ -337,10 +370,11 @@ class ProductController extends GetxController {
         isComment.value = '';
         isQuestionComment.value = '';
 
-        Timer.periodic(const Duration(seconds: 7), (t) {
+        Timer.periodic(const Duration(seconds: 3), (t) {
+          Get.back();
           textReviewField.clear();
           fioReviewField.clear();
-          rating.value = 4;
+          rating.value = 5;
           emailReviewField.clear();
 
           t.cancel();
@@ -383,10 +417,11 @@ class ProductController extends GetxController {
       return;
     }
 
-    double price = double.tryParse(product.value!.price.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-    price = (price * val / 100).ceilToDouble();
+    String currencySymbol = product.value!.price.replaceAll(RegExp(r'[\d\s]+'), '').trim();
+    double price = double.tryParse((product.value!.special.isNotEmpty ? product.value!.special : product.value!.price).replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    price -= (price * val / 100).ceilToDouble();
     saleTransition.value = double.tryParse(priceField.text) ?? 0;
-    priceField.text = Helper.formatPrice(price);
+    priceField.text = Helper.formatPrice(price, symbol: currencySymbol);
     saleTransitionEnd.value = price;
     sale.value = val;
   }

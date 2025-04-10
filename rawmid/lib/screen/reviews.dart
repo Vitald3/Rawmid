@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/model/home/product.dart';
+import 'package:rawmid/screen/product/product.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/widget/module_title.dart';
 import '../controller/reviews.dart';
@@ -46,53 +47,56 @@ class ReviewsView extends StatelessWidget {
                         children: [
                           ModuleTitle(title: 'Отзывы', type: true),
                           h(16),
-                          Row(
-                              children: [
-                                ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: CachedNetworkImage(
-                                        imageUrl: product.image,
-                                        errorWidget: (c, e, i) {
-                                          return Image.asset('assets/image/no_image.png');
-                                        },
-                                        height: 64,
-                                        width: 64,
-                                        fit: BoxFit.cover
-                                    )
-                                ),
-                                w(12),
-                                Expanded(
-                                    child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                              product.title,
-                                              style: TextStyle(
-                                                  color: Color(0xFF1E1E1E),
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w700
-                                              )
-                                          ),
-                                          if (product.color.isNotEmpty) Text(
-                                              'Цвет: ${product.color}',
-                                              style: TextStyle(
-                                                  color: Color(0xFF8A95A8),
-                                                  fontSize: 10
-                                              )
-                                          )
-                                        ]
-                                    )
-                                ),
-                                w(12),
-                                Text(
-                                    (product.special ?? '').isNotEmpty ? product.special! : product.price ?? '',
-                                    style: TextStyle(
-                                        color: Color(0xFF1E1E1E),
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700
-                                    )
-                                )
-                              ]
+                          GestureDetector(
+                            onTap: () => Get.to(() => ProductView(id: product.id)),
+                            child: Row(
+                                children: [
+                                  ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: CachedNetworkImage(
+                                          imageUrl: product.image,
+                                          errorWidget: (c, e, i) {
+                                            return Image.asset('assets/image/no_image.png');
+                                          },
+                                          height: 64,
+                                          width: 64,
+                                          fit: BoxFit.cover
+                                      )
+                                  ),
+                                  w(12),
+                                  Expanded(
+                                      child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                                product.title,
+                                                style: TextStyle(
+                                                    color: Color(0xFF1E1E1E),
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w700
+                                                )
+                                            ),
+                                            if (product.color.isNotEmpty) Text(
+                                                'Цвет: ${product.color}',
+                                                style: TextStyle(
+                                                    color: Color(0xFF8A95A8),
+                                                    fontSize: 10
+                                                )
+                                            )
+                                          ]
+                                      )
+                                  ),
+                                  w(12),
+                                  Text(
+                                      (product.special ?? '').isNotEmpty ? product.special! : product.price ?? '',
+                                      style: TextStyle(
+                                          color: Color(0xFF1E1E1E),
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700
+                                      )
+                                  )
+                                ]
+                            )
                           ),
                           h(20),
                           !controller.isLoading.value ? Center(
@@ -112,6 +116,7 @@ class ReviewsView extends StatelessWidget {
                                           borderRadius: BorderRadius.circular(6)
                                       )
                                   ),
+                                  key: controller.keys[index],
                                   child: Column(
                                       children: [
                                         SizedBox(
@@ -169,19 +174,14 @@ class ReviewsView extends StatelessWidget {
                                             children: [
                                               Stack(
                                                   children: [
-                                                    Text(item.text, style: TextStyle(), maxLines: item.checked && controller.isChecked.value == index ? null : 3, overflow: item.checked && controller.isChecked.value == index ? null : TextOverflow.ellipsis),
+                                                    Text(item.text, style: TextStyle(), maxLines: item.checked ? null : 3, overflow: item.checked ? null : TextOverflow.ellipsis),
                                                     if (item.text.length > 200 && !item.checked) Positioned(
                                                         bottom: 0,
                                                         right: 0,
                                                         child: InkWell(
                                                             onTap: () {
                                                               item.checked = !item.checked;
-
-                                                              if (item.checked) {
-                                                                controller.isChecked.value = index;
-                                                              } else {
-                                                                controller.isChecked.value = -1;
-                                                              }
+                                                              controller.update();
                                                             },
                                                             child: Container(
                                                                 padding: const EdgeInsets.only(left: 3),
@@ -198,11 +198,17 @@ class ReviewsView extends StatelessWidget {
                                               if (item.checked) InkWell(
                                                   onTap: () {
                                                     item.checked = false;
-                                                    controller.isChecked.value = -1;
+                                                    controller.update();
+
+                                                    Scrollable.ensureVisible(
+                                                      controller.keys[index].currentContext!,
+                                                      duration: Duration(seconds: 1),
+                                                      curve: Curves.easeInOut
+                                                    );
                                                   },
                                                   child: Container(
                                                       padding: const EdgeInsets.only(left: 3),
-                                                      color: Colors.white,
+                                                      color: Color(0xFFDDE8EA),
                                                       child: Text(
                                                           'Свернуть',
                                                           style: TextStyle(color: Colors.blue, fontSize: 14)

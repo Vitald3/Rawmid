@@ -30,6 +30,15 @@ class RegisterController extends GetxController {
 
       if (user != null) {
         navController.user.value = user;
+        update();
+
+        final param = Get.parameters;
+
+        if ((param['route'] ?? '').isNotEmpty) {
+          Get.toNamed('/${param['route']}');
+          return;
+        }
+
         Get.offAllNamed('home');
       }
 

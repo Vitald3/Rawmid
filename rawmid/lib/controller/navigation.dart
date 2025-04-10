@@ -4,9 +4,12 @@ import 'package:get/get.dart';
 import 'package:rawmid/api/cart.dart';
 import 'package:rawmid/api/profile.dart';
 import 'package:rawmid/controller/cart.dart';
+import 'package:rawmid/controller/compare.dart';
 import 'package:rawmid/controller/wishlist.dart';
+import 'package:rawmid/model/catalog/category.dart';
 import 'package:rawmid/model/city.dart';
 import 'package:rawmid/model/location.dart';
+import 'package:rawmid/screen/product/product.dart';
 import 'package:rawmid/utils/helper.dart';
 import '../api/home.dart';
 import '../api/product.dart';
@@ -16,6 +19,7 @@ import '../model/home/product.dart';
 import '../model/profile/profile.dart';
 import '../screen/cart/cart.dart';
 import '../screen/catalog/catalog.dart';
+import '../screen/compare.dart';
 import '../screen/home/home.dart';
 import '../screen/wishlist/wishlist.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -33,37 +37,48 @@ class NavigationController extends GetxController {
   final List<Widget> widgetOptions = <Widget>[
     const HomeView(),
     const CatalogView(),
-    const SizedBox(),
+    const CompareView(),
     const WishlistView(),
     const CartView()
   ];
   final List<String> titles = [
     'Главная',
     'Каталог',
-    'Клуб',
+    'Сравнение',
     'Избранное',
     'Корзина'
   ];
   RxBool reset = false.obs;
   Rxn<ProfileModel> user = Rxn<ProfileModel>();
-  RxString city = ''.obs;
+  RxInt fId = (Helper.prefs.getInt('fias_id') ?? 0).obs;
+  RxString city = (Helper.prefs.getString('city') ?? '').obs;
+  RxString countryCode = (Helper.prefs.getString('countryCode') ?? '').obs;
   RxString searchCity = ''.obs;
   RxList<CityModel> filteredCities = <CityModel>[].obs;
   RxList<Location> filteredLocation = <Location>[].obs;
   RxList<CityModel> cities = <CityModel>[].obs;
   RxList<CartModel> cartProducts = <CartModel>[].obs;
   RxList<ProductModel> searchProducts = <ProductModel>[].obs;
+  RxList<CategoryModel> searchCategories = <CategoryModel>[].obs;
   RxList<NewsModel> searchNews = <NewsModel>[].obs;
   late stt.SpeechToText speech;
   RxBool isListening = false.obs;
   RxBool isAvailable = false.obs;
+  RxBool isSearch = false.obs;
   RxString searchText = ''.obs;
   RxList<String> wishlist = (Helper.prefs.getStringList('wishlist') ?? <String>[]).obs;
 
   onItemTapped(int index) {
+    searchProducts.clear();
+    searchNews.clear();
+    searchCategories.clear();
+
     if (index == 3 && activeTab.value != 3) {
       final wishlistController = Get.find<WishlistController>();
       wishlistController.initialize();
+    } else if (index == 2 && activeTab.value != 2) {
+      final compareController = Get.find<CompareController>();
+      compareController.initialize();
     }
 
     activeTab.value = index;
@@ -71,6 +86,15 @@ class NavigationController extends GetxController {
 
   void resetV() {
     reset.value = true;
+  }
+
+  Future changeCity(CityModel val) async {
+    final code = await HomeApi.changeCity(val.id);
+    countryCode.value = code;
+    Helper.prefs.setString('city', val.name);
+    Helper.prefs.setInt('fias_id', val.id);
+    Helper.prefs.setString('countryCode', code);
+    Get.back();
   }
 
   Future filterCities(String val) async {
@@ -94,10 +118,20 @@ class NavigationController extends GetxController {
   }
 
   Future initialize() async {
-    final api = await HomeApi.getCityByIP();
+    if (city.isEmpty) {
+      if (Get.arguments != null) {
+        city.value = Get.arguments['city'] ?? '';
+        countryCode.value = Get.arguments['countryCode'] ?? 'KZ';
+      } else {
+        final api = await HomeApi.getCityByIP();
 
-    if (api.isNotEmpty) {
-      city.value = api;
+        if (api.isNotEmpty) {
+          city.value = api['city'] ?? '';
+          countryCode.value = api['countryCode'] ?? 'KZ';
+        }
+      }
+    } else if (fId.value > 0) {
+      await HomeApi.changeCity(fId.value);
     }
 
     user.value = await ProfileApi.user();
@@ -123,6 +157,16 @@ class NavigationController extends GetxController {
   }
 
   Future addCart(String id) async {
+    if (Get.currentRoute != '/ProductView') {
+      final colors = await CartApi.getColors(id);
+
+      if (colors) {
+        Get.to(() => ProductView(id: id));
+        return;
+      }
+    }
+
+
     final api = await CartApi.addCart({
       'product_id': id
     });
@@ -133,6 +177,15 @@ class NavigationController extends GetxController {
       cart.cartProducts.value = api;
       cart.update();
     }
+  }
+
+  bool isCart(String id) {
+    if (Get.isRegistered<CartController>()) {
+      final cart = Get.find<CartController>();
+      return cart.cartProducts.where((e) => e.id == id).isNotEmpty;
+    }
+
+    return false;
   }
 
   Future clear() async {
@@ -156,23 +209,26 @@ class NavigationController extends GetxController {
   }
 
   Future search(String val) async {
-    searchText.value = val;
+    if (!isSearch.value) {
+      if (val.isEmpty) {
+        searchProducts.clear();
+        searchNews.clear();
+        searchCategories.clear();
+        return;
+      }
 
-    if (val.isEmpty) {
-      searchProducts.clear();
-      searchNews.clear();
-      return;
-    }
+      final api = await HomeApi.search(val);
 
-    final api = await HomeApi.search(val);
-
-    if (api != null) {
-      searchProducts.value = api.products;
-      searchNews.value = api.news;
+      if (api != null) {
+        searchCategories.value = api.categories;
+        searchProducts.value = api.products;
+        searchNews.value = api.news;
+      }
     }
   }
 
   clearSearch() {
+    searchCategories.clear();
     searchProducts.clear();
     searchNews.clear();
     searchText.value = '';
@@ -180,12 +236,32 @@ class NavigationController extends GetxController {
   }
 
   Future<void> startListening() async {
+    searchText.value = '';
+    isSearch.value = true;
+
     if (isAvailable.value) {
       isListening.value = true;
 
       speech.listen(
           onResult: (result) {
             searchText.value = result.recognizedWords;
+
+            if (result.finalResult) {
+              if (searchText.value.isEmpty) {
+                searchCategories.clear();
+                searchProducts.clear();
+                searchNews.clear();
+                return;
+              }
+
+              HomeApi.search(searchText.value).then((api) {
+                if (api != null) {
+                  searchCategories.value = api.categories;
+                  searchProducts.value = api.products;
+                  searchNews.value = api.news;
+                }
+              });
+            }
           }
       );
     }
@@ -194,6 +270,7 @@ class NavigationController extends GetxController {
   void stopListening() {
     speech.stop();
     isListening.value = false;
+    isSearch.value = false;
   }
 
   Future loadJsonFromAssets() async {

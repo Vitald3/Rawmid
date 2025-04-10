@@ -37,9 +37,7 @@ class AddressView extends GetView<UserController> {
                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 activeColor: primaryColor,
                                 onChanged: (value) {
-                                  if (value ?? false) {
-                                    controller.addressId.value = e.id;
-                                  }
+                                  controller.setAddress(e.id);
                                 }
                             )
                         ),

@@ -23,6 +23,7 @@ class SupportController extends GetxController {
   final emailField = TextEditingController();
   final nameField = TextEditingController();
   final textField = TextEditingController();
+  final orderField = TextEditingController();
   RxBool emailValidate = false.obs;
   final formKey = GlobalKey<FormState>();
   final target = GlobalKey();
@@ -123,11 +124,13 @@ class SupportController extends GetxController {
         'department_id': '${(type.value ?? 0)}'
       };
 
-      final api = await ProfileApi.sendForm(file.value, body);
-
-      if (orderId.value != null) {
+      if ((type.value == 0 || type.value == 6) && orderField.text.isNotEmpty) {
+        body.putIfAbsent('order_id', () => orderField.text);
+      } else if (orderId.value != null) {
         body.putIfAbsent('order_id', () => orderId.value!);
       }
+
+      final api = await ProfileApi.sendForm(file.value, body);
 
       if (api) {
         Helper.snackBar(text: 'Ваш вопрос принят');

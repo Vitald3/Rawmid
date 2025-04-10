@@ -33,9 +33,15 @@ class CatalogView extends StatelessWidget {
                                 children: [
                                   if (controller.homeController != null && controller.homeController!.banners.isNotEmpty) SlideshowCatalogView(banners: controller.homeController!.banners),
                                   if (controller.categories.isNotEmpty) CategorySection(categories: controller.categories),
-                                  if (controller.specials.isNotEmpty) StoreSection(title: 'Товары со скидкой', products: controller.specials, addWishlist: controller.addWishlist, buy: (id) => controller.navController.addCart(id)),
+                                  if (controller.specials.isNotEmpty) StoreSection(title: 'Товары со скидкой', products: controller.specials, addWishlist: controller.addWishlist, buy: (id) async {
+                                    await controller.navController.addCart(id);
+                                    controller.update();
+                                  }),
                                   if (controller.banners.isNotEmpty) BannerView(banners: controller.banners, title: 'Особые предложения'),
-                                  if (controller.homeController != null && controller.homeController!.shopProducts.isNotEmpty) StoreSection(title: 'Рекомендуемые товары', products: controller.homeController!.shopProducts, addWishlist: controller.addWishlist, buy: (id) => controller.navController.addCart(id)),
+                                  if (controller.homeController != null && controller.homeController!.shopProducts.isNotEmpty) StoreSection(title: 'Рекомендуемые товары', products: controller.homeController!.shopProducts, addWishlist: controller.addWishlist, buy: (id) async {
+                                    await controller.navController.addCart(id);
+                                    controller.update();
+                                  }),
                                   h(40)
                                 ]
                               )

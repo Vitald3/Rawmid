@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:rawmid/utils/constant.dart';
+import 'package:screenshot/screenshot.dart';
 import 'dart:typed_data';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:printing/printing.dart';
@@ -17,28 +19,72 @@ class WebViewWithSession extends StatefulWidget {
 
 class WebViewWithSessionState extends State<WebViewWithSession> {
   late WebViewController _controller;
+  final ScreenshotController screenshotController = ScreenshotController();
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _loadWebPage();
+  }
+
+  void _injectCookies() async {
+    String jsCode = "document.cookie = 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}; path=/; domain=.${siteUrl.replaceAll('https://', '')}';";
+    await _controller.runJavaScript(jsCode);
+    await Future.delayed(Duration(seconds: 1));
+    _captureAndConvert();
+  }
+
+  void _loadWebPage() async {
+    final link = Uri.parse(widget.link);
+
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
-        onPageFinished: (String url) {
-          _getHtmlContent();
-        }
-      ))
-      ..loadRequest(Uri.parse(widget.link), headers: {'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'});
+          onPageFinished: (String url) {
+            _injectCookies();
+          }
+      ));
+
+    final cookieManager = WebViewCookieManager();
+
+    await cookieManager.setCookie(
+      WebViewCookie(
+        name: 'PHPSESSID',
+        value: Helper.prefs.getString('PHPSESSID') ?? '',
+        domain: link.host,
+        path: '/'
+      )
+    );
+
+    await _controller.loadRequest(Uri.parse(widget.link), headers: {'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'});
   }
 
-  Future _getHtmlContent() async {
-    String html = await _controller.runJavaScriptReturningResult(
-        "document.documentElement.outerHTML;") as String;
-    html = html.replaceAll('"', '');
-    printPdf(html);
+  Future<void> _captureAndConvert() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    await Future.delayed(Duration(seconds: 1));
+
+    Uint8List? screenshot = await screenshotController.capture();
+
+    if (screenshot != null) {
+      final pdf = pw.Document();
+      pdf.addPage(
+        pw.Page(
+          build: (pw.Context context) => pw.Center(
+            child: pw.Image(pw.MemoryImage(screenshot))
+          )
+        )
+      );
+
+      Uint8List pdfData = await pdf.save();
+      await Printing.layoutPdf(onLayout: (format) => pdfData);
+    }
   }
 
-  printPdf(String html) async {
+  Future<void> generateAndPrintPdf(String html) async {
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -51,7 +97,9 @@ class WebViewWithSessionState extends State<WebViewWithSession> {
 
     Uint8List pdfData = await pdf.save();
 
-    await Printing.layoutPdf(onLayout: (format) => pdfData);
+    await Printing.layoutPdf(
+      onLayout: (format) async => pdfData
+    );
   }
 
   @override
@@ -77,7 +125,7 @@ class WebViewWithSessionState extends State<WebViewWithSession> {
               )
           )
       ),
-      bottomSheet: WebViewWidget(controller: _controller)
+      bottomSheet: !isLoading ? Center(child: CircularProgressIndicator(color: primaryColor)) : Screenshot(controller: screenshotController, child: WebViewWidget(controller: _controller))
     );
   }
 }

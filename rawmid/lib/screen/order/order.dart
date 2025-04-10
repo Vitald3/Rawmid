@@ -84,7 +84,7 @@ class OrderView extends StatelessWidget {
                                                                         )
                                                                     )
                                                                 ),
-                                                                Flexible(
+                                                                if (controller.orders.isNotEmpty) Flexible(
                                                                     child: Container(
                                                                         height: 40,
                                                                         padding: const EdgeInsets.all(4),
@@ -154,7 +154,7 @@ class OrderView extends StatelessWidget {
                                                         ]
                                                     )
                                                 ),
-                                                Builder(
+                                                controller.orders.isNotEmpty ? Builder(
                                                   builder: (c) {
                                                     List<OrdersModel> orders = [];
 
@@ -252,18 +252,19 @@ class OrderView extends StatelessWidget {
                                                                     padding: EdgeInsets.only(left: 20),
                                                                     scrollDirection: Axis.horizontal,
                                                                     child: Row(
-                                                                        spacing: 8,
+                                                                        spacing: 16,
                                                                         children: List.generate(order.products.length, (index2) {
                                                                           final product = order.products[index2];
 
                                                                           return GestureDetector(
-                                                                              onTap: () => ProductView(id: product.id),
+                                                                              onTap: () => Get.to(() => ProductView(id: product.id)),
                                                                               child: SizedBox(
-                                                                                  width: 80,
+                                                                                  width: 160,
                                                                                   child: Column(
+                                                                                      crossAxisAlignment: CrossAxisAlignment.start,
                                                                                       children: [
                                                                                         Container(
-                                                                                            height: 64,
+                                                                                            height: 160,
                                                                                             clipBehavior: Clip.antiAlias,
                                                                                             decoration: ShapeDecoration(
                                                                                                 color: Color(0xFFDDDADA),
@@ -284,7 +285,7 @@ class OrderView extends StatelessWidget {
                                                                                             overflow: TextOverflow.ellipsis,
                                                                                             style: TextStyle(
                                                                                                 color: Color(0xFF1E1E1E),
-                                                                                                fontSize: 8,
+                                                                                                fontSize: 14,
                                                                                                 fontWeight: FontWeight.w700
                                                                                             )
                                                                                         )
@@ -337,7 +338,7 @@ class OrderView extends StatelessWidget {
                                                         })
                                                     );
                                                   }
-                                                ),
+                                                ) : Center(child: Text('Вы еще не оформляли заказ')),
                                                 h(20 + MediaQuery.of(context).padding.bottom)
                                               ]
                                           )

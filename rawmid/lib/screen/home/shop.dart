@@ -40,7 +40,7 @@ class StoreSectionState extends State<StoreSection> {
               valueListenable: Helper.trigger,
               builder: (context, items, child) => Container(
                   padding: const EdgeInsets.only(left: 4, right: 20),
-                  constraints: BoxConstraints(minHeight: 300, maxHeight: 340),
+                  constraints: BoxConstraints(minHeight: 308, maxHeight: 340),
                   child: PageView.builder(
                       clipBehavior: Clip.none,
                       controller: pageController,
@@ -70,8 +70,8 @@ class StoreSectionState extends State<StoreSection> {
                   )
               )
           ),
-          if (widget.products.length > 1) h(16),
-          if (widget.products.length > 1) Row(
+          if ((widget.products.length / 2).ceil() > 1) h(16),
+          if ((widget.products.length / 2).ceil() > 1) Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate((widget.products.length / 2).ceil(), (index) => GestureDetector(
                 onTap: () async {

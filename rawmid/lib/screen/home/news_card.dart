@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:rawmid/utils/constant.dart';
 import '../../model/home/news.dart';
 import '../../widget/h.dart';
 import '../../widget/w.dart';
@@ -7,15 +8,16 @@ import '../news/news.dart';
 import 'package:get/get.dart';
 
 class NewsCard extends StatelessWidget {
-  const NewsCard({super.key, required this.news, this.button});
+  const NewsCard({super.key, required this.news, this.button, this.recipe});
 
   final NewsModel news;
   final bool? button;
+  final bool? recipe;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Get.to(() => NewsView(id: news.id)),
+      onTap: () => Get.to(() => NewsView(id: news.id, recipe: recipe ?? false)),
       child: Container(
           margin: EdgeInsets.symmetric(horizontal: 8),
           padding: EdgeInsets.all(12),
@@ -73,16 +75,16 @@ class NewsCard extends StatelessWidget {
                     maxLines: !(button ?? false) ? 2 : 5,
                     overflow: TextOverflow.ellipsis
                 ),
-                if (!(button ?? false)) h(8),
+                if (!(button ?? false)) Spacer(),
                 if (!(button ?? false)) ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)
                         ),
                         minimumSize: Size(double.infinity, 40)
                     ),
-                    onPressed: () => Get.to(() => NewsView(id: news.id)),
+                    onPressed: () => Get.to(() => NewsView(id: news.id, recipe: false)),
                     child: Text('Читать', style: TextStyle(fontSize: 14, color: Colors.white))
                 )
               ]

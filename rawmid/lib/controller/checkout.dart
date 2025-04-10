@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/api/checkout.dart';
+import 'package:rawmid/api/order.dart';
 import 'package:rawmid/controller/cart.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/model/checkout/order.dart';
@@ -22,6 +23,7 @@ import '../model/checkout/bb_item.dart';
 import '../model/checkout/pvz.dart';
 import '../model/checkout/shipping.dart';
 import '../model/country.dart';
+import '../model/order_history.dart';
 import '../screen/checkout/payment.dart';
 import '../utils/helper.dart';
 
@@ -101,6 +103,7 @@ class CheckoutController extends GetxController {
   RxString selectedShipping = ''.obs;
   RxString selectedPayment = ''.obs;
   Rxn<OrderModel> order = Rxn<OrderModel>();
+  Rxn<OrdersModel> setOrder = Rxn<OrdersModel>();
   RxList<Pvz> pvz = <Pvz>[].obs;
   final formKey = GlobalKey<FormState>();
   WebViewController? webController;
@@ -264,6 +267,7 @@ class CheckoutController extends GetxController {
       preload.value = true;
     }
 
+    isLoading2.value = false;
     isLoading.value = false;
     setValidation();
 
@@ -274,6 +278,8 @@ class CheckoutController extends GetxController {
     if (fields.isNotEmpty) {
       items = jsonDecode(fields);
     }
+
+    errors.clear();
 
     fizControllers.forEach((e, v) {
       errors.putIfAbsent(e, () => GlobalKey<FormFieldState>());
@@ -353,6 +359,8 @@ class CheckoutController extends GetxController {
           Get.back();
         });
       }
+
+      isLoading2.value = true;
     });
 
     final user = navController.user.value;
@@ -362,7 +370,8 @@ class CheckoutController extends GetxController {
         phoneField.value = PhoneNumber.parse(user.phone);
         phoneBuhField.value = PhoneNumber.parse(user.ur.phoneBuh);
       } catch(e) {
-        //
+        phoneField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
+        phoneBuhField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
       }
       fizControllers['firstname']!.text = user.firstname;
       fizControllers['lastname']!.text = user.lastname;
@@ -392,7 +401,14 @@ class CheckoutController extends GetxController {
   }
 
   Future setAddress(int id) async {
+    addAddress.value = false;
+
+    if (addressId.value == id) {
+      return;
+    }
+
     addressId.value = id;
+
     final api = await ProfileApi.setAddress(id);
 
     if (api != null) {
@@ -722,6 +738,24 @@ class CheckoutController extends GetxController {
         return;
       }
 
+      var courier = false;
+
+      for (var i in shipping) {
+        for (var e in i.quote) {
+          if (selectedShipping.value == e.code && e.title.contains('До дверей')) {
+            courier = true;
+            break;
+          }
+        }
+
+        if (courier) break;
+      }
+
+      if (courier && addressId.value == 0) {
+        Helper.snackBar(error: true, text: 'Выберите или создайте новый адрес');
+        return;
+      }
+
       Map<String, dynamic> body = {};
 
       controllersAddress.forEach((key, controller) {
@@ -792,8 +826,9 @@ class CheckoutController extends GetxController {
     }
   }
 
-  setSuccess() {
+  setSuccess() async {
     success.value = true;
+    setOrder.value = await OrderApi.getOrder(order.value!.orderId);
     CartApi.clear();
     navController.cartProducts.clear();
     Get.back();

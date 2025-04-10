@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:rawmid/controller/navigation.dart';
 import '../../model/home/product.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
@@ -10,7 +11,7 @@ import 'package:get/get.dart';
 import '../product/product.dart';
 import '../reviews.dart';
 
-class ProductCardList extends StatelessWidget {
+class ProductCardList extends GetView<NavigationController> {
   const ProductCardList({super.key, required this.product, required this.addWishlist, required this.buy});
 
   final ProductModel product;
@@ -30,6 +31,7 @@ class ProductCardList extends StatelessWidget {
                   height: 110,
                   child: Stack(
                       alignment: Alignment.center,
+                      clipBehavior: Clip.none,
                       children: [
                         Container(
                             decoration: BoxDecoration(
@@ -64,10 +66,10 @@ class ProductCardList extends StatelessWidget {
                         ),
                         Positioned(
                             top: 0,
-                            right: 0,
+                            right: -5,
                             child: InkWell(
                                 onTap: addWishlist,
-                                child: Icon(Helper.wishlist.value.contains(product.id) ? Icons.favorite : Icons.favorite_border, color: Helper.wishlist.value.contains(product.id) ? primaryColor : Colors.black, size: 18)
+                                child: Icon(Helper.wishlist.value.contains(product.id) ? Icons.favorite : Icons.favorite_border, color: Helper.wishlist.value.contains(product.id) ? primaryColor : Colors.black, size: 28)
                             )
                         )
                       ]
@@ -88,7 +90,7 @@ class ProductCardList extends StatelessWidget {
                                   h(4),
                                   InkWell(
                                       onTap: () => Helper.addCompare(product.id),
-                                      child: Image.asset('assets/icon/rat${Helper.compares.value.contains(product.id) ? '2' : ''}.png', width: 14, fit: BoxFit.cover)
+                                      child: Image.asset('assets/icon/rat${Helper.compares.value.contains(product.id) ? '2' : ''}.png', width: 24, fit: BoxFit.cover)
                                   ),
                                   Spacer(),
                                   InkWell(
@@ -122,7 +124,7 @@ class ProductCardList extends StatelessWidget {
                                       children: [1,2,3,4,5].map((e) => Icon(e <= product.rating! ? Icons.star : Icons.star_half, color: Colors.amber, size: 16)).toList()
                                   ) : SizedBox(height: 16),
                                   h(8),
-                                  PrimaryButton(text: 'Купить', loader: true, onPressed: buy, height: 38)
+                                  PrimaryButton(text: controller.isCart(product.id) ? 'В корзине' : 'Купить', loader: true, onPressed: buy, height: 38)
                                 ]
                             )
                         )

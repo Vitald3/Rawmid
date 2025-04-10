@@ -44,7 +44,7 @@ class RecipesSectionState extends State<RecipesSection> {
                       padEnds: false,
                       itemCount: widget.recipes.length,
                       itemBuilder: (context, index) {
-                        return NewsCard(news: widget.recipes[index], button: true);
+                        return NewsCard(news: widget.recipes[index], button: true, recipe: true);
                       }
                   )
               ),

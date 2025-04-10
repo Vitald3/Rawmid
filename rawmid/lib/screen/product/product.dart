@@ -11,6 +11,7 @@ import 'package:rawmid/utils/extension.dart';
 import 'package:rawmid/widget/module_title.dart';
 import 'package:rawmid/widget/primary_button.dart';
 import 'package:rawmid/widget/product_card.dart';
+import 'package:rawmid/widget/tooltip.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../controller/product.dart';
 import '../../model/product/review.dart';
@@ -18,8 +19,11 @@ import '../../utils/helper.dart';
 import '../../utils/utils.dart';
 import '../../widget/h.dart';
 import '../../widget/nav_menu.dart';
+import '../../widget/search.dart';
+import '../../widget/search_bar.dart';
 import '../../widget/video.dart';
 import '../../widget/w.dart';
+import '../home/city.dart';
 import '../home/news.dart';
 
 class ProductView extends StatelessWidget {
@@ -46,7 +50,53 @@ class ProductView extends StatelessWidget {
                             onPressed: Get.back,
                             icon: Image.asset('assets/icon/left.png')
                         ),
-                        Image.asset('assets/image/logo.png', width: 70)
+                        if (controller.navController.city.value.isNotEmpty) w(10),
+                        if (controller.navController.city.value.isNotEmpty) Expanded(
+                            child: InkWell(
+                                onTap: () {
+                                  showModalBottomSheet(
+                                      context: Get.context!,
+                                      isScrollControlled: true,
+                                      useSafeArea: true,
+                                      useRootNavigator: true,
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+                                      ),
+                                      builder: (context) {
+                                        return CitySearch();
+                                      }
+                                  ).then((_) {
+                                    controller.navController.filteredCities.value = controller.navController.cities;
+                                    controller.navController.filteredLocation.clear();
+                                    controller.initialize();
+                                  });
+                                },
+                                child: Padding(
+                                    padding: const EdgeInsets.only(left: 30),
+                                    child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          Icon(Icons.location_on_rounded, color: Color(0xFF14BFFF)),
+                                          w(6),
+                                          Flexible(
+                                              child: Text(
+                                                  controller.navController.city.value,
+                                                  textAlign: TextAlign.right,
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                      color: Color(0xFF14BFFF),
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.w600
+                                                  )
+                                              )
+                                          )
+                                        ]
+                                    )
+                                )
+                            )
+                        )
                       ]
                   )
                 )
@@ -57,207 +107,249 @@ class ProductView extends StatelessWidget {
               child: controller.isLoading.value ? Stack(
                 children: [
                   SingleChildScrollView(
-                      padding: EdgeInsets.only(left: 20, right: 20, bottom: 50 + MediaQuery.of(context).padding.bottom),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                                controller.product.value!.name,
-                                style: TextStyle(
-                                    color: Color(0xFF1E1E1E),
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600
-                                )
-                            ),
-                            h(16),
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Flexible(
-                                      child: Text(
-                                          'Артикул товара: ${controller.product.value!.sku}',
-                                          style: TextStyle(
-                                              color: Color(0xFF8A95A8),
-                                              fontSize: 13
-                                          )
-                                      )
-                                  ),
-                                  Flexible(
-                                      child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                                          decoration: ShapeDecoration(
-                                              color: controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? Color(0x1903A34B) : Color(0xFFEBF3F6),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))
-                                          ),
-                                          child: Text(
-                                              controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? 'Предзаказ' : controller.product.value!.status,
-                                              style: TextStyle(
-                                                  color: controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? Color(0xFF03A34B) : Color(0xFF0D80D9),
-                                                  fontSize: 14
-                                              )
-                                          )
-                                      )
-                                  )
-                                ]
-                            ),
-                            h(22),
-                            _imageCard(controller),
-                            if (controller.webController != null) PrimaryButton(text: 'Описание товара', height: 40, onPressed: () {
-                              Navigator.of(context).push(
-                                PageRouteBuilder(
-                                  opaque: false,
-                                  pageBuilder: (context, animation, secondaryAnimation) {
-                                    return Scaffold(
-                                      backgroundColor: Colors.black.withOpacityX(0.5),
-                                      body: SafeArea(
-                                        child: Stack(
-                                          children: [
-                                            Positioned(
-                                              top: 10,
-                                              right: 0,
-                                              child: IconButton(
-                                                  onPressed: Get.back,
-                                                  icon: Icon(Icons.close, size: 24, color: Colors.white)
-                                              )
-                                            ),
-                                            Expanded(
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius: BorderRadius.circular(20)
-                                                ),
-                                                clipBehavior: Clip.antiAlias,
-                                                margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 40),
-                                                child: WebViewWidget(controller: controller.webController!)
-                                              )
-                                            )
-                                          ]
-                                        )
-                                      )
-                                    );
-                                  },
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                    return SlideTransition(
-                                      position: Tween<Offset>(
-                                        begin: const Offset(0, 1),
-                                        end: Offset.zero,
-                                      ).animate(animation),
-                                      child: child
-                                    );
-                                  }
-                                )
-                              );
-                            }),
-                            if (controller.product.value!.schema.isNotEmpty || controller.product.value!.childProducts.isNotEmpty) Column(
+                      padding: EdgeInsets.only(bottom: 60 + MediaQuery.of(context).padding.bottom),
+                      child: Stack(
+                        children: [
+                          Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                h(32),
-                                if (controller.product.value!.childProducts.isNotEmpty) Text(
-                                    'Доступные варианты',
-                                    style: TextStyle(
-                                        color: Color(0xFF1E1E1E),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700
-                                    )
-                                ),
-                                h(16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    if (controller.product.value!.childProducts.isNotEmpty) Flexible(
-                                        child: Wrap(
-                                          runSpacing: 8,
-                                          spacing: 8,
-                                          children: List.generate(controller.product.value!.childProducts.length, (index) {
-                                            final child = controller.product.value!.childProducts[index];
-
-                                            return GestureDetector(
-                                              onTap: () => controller.selectChild.value = child.id,
-                                              child: Column(
-                                                  children: [
-                                                    Container(
-                                                        decoration: BoxDecoration(
-                                                            borderRadius: BorderRadius.circular(8),
-                                                            color: controller.selectChild.value == child.id || controller.selectChild.isEmpty && index == 0 ? primaryColor : Colors.grey
-                                                        ),
-                                                        clipBehavior: Clip.antiAlias,
-                                                        padding: EdgeInsets.all(3),
-                                                        child: ClipRRect(
-                                                            borderRadius: BorderRadius.circular(4),
-                                                            child: CachedNetworkImage(
-                                                                imageUrl: child.image,
-                                                                errorWidget: (c, e, i) {
-                                                                  return Image.asset('assets/image/no_image.png');
-                                                                },
-                                                                height: 40,
-                                                                width: 40,
-                                                                fit: BoxFit.cover
-                                                            )
-                                                        )
+                                h(8),
+                                SearchBarView(),
+                                h(20),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 20, right: 20),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                          controller.product.value!.name,
+                                          style: TextStyle(
+                                              color: Color(0xFF1E1E1E),
+                                              fontSize: 21,
+                                              fontWeight: FontWeight.w600
+                                          )
+                                      ),
+                                      h(16),
+                                      Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Flexible(
+                                                child: Text(
+                                                    'Артикул товара: ${controller.product.value!.sku}',
+                                                    style: TextStyle(
+                                                        color: Color(0xFF8A95A8),
+                                                        fontSize: 13
+                                                    )
+                                                )
+                                            ),
+                                            Flexible(
+                                                child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                                                    decoration: ShapeDecoration(
+                                                        color: controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? Color(0x1903A34B) : Color(0xFFEBF3F6),
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))
                                                     ),
-                                                    h(4),
-                                                    Text(
-                                                        child.color,
-                                                        textAlign: TextAlign.right,
+                                                    child: Text(
+                                                        controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? 'Предзаказ' : controller.product.value!.status,
                                                         style: TextStyle(
-                                                            color: Color(0xFF8A95A8),
-                                                            fontSize: 11
+                                                            color: controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? Color(0xFF03A34B) : Color(0xFF0D80D9),
+                                                            fontSize: 14
                                                         )
                                                     )
-                                                  ]
-                                              )
-                                            );
-                                          })
-                                        )
-                                    ),
-                                    if (controller.product.value!.schema.isNotEmpty) Flexible(
-                                      child: SizedBox(
-                                          width: 106,
-                                          child: InkWell(
-                                              onTap: () {
-                                                showModalBottomSheet(
-                                                    context: Get.context!,
-                                                    isScrollControlled: true,
-                                                    useSafeArea: true,
-                                                    useRootNavigator: true,
-                                                    shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.vertical(top: Radius.circular(20))
-                                                    ),
-                                                    builder: (context) {
-                                                      return _openZap(controller);
-                                                    }
-                                                );
-                                              },
-                                              child: Text(
-                                                  'Схема товара',
-                                                  style: TextStyle(
-                                                      color: Color(0xFF14BFFF),
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.w700,
-                                                      decoration: TextDecoration.underline,
-                                                      decorationColor: Color(0xFF14BFFF),
-                                                      height: 1.30
+                                                )
+                                            )
+                                          ]
+                                      ),
+                                      h(22),
+                                      _imageCard(controller),
+                                      if (controller.webController != null) PrimaryButton(text: 'Описание товара', height: 40, onPressed: () {
+                                        Navigator.of(context).push(
+                                            PageRouteBuilder(
+                                                opaque: false,
+                                                pageBuilder: (context, animation, secondaryAnimation) {
+                                                  return Scaffold(
+                                                      backgroundColor: Colors.black.withOpacityX(0.5),
+                                                      body: SafeArea(
+                                                          child: Stack(
+                                                              children: [
+                                                                Positioned(
+                                                                    top: 10,
+                                                                    right: 0,
+                                                                    child: IconButton(
+                                                                        onPressed: Get.back,
+                                                                        icon: Icon(Icons.close, size: 24, color: Colors.white)
+                                                                    )
+                                                                ),
+                                                                Container(
+                                                                    decoration: BoxDecoration(
+                                                                        color: Colors.white,
+                                                                        borderRadius: BorderRadius.circular(20)
+                                                                    ),
+                                                                    height: Get.height * 0.8,
+                                                                    clipBehavior: Clip.antiAlias,
+                                                                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                                                    margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 40, left: 20, right: 20),
+                                                                    child: WebViewWidget(controller: controller.webController!)
+                                                                )
+                                                              ]
+                                                          )
+                                                      )
+                                                  );
+                                                },
+                                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                  return SlideTransition(
+                                                      position: Tween<Offset>(
+                                                        begin: const Offset(0, 1),
+                                                        end: Offset.zero,
+                                                      ).animate(animation),
+                                                      child: child
+                                                  );
+                                                }
+                                            )
+                                        );
+                                      }),
+                                      if (controller.product.value!.schema.isNotEmpty || controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            h(32),
+                                            if (controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) Text(
+                                                'Доступные варианты',
+                                                style: TextStyle(
+                                                    color: Color(0xFF1E1E1E),
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w700
+                                                )
+                                            ),
+                                            h(16),
+                                            Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  if (controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) Flexible(
+                                                      child: Wrap(
+                                                          runSpacing: 8,
+                                                          spacing: 8,
+                                                          children: List.generate(controller.product.value!.childProducts.length, (index) {
+                                                            final child = controller.product.value!.childProducts[index];
+
+                                                            return GestureDetector(
+                                                                onTap: () => controller.selectChild.value = child.id,
+                                                                child: Column(
+                                                                    children: [
+                                                                      Container(
+                                                                          decoration: BoxDecoration(
+                                                                              borderRadius: BorderRadius.circular(8),
+                                                                              color: controller.selectChild.value == child.id || controller.selectChild.isEmpty && index == 0 ? primaryColor : Colors.grey
+                                                                          ),
+                                                                          clipBehavior: Clip.antiAlias,
+                                                                          padding: EdgeInsets.all(3),
+                                                                          child: ClipRRect(
+                                                                              borderRadius: BorderRadius.circular(4),
+                                                                              child: CachedNetworkImage(
+                                                                                  imageUrl: child.image,
+                                                                                  errorWidget: (c, e, i) {
+                                                                                    return Image.asset('assets/image/no_image.png');
+                                                                                  },
+                                                                                  height: 40,
+                                                                                  width: 40,
+                                                                                  fit: BoxFit.cover
+                                                                              )
+                                                                          )
+                                                                      ),
+                                                                      h(4),
+                                                                      Text(
+                                                                          child.color,
+                                                                          textAlign: TextAlign.right,
+                                                                          style: TextStyle(
+                                                                              color: Color(0xFF8A95A8),
+                                                                              fontSize: 11
+                                                                          )
+                                                                      )
+                                                                    ]
+                                                                )
+                                                            );
+                                                          })
+                                                      )
+                                                  ),
+                                                  if (controller.product.value!.schema.isNotEmpty) Flexible(
+                                                      child: SizedBox(
+                                                          width: 106,
+                                                          child: InkWell(
+                                                              onTap: () {
+                                                                showModalBottomSheet(
+                                                                    context: Get.context!,
+                                                                    isScrollControlled: true,
+                                                                    useSafeArea: true,
+                                                                    useRootNavigator: true,
+                                                                    shape: RoundedRectangleBorder(
+                                                                        borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+                                                                    ),
+                                                                    builder: (context) {
+                                                                      return _openZap(controller);
+                                                                    }
+                                                                );
+                                                              },
+                                                              child: Text(
+                                                                  'Схема товара',
+                                                                  style: TextStyle(
+                                                                      color: Color(0xFF14BFFF),
+                                                                      fontSize: 14,
+                                                                      fontWeight: FontWeight.w700,
+                                                                      decoration: TextDecoration.underline,
+                                                                      decorationColor: Color(0xFF14BFFF),
+                                                                      height: 1.30
+                                                                  )
+                                                              )
+                                                          )
+                                                      )
                                                   )
-                                              )
-                                          )
-                                      )
-                                    )
-                                  ]
-                                )
-                              ]
-                            ),
-                            h(32),
-                            if (controller.product.value!.attributes.isNotEmpty) _attributes(controller),
-                            h(30),
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  if (controller.childProducts.isNotEmpty) Expanded(
-                                      child: PrimaryButton(text: 'Уцененные товары', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: controller.scrollToUc)
-                                  ),
-                                  if (controller.childProducts.isNotEmpty) w(10),
-                                  Expanded(
-                                      child: PrimaryButton(text: 'Торговаться', height: 40, onPressed: () {
+                                                ]
+                                            )
+                                          ]
+                                      ),
+                                      h(32),
+                                      if (controller.product.value!.attributes.isNotEmpty) _attributes(controller),
+                                      h(30),
+                                      Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            if (controller.childProducts.isNotEmpty) Expanded(
+                                                child: PrimaryButton(text: 'Уцененные товары', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: controller.scrollToUc)
+                                            ),
+                                            if (controller.childProducts.isNotEmpty) w(10),
+                                            Expanded(
+                                                child: PrimaryButton(text: 'Поторговаться', height: 40, onPressed: () {
+                                                  showModalBottomSheet(
+                                                      context: Get.context!,
+                                                      isScrollControlled: true,
+                                                      useSafeArea: true,
+                                                      useRootNavigator: true,
+                                                      shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+                                                      ),
+                                                      builder: (context) {
+                                                        return _openX(controller);
+                                                      }
+                                                  );
+                                                })
+                                            )
+                                          ]
+                                      ),
+                                      h(30),
+                                      if (controller.time.value.inSeconds > 0) Text('До окончания акции:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                                      if (controller.time.value.inSeconds > 0) h(10),
+                                      if (controller.time.value.inSeconds > 0) _buildTimerBox(controller),
+                                      if (controller.time.value.inSeconds > 0) h(20),
+                                      if (controller.time.value.inSeconds > 0) PrimaryButton(text: 'Посмотреть все акции', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {}),
+                                      if (controller.reviews.isNotEmpty) _buildReviews(controller),
+                                      if (controller.product.value?.chain?.products != null) _buildChains(controller),
+                                      if (controller.childProducts.isNotEmpty) _buildChilds(controller),
+                                      if (controller.accessories.isNotEmpty) _buildAccessories(controller),
+                                      if (controller.video.isNotEmpty) _buildVideo(controller),
+                                      if (controller.questions.isNotEmpty) _buildQuestion(controller),
+                                      if (controller.recipes.isNotEmpty) NewsSection(news: controller.recipes, title: 'Рецепты', recipe: true),
+                                      if (controller.surveys.isNotEmpty) NewsSection(news: controller.surveys, title: 'Обзоры'),
+                                      if (controller.rec.isNotEmpty) NewsSection(news: controller.rec, title: 'Советы'),
+                                      h(20),
+                                      PrimaryButton(text: 'Остались вопросы к товару', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {
                                         showModalBottomSheet(
                                             context: Get.context!,
                                             isScrollControlled: true,
@@ -267,45 +359,18 @@ class ProductView extends StatelessWidget {
                                                 borderRadius: BorderRadius.vertical(top: Radius.circular(20))
                                             ),
                                             builder: (context) {
-                                              return _openX(controller);
+                                              return _openQuestion(controller);
                                             }
                                         );
-                                      })
+                                      }),
+                                      h(30)
+                                    ]
                                   )
-                                ]
-                            ),
-                            h(30),
-                            if (controller.time.value.inSeconds > 0) Text('До окончания акции:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                            if (controller.time.value.inSeconds > 0) h(10),
-                            if (controller.time.value.inSeconds > 0) _buildTimerBox(controller),
-                            if (controller.time.value.inSeconds > 0) h(20),
-                            if (controller.time.value.inSeconds > 0) PrimaryButton(text: 'Посмотреть все акции', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {}),
-                            if (controller.reviews.isNotEmpty) _buildReviews(controller),
-                            if (controller.product.value?.chain?.products != null) _buildChains(controller),
-                            if (controller.childProducts.isNotEmpty) _buildChilds(controller),
-                            if (controller.accessories.isNotEmpty) _buildAccessories(controller),
-                            if (controller.video.isNotEmpty) _buildVideo(controller),
-                            if (controller.questions.isNotEmpty) _buildQuestion(controller),
-                            if (controller.recipes.isNotEmpty) NewsSection(news: controller.recipes, title: 'Рецепты'),
-                            if (controller.surveys.isNotEmpty) NewsSection(news: controller.surveys, title: 'Обзоры'),
-                            if (controller.rec.isNotEmpty) NewsSection(news: controller.rec, title: 'Советы'),
-                            h(20),
-                            PrimaryButton(text: 'Остались вопросы к товару', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {
-                              showModalBottomSheet(
-                                  context: Get.context!,
-                                  isScrollControlled: true,
-                                  useSafeArea: true,
-                                  useRootNavigator: true,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(top: Radius.circular(20))
-                                  ),
-                                  builder: (context) {
-                                    return _openQuestion(controller);
-                                  }
-                              );
-                            }),
-                            h(30)
-                          ]
+                                )
+                              ]
+                          ),
+                          SearchWidget()
+                        ]
                       )
                   ),
                   Positioned(
@@ -369,24 +434,7 @@ class ProductView extends StatelessWidget {
                                     ),
                                     w(10),
                                     Expanded(
-                                        child: PrimaryButton(text: controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? 'Предзаказ' : 'Купить', height: 40, onPressed: () async {
-                                          if (controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0) {
-                                            showModalBottomSheet(
-                                                context: Get.context!,
-                                                isScrollControlled: true,
-                                                useSafeArea: true,
-                                                useRootNavigator: true,
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.vertical(top: Radius.circular(20))
-                                                ),
-                                                builder: (context) {
-                                                  return _openPreOrder(controller);
-                                                }
-                                            );
-
-                                            return;
-                                          }
-
+                                        child: PrimaryButton(text: controller.navController.isCart(id) ? 'В корзине' : controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? 'Предзаказ' : 'Купить', height: 40, onPressed: () async {
                                           String idNew = id;
 
                                           if (controller.selectChild.isNotEmpty) {
@@ -518,8 +566,10 @@ class ProductView extends StatelessWidget {
                                   tween: Tween(begin: controller.saleTransition.value, end: controller.saleTransitionEnd.value),
                                   duration: Duration(milliseconds: 500),
                                   builder: (context, value, child) {
+                                    String currencySymbol = controller.product.value!.price.replaceAll(RegExp(r'[\d\s]+'), '').trim();
+
                                     return Text(
-                                        Helper.formatPrice(value),
+                                        Helper.formatPrice(value, symbol: currencySymbol),
                                         style: TextStyle(color: firstColor,
                                             fontSize: 16,
                                             fontWeight: FontWeight.w500)
@@ -627,7 +677,7 @@ class ProductView extends StatelessWidget {
                           ]
                       )
                   ),
-                  if (controller.navController.user.value == null) h(10),
+                  h(10),
                   TextFormField(
                       controller: controller.textXField,
                       decoration: decorationInput(hint: 'Обоснование для получения скидки', contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4)),
@@ -1024,166 +1074,6 @@ class ProductView extends StatelessWidget {
     );
   }
 
-  Widget _openPreOrder(ProductController controller) {
-    final product = controller.product.value!;
-
-    return Padding(
-        padding: EdgeInsets.only(
-            left: 16, right: 16, top: 20, bottom: MediaQuery.of(Get.context!).viewInsets.bottom + 20
-        ),
-        child: Form(
-            key: controller.formKey5,
-            child: Obx(() => Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                      'Желаете получить товар среди первых?',
-                      style: TextStyle(
-                          color: Color(0xFF1E1E1E),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600
-                      )
-                  ),
-                  h(6),
-                  Text(
-                      'Для предзаказа заполните форму ниже.',
-                      style: TextStyle(
-                          color: Color(0xFF1E1E1E),
-                          fontSize: 14
-                      )
-                  ),
-                  h(16),
-                  Row(
-                      children: [
-                        ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: CachedNetworkImage(
-                                imageUrl: product.image,
-                                errorWidget: (c, e, i) {
-                                  return Image.asset('assets/image/no_image.png');
-                                },
-                                height: 64,
-                                width: 64,
-                                fit: BoxFit.cover
-                            )
-                        ),
-                        w(12),
-                        Expanded(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                      product.name,
-                                      style: TextStyle(
-                                          color: Color(0xFF1E1E1E),
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700
-                                      )
-                                  ),
-                                  if (product.color.isNotEmpty) Text(
-                                      'Цвет: ${product.color}',
-                                      style: TextStyle(
-                                          color: Color(0xFF8A95A8),
-                                          fontSize: 10
-                                      )
-                                  )
-                                ]
-                            )
-                        ),
-                        w(12),
-                        Text(
-                            product.special.isNotEmpty ? product.special : product.price,
-                            style: TextStyle(
-                                color: Color(0xFF1E1E1E),
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700
-                            )
-                        )
-                      ]
-                  ),
-                  h(20),
-                  TextFormField(
-                      controller: controller.fioPreField,
-                      cursorHeight: 15,
-                      decoration: decorationInput(hint: 'ФИО*', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: (val) {
-                        if ((val ?? '').isEmpty) {
-                          return 'Напишите ваше ФИО';
-                        }
-
-                        return null;
-                      }
-                  ),
-                  h(10),
-                  PhoneFormField(
-                    controller: controller.phonePreField,
-                    validator: PhoneValidator.compose([PhoneValidator.required(Get.context!, errorText: 'Номер телефона обязателен'), PhoneValidator.validMobile(Get.context!, errorText: 'Номер телефона некорректен')]),
-                    countrySelectorNavigator: const CountrySelectorNavigator.draggableBottomSheet(),
-                    isCountrySelectionEnabled: true,
-                    isCountryButtonPersistent: true,
-                    autofillHints: const [AutofillHints.telephoneNumber],
-                    countryButtonStyle: const CountryButtonStyle(
-                        showDialCode: true,
-                        showIsoCode: false,
-                        showFlag: true,
-                        showDropdownIcon: false,
-                        flagSize: 20
-                    ),
-                    decoration: decorationInput(contentPadding: const EdgeInsets.symmetric(horizontal: 8)),
-                  ),
-                  h(10),
-                  TextFormField(
-                      controller: controller.textPreField,
-                      decoration: decorationInput(hint: 'Текст', contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4)),
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      maxLines: 3,
-                      cursorHeight: 15,
-                      validator: (val) {
-                        if ((val ?? '').isEmpty) {
-                          return 'Напишите ваш вопрос';
-                        }
-
-                        return null;
-                      }
-                  ),
-                  h(20),
-                  PrimaryButton(text: 'Оформить предзаказ', loader: true, height: 50, onPressed: controller.addPreOrder),
-                  h(12),
-                  Row(
-                      children: [
-                        Checkbox(
-                            value: controller.isPreAgree.value,
-                            overlayColor: WidgetStatePropertyAll(primaryColor),
-                            side: BorderSide(color: primaryColor, width: 2),
-                            checkColor: Colors.white,
-                            activeColor: primaryColor,
-                            visualDensity: VisualDensity.compact,
-                            onChanged: (bool? value) {
-                              controller.isPreAgree.value = value ?? false;
-                            }
-                        ),
-                        Expanded(
-                            child: Text(
-                                'Я прочитал политику обработки персональных данных и согласен с условиями',
-                                style: TextStyle(
-                                    color: Color(0xFF8A95A8),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.30
-                                )
-                            )
-                        )
-                      ]
-                  ),
-                  h(20)
-                ]
-            ))
-        )
-    );
-  }
-
   Widget _openQuestion(ProductController controller) {
     return Padding(
         padding: EdgeInsets.only(
@@ -1229,21 +1119,26 @@ class ProductView extends StatelessWidget {
                   Row(
                       children: [
                         Expanded(
-                            child: PhoneFormField(
-                              controller: controller.phoneField,
-                              validator: PhoneValidator.compose([PhoneValidator.required(Get.context!, errorText: 'Номер телефона обязателен'), PhoneValidator.validMobile(Get.context!, errorText: 'Номер телефона некорректен')]),
-                              countrySelectorNavigator: const CountrySelectorNavigator.draggableBottomSheet(),
-                              isCountrySelectionEnabled: true,
-                              isCountryButtonPersistent: true,
-                              autofillHints: const [AutofillHints.telephoneNumber],
-                              countryButtonStyle: const CountryButtonStyle(
-                                  showDialCode: true,
-                                  showIsoCode: false,
-                                  showFlag: true,
-                                  showDropdownIcon: false,
-                                  flagSize: 20
-                              ),
-                              decoration: decorationInput(contentPadding: const EdgeInsets.symmetric(horizontal: 8)),
+                            child: SizedBox(
+                              height: 49,
+                              child: PhoneFormField(
+                                controller: controller.phoneField,
+                                validator: PhoneValidator.compose([PhoneValidator.required(Get.context!, errorText: 'Номер телефона обязателен'), PhoneValidator.validMobile(Get.context!, errorText: 'Номер телефона некорректен')]),
+                                countrySelectorNavigator: const CountrySelectorNavigator.draggableBottomSheet(),
+                                isCountrySelectionEnabled: true,
+                                isCountryButtonPersistent: true,
+                                autofillHints: const [AutofillHints.telephoneNumber],
+                                cursorHeight: 15,
+                                countryButtonStyle: const CountryButtonStyle(
+                                    showDialCode: true,
+                                    showIsoCode: false,
+                                    showFlag: true,
+                                    padding: EdgeInsets.only(left: 14),
+                                    showDropdownIcon: false,
+                                    flagSize: 20
+                                ),
+                                decoration: decorationInput(contentPadding: const EdgeInsets.symmetric(horizontal: 8)),
+                              )
                             )
                         ),
                         w(10),
@@ -1464,6 +1359,50 @@ class ProductView extends StatelessWidget {
               ),
               h(20),
               TextFormField(
+                  cursorHeight: 15,
+                  controller: controller.emailField,
+                  decoration: decorationInput(error: controller.emailValidate.value ? dangerColor : null, hint: 'E-mail*', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: controller.validateEmailX,
+                  validator: (val) {
+                    if ((val ?? '').isEmpty) {
+                      return 'Напишите E-mail';
+                    } else if ((val ?? '').isNotEmpty && !EmailValidator.validate(val!)) {
+                      return 'E-mail заполнен некорректно';
+                    }
+
+                    return null;
+                  }
+              ),
+              if (controller.emailValidate.value) Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 16),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                            'E-mail не существует',
+                            style: TextStyle(color: dangerColor, fontSize: 12)
+                        )
+                      ]
+                  )
+              ),
+              h(20),
+              TextFormField(
+                  controller: controller.nameField,
+                  cursorHeight: 15,
+                  decoration: decorationInput(hint: 'Ваше имя*', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  validator: (val) {
+                    if ((val ?? '').isEmpty) {
+                      return 'Напишите ваше ФИО';
+                    }
+
+                    return null;
+                  }
+              ),
+              h(20),
+              TextFormField(
                   controller: controller.questionField,
                   maxLines: 3,
                   cursorHeight: 15,
@@ -1520,7 +1459,7 @@ class ProductView extends StatelessWidget {
     return Column(
         children: [
           h(30),
-          ModuleTitle(title: 'Аксессуары и чапчасти', type: true),
+          ModuleTitle(title: 'Аксессуары', type: true),
           SizedBox(
               height: 340,
               child: PageView.builder(
@@ -1533,10 +1472,6 @@ class ProductView extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 12),
                         child: ProductCard(product: controller.accessories[index], addWishlist: () => controller.addWishlist(controller.accessories[index].id), buy: () async {
                           await controller.navController.addCart(controller.accessories[index].id);
-
-                          if (controller.navController.cartProducts.isNotEmpty) {
-                            Helper.snackBar(text: 'Товар успешно добавлен в корзину');
-                          }
                         }, margin: false)
                     ));
                   }
@@ -1564,10 +1499,6 @@ class ProductView extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
                         child: ProductCard(product: controller.childProducts[index], addWishlist: () => controller.addWishlist(controller.childProducts[index].id), buy: () async {
                           await controller.navController.addCart(controller.childProducts[index].id);
-
-                          if (controller.navController.cartProducts.isNotEmpty) {
-                            Helper.snackBar(text: 'Товар успешно добавлен в корзину');
-                          }
                         }, margin: false)
                     ));
                   }
@@ -2097,7 +2028,7 @@ class ProductView extends StatelessWidget {
         children: [
           _buildTimerItem(controller.time.value.inDays, Helper.getNoun(controller.time.value.inDays, 'День', 'Дня', 'Дней', before: false)),
           _buildTimerItem(controller.time.value.inHours % 24, Helper.getNoun(controller.time.value.inHours % 24, 'Час', 'Часа', 'Часов', before: false)),
-          _buildTimerItem(controller.time.value.inMinutes % 24, Helper.getNoun(controller.time.value.inMinutes % 24, 'Минута', 'Минут', 'Минут', before: false))
+          _buildTimerItem(controller.time.value.inMinutes % 24, Helper.getNoun(controller.time.value.inMinutes % 24, 'Минута', 'Минуты', 'Минут', before: false))
         ]
       )
     ));
@@ -2235,12 +2166,8 @@ class ProductView extends StatelessWidget {
                                               )
                                           ),
                                           w(8),
-                                          PrimaryButton(text: 'Купить', loader: true, width: 97, height: 44, onPressed: () async {
+                                          PrimaryButton(text: controller.navController.isCart(zap[productIndex].id) ? 'В корзине' : 'Купить', loader: true, width: 97, height: 44, onPressed: () async {
                                             controller.navController.addCart(zap[productIndex].id);
-
-                                            if (controller.navController.cartProducts.isNotEmpty) {
-                                              Helper.snackBar(text: 'Товар успешно добавлен в корзину');
-                                            }
                                           })
                                         ]
                                     );
@@ -2279,6 +2206,20 @@ class ProductView extends StatelessWidget {
   }
 
   Widget _imageCard(ProductController controller) {
+    List<String> images = controller.product.value!.images;
+    
+    if (controller.selectChild.isNotEmpty) {
+      final child = controller.childProducts.where((e) => e.id == controller.selectChild.value && (e.images ?? []).isNotEmpty);
+
+      if (child.where((e) => e.color.isNotEmpty).isNotEmpty) {
+        images.clear();
+      }
+
+      for (var i in child) {
+        images.addAll(i.images!);
+      }
+    }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2295,9 +2236,9 @@ class ProductView extends StatelessWidget {
                             await controller.pageController2.animateToPage(val, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                             controller.activeIndex.value = val;
                           },
-                          itemCount: controller.product.value!.images.length,
+                          itemCount: images.length,
                           itemBuilder: (context, index) {
-                            final item = controller.product.value!.images[index];
+                            final item = images[index];
 
                             return GestureDetector(
                               onTap: () {
@@ -2353,30 +2294,33 @@ class ProductView extends StatelessWidget {
                                 child: Text(controller.product.value!.category, style: TextStyle(color:primaryColor, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis)
                             ),
                             if (controller.product.value!.category.isNotEmpty) h(8),
-                            if (controller.product.value!.reward > 0) Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: ShapeDecoration(
-                                    color: Color(0xFF009FE6),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16)
+                            if (controller.product.value!.reward > 0) TooltipWidget(
+                                message: 'Количество бонусных баллов за покупку',
+                                child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: ShapeDecoration(
+                                        color: Color(0xFF009FE6),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(16)
+                                        )
+                                    ),
+                                    child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                              '${controller.product.value!.reward}',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600
+                                              )
+                                          ),
+                                          w(2),
+                                          Image.asset('assets/icon/rang.png')
+                                        ]
                                     )
-                                ),
-                                child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                          '${controller.product.value!.reward}',
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600
-                                          )
-                                      ),
-                                      w(2),
-                                      Image.asset('assets/icon/rang.png')
-                                    ]
                                 )
                             )
                           ]
@@ -2389,12 +2333,12 @@ class ProductView extends StatelessWidget {
                           children: [
                             InkWell(
                                 onTap: () => controller.addWishlist(controller.product.value!.id),
-                                child: Icon(Helper.wishlist.value.contains(controller.product.value!.id) ? Icons.favorite : Icons.favorite_border, color: Helper.wishlist.value.contains(controller.product.value!.id) ? primaryColor : Colors.black, size: 18)
+                                child: Icon(Helper.wishlist.value.contains(controller.product.value!.id) ? Icons.favorite : Icons.favorite_border, color: Helper.wishlist.value.contains(controller.product.value!.id) ? primaryColor : Colors.black, size: 28)
                             ),
                             h(8),
                             InkWell(
                                 onTap: () => Helper.addCompare(controller.product.value!.id),
-                                child: Image.asset('assets/icon/rat${Helper.compares.value.contains(controller.product.value!.id) ? '2' : ''}.png', width: 18, fit: BoxFit.cover)
+                                child: Image.asset('assets/icon/rat${Helper.compares.value.contains(controller.product.value!.id) ? '2' : ''}.png', width: 24, fit: BoxFit.cover)
                             )
                           ]
                       )
@@ -2413,11 +2357,11 @@ class ProductView extends StatelessWidget {
                   controller.activeIndex.value = val;
                 },
                 padEnds: false,
-                itemCount: controller.product.value!.images.length,
+                itemCount: images.length,
                 itemBuilder: (context, index) {
-                  final item = controller.product.value!.images[index];
+                  final item = images[index];
 
-                  return Container(
+                  return Obx(() => Container(
                       width: 79,
                       height: 64,
                       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -2465,7 +2409,7 @@ class ProductView extends StatelessWidget {
                               ]
                           )
                       )
-                  );
+                  ));
                 }
             )
         ),
@@ -2484,6 +2428,7 @@ class ProductView extends StatelessWidget {
           AnimatedContainer(
               duration: Duration(milliseconds: 300),
               clipBehavior: Clip.hardEdge,
+              key: controller.attrKey,
               decoration: BoxDecoration(),
               constraints: controller.isExpanded2.value ? null : BoxConstraints(maxHeight: 20 * (controller.product.value!.attributes.length / 5)),
               child: Wrap(
@@ -2492,7 +2437,13 @@ class ProductView extends StatelessWidget {
           ),
           if (controller.product.value!.attributes.length > 5) h(10),
           if (controller.product.value!.attributes.length > 5) GestureDetector(
-            onTap: () => controller.isExpanded2.value = !controller.isExpanded2.value,
+            onTap: () {
+              if (controller.isExpanded2.value) {
+                controller.scrollToAttr();
+              }
+
+              controller.isExpanded2.value = !controller.isExpanded2.value;
+            },
             child: Text(
               controller.isExpanded2.value ? 'Свернуть' : 'Все характеристики',
               style: TextStyle(

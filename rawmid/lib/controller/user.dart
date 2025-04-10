@@ -257,8 +257,10 @@ class UserController extends GetxController {
         phoneField.value = PhoneNumber.parse(api.phone);
         phoneBuhField.value = PhoneNumber.parse(api.ur.phoneBuh);
       } catch(e) {
-        //
+        phoneField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
+        phoneBuhField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
       }
+
       controllers['firstname']!.text = api.firstname;
       controllers['lastname']!.text = api.lastname;
       controllers['email']!.text = api.email;
@@ -405,8 +407,15 @@ class UserController extends GetxController {
         }
       });
       body.putIfAbsent('customer_group_id', () => '8');
-      ProfileApi.save(body);
       Helper.closeKeyboard();
+
+      final api = await ProfileApi.save(body);
+
+      if (api != null) {
+        user.value = api;
+      }
+
+      edit.value = false;
     }
   }
 
@@ -423,7 +432,14 @@ class UserController extends GetxController {
         }
       });
       body.putIfAbsent('customer_group_id', () => '9');
-      ProfileApi.save(body);
+      Helper.closeKeyboard();
+      final api = await ProfileApi.save(body);
+
+      if (api != null) {
+        user.value = api;
+      }
+
+      edit.value = false;
     }
   }
 

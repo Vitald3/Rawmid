@@ -28,6 +28,22 @@ class CartApi {
     return items;
   }
 
+  static Future<bool> getColors(String id) async {
+    try {
+      final response = await http.post(Uri.parse(checkColorsUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'product_id': id});
+      final json = jsonDecode(response.body);
+
+      return json['check'] ?? false;
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return false;
+  }
+
   static Future<List<CartModel>> addCart(Map<String, dynamic> body) async {
     List<CartModel> items = [];
 

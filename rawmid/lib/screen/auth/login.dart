@@ -116,10 +116,10 @@ class LoginView extends StatelessWidget {
                                           TextFormField(
                                               cursorHeight: 15,
                                               controller: controller.passwordField,
-                                              obscureText: controller.isPasswordVisible.value,
+                                              obscureText: !controller.isPasswordVisible.value,
                                               autovalidateMode: AutovalidateMode.onUserInteraction,
                                               decoration: decorationInput(hint: 'Введите пароль', suffixIcon: IconButton(
-                                                  icon: Icon(controller.isPasswordVisible.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                                  icon: Icon(!controller.isPasswordVisible.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
                                                   onPressed: () => controller.isPasswordVisible.value = !controller.isPasswordVisible.value
                                               )),
                                               onChanged: (val) => controller.validate(),

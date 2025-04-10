@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/controller/cart.dart';
+import 'package:rawmid/screen/product/product.dart';
 import 'package:rawmid/widget/primary_button.dart';
 import '../../model/cart.dart';
 import '../../utils/constant.dart';
@@ -78,48 +79,58 @@ class CartView extends StatelessWidget {
   Widget _cartItemTile(CartModel product, Function(CartModel) plus, Function(CartModel) minus, Function(String) addWishlist) {
     return Padding(
         padding: EdgeInsets.only(bottom: 12),
-        child:  Row(
+        child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      image: DecorationImage(
-                          image: product.image.isNotEmpty ? CachedNetworkImageProvider(product.image) : AssetImage('assets/image/empty.png'),
-                          fit: BoxFit.cover
+              GestureDetector(
+                  onTap: () {
+                    Get.to(() => ProductView(id: product.id));
+                  },
+                  child: Container(
+                      width: 70,
+                      height: 70,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          image: DecorationImage(
+                              image: product.image.isNotEmpty ? CachedNetworkImageProvider(product.image) : AssetImage('assets/image/empty.png'),
+                              fit: BoxFit.cover
+                          )
                       )
                   )
               ),
               w(12),
               Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            product.name,
-                            style: TextStyle(
-                                color: Color(0xFF1E1E1E),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700
+                  child: GestureDetector(
+                      onTap: () {
+                        Get.to(() => ProductView(id: product.id));
+                      },
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                product.name,
+                                style: TextStyle(
+                                    color: Color(0xFF1E1E1E),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700
+                                )
+                            ),
+                            if (product.color.isNotEmpty) h(4),
+                            if (product.color.isNotEmpty) Text(
+                                'Цвет: ${product.color}',
+                                style: TextStyle(fontSize: 12, color: Colors.grey[600])
+                            ),
+                            h(8),
+                            Text(
+                                product.price,
+                                style: TextStyle(
+                                    color: Color(0xFF1E1E1E),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700
+                                )
                             )
-                        ),
-                        if (product.color.isNotEmpty) h(4),
-                        if (product.color.isNotEmpty) Text(
-                            'Цвет: ${product.color}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600])
-                        ),
-                        h(8),
-                        Text(
-                            product.price,
-                            style: TextStyle(
-                                color: Color(0xFF1E1E1E),
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700
-                            )
-                        )
-                      ]
+                          ]
+                      )
                   )
               ),
               w(6),

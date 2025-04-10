@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rawmid/controller/navigation.dart';
+import 'package:rawmid/model/city.dart';
 import '../../utils/constant.dart';
 import '../../utils/utils.dart';
 import '../../widget/h.dart';
@@ -46,7 +47,7 @@ class CitySearch extends GetView<NavigationController> {
                             onTap: () {
                               controller.city.value = controller.filteredCities[index].name;
                               controller.searchCity.value = '';
-                              Get.back();
+                              controller.changeCity(controller.filteredCities[index]);
                             }
                         );
                       }
@@ -60,9 +61,9 @@ class CitySearch extends GetView<NavigationController> {
                             contentPadding: EdgeInsets.zero,
                             title: Text(controller.filteredLocation[index].label),
                             onTap: () {
-                              controller.city.value = controller.filteredLocation[index].label;
+                              controller.city.value = controller.filteredLocation[index].value.replaceAll('г. ', '');
                               controller.searchCity.value = '';
-                              Get.back();
+                              controller.changeCity(CityModel(id: int.tryParse(controller.filteredLocation[index].fiasId) ?? 0, name: controller.filteredLocation[index].value.replaceAll('г. ', '')));
                             }
                         );
                       }

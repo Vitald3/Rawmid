@@ -6,19 +6,21 @@ import 'package:rawmid/utils/helper.dart';
 import '../../controller/news.dart';
 import '../../utils/constant.dart';
 import '../../widget/h.dart';
+import '../../widget/primary_button.dart';
 import '../../widget/search.dart';
 import '../../widget/search_bar.dart';
 import '../../widget/w.dart';
 
 class NewsView extends StatelessWidget {
-  const NewsView({super.key, required this.id});
+  const NewsView({super.key, required this.id, required this.recipe});
 
   final String id;
+  final bool recipe;
 
   @override
   Widget build(BuildContext context) {
     return GetBuilder<NewsController>(
-        init: NewsController(id),
+        init: NewsController(id, recipe),
         builder: (controller) => Scaffold(
             appBar: AppBar(
                 backgroundColor: Colors.white,
@@ -41,12 +43,14 @@ class NewsView extends StatelessWidget {
             ),
             backgroundColor: Colors.white,
             body: SafeArea(
+                bottom: false,
                 child: Obx(() => Stack(
                     alignment: Alignment.center,
                     children: [
                       if (controller.isLoading.value) Container(
                           height: Get.height,
                           color: Colors.white,
+                          padding: EdgeInsets.only(bottom: 50 + MediaQuery.of(context).viewPadding.bottom),
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -114,7 +118,7 @@ class NewsView extends StatelessWidget {
                                                                 )
                                                               ]
                                                           ),
-                                                          Row(
+                                                          if (controller.news.value!.time.isNotEmpty) Row(
                                                               mainAxisSize: MainAxisSize.min,
                                                               children: [
                                                                 Image.asset('assets/icon/time.png', width: 16),
@@ -156,7 +160,19 @@ class NewsView extends StatelessWidget {
                           )
                       ),
                       if (controller.isLoading.value) SearchWidget(),
-                      if (!controller.isLoading.value) Center(child: CircularProgressIndicator(color: primaryColor))
+                      if (!controller.isLoading.value) Center(child: CircularProgressIndicator(color: primaryColor)),
+                      if (controller.isLoading.value) Positioned(
+                          bottom: 10 + MediaQuery.of(context).viewPadding.bottom,
+                          left: 20,
+                          right: 20,
+                          child: PrimaryButton(text: 'Все ${recipe ? 'рецепты' : 'статьи'}', height: 40, background: Colors.white, borderColor: primaryColor, borderWidth: 2, textStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.w700), onPressed: () {
+                            if (recipe) {
+                              Get.offNamed('/blog', arguments: true);
+                            } else {
+                              Get.offNamed('/blog');
+                            }
+                          })
+                      )
                     ]
                 ))
             )

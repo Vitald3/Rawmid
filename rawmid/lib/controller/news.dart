@@ -4,7 +4,8 @@ import 'package:rawmid/model/home/news.dart';
 
 class NewsController extends GetxController {
   String id;
-  NewsController(this.id) {
+  bool recipe;
+  NewsController(this.id, this.recipe) {
     initialize();
   }
 
@@ -12,7 +13,7 @@ class NewsController extends GetxController {
   Rxn<NewsModel> news = Rxn();
 
   Future initialize() async {
-    news.value = await BlogApi.getNew(id);
+    news.value = await BlogApi.getNew(id, recipe);
     isLoading.value = true;
   }
 

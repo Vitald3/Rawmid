@@ -5,7 +5,6 @@ import 'package:rawmid/screen/home/news_card.dart';
 import 'package:rawmid/screen/news/news.dart';
 import 'package:rawmid/utils/extension.dart';
 import 'package:rawmid/widget/module_title.dart';
-import 'package:rawmid/widget/primary_button.dart';
 import '../../controller/blog.dart';
 import '../../utils/constant.dart';
 import '../../widget/h.dart';
@@ -124,7 +123,7 @@ class BlogView extends StatelessWidget {
                                                                             Positioned(
                                                                                 left: 16,
                                                                                 right: 16,
-                                                                                bottom: 24,
+                                                                                bottom: 14,
                                                                                 child: Row(
                                                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                     children: [
@@ -141,7 +140,17 @@ class BlogView extends StatelessWidget {
                                                                                               )
                                                                                           )
                                                                                       ),
-                                                                                      PrimaryButton(text: 'Читать', height: 45, width: 90, onPressed: () => Get.to(() => NewsView(id: controller.featured[index].id)))
+                                                                                      ElevatedButton(
+                                                                                          style: ElevatedButton.styleFrom(
+                                                                                              backgroundColor: primaryColor,
+                                                                                              shape: RoundedRectangleBorder(
+                                                                                                  borderRadius: BorderRadius.circular(12)
+                                                                                              ),
+                                                                                              minimumSize: Size(90, 40)
+                                                                                          ),
+                                                                                          onPressed: () => Get.to(() => NewsView(id: controller.featured[index].id, recipe: false)),
+                                                                                          child: Text('Читать', style: TextStyle(fontSize: 14, color: Colors.white))
+                                                                                      )
                                                                                     ]
                                                                                 )
                                                                             )
@@ -196,7 +205,7 @@ class BlogView extends StatelessWidget {
                                                   physics: NeverScrollableScrollPhysics(),
                                                   padding: EdgeInsets.symmetric(horizontal: 10),
                                                   itemCount: controller.news.length,
-                                                  itemBuilder: (context, index) => NewsCard(news: controller.news[index])
+                                                  itemBuilder: (context, index) => NewsCard(news: controller.news[index], recipe: controller.isRecipe.value)
                                               )
                                             ]
                                         )

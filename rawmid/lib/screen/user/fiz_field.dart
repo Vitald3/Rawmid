@@ -21,10 +21,7 @@ class FizFieldView extends GetView<UserController> {
               validator: (value) => controller.activeField.value == 'lastname' ? controller.validators['lastname']!(value) : null,
               decoration: decorationInput(hint: 'Фамилия *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              textInputAction: TextInputAction.next,
-              onEditingComplete: controller.save,
-              onSaved: (val) => controller.save(),
-              onTap: controller.save
+              textInputAction: TextInputAction.next
           ),
           h(16),
           TextFormField(
@@ -34,10 +31,7 @@ class FizFieldView extends GetView<UserController> {
               validator: (value) => controller.activeField.value == 'firstname' ? controller.validators['firstname']!(value) : null,
               decoration: decorationInput(hint: 'Имя *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              textInputAction: TextInputAction.next,
-              onEditingComplete: controller.save,
-              onSaved: (val) => controller.save(),
-              onTap: controller.save
+              textInputAction: TextInputAction.next
           ),
           h(16),
           PhoneFormField(
@@ -55,8 +49,6 @@ class FizFieldView extends GetView<UserController> {
                 flagSize: 20
             ),
             textInputAction: TextInputAction.next,
-            onEditingComplete: controller.save,
-            onSaved: (val) => controller.save(),
             decoration: decorationInput(contentPadding: const EdgeInsets.symmetric(horizontal: 8)),
           ),
           h(16),
@@ -68,10 +60,7 @@ class FizFieldView extends GetView<UserController> {
               decoration: decorationInput(hint: 'E-mail *', error: controller.fizEmailValidate.value ? dangerColor : null, contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
               autovalidateMode: AutovalidateMode.onUserInteraction,
               textInputAction: TextInputAction.done,
-              onChanged: controller.validateEmailX,
-              onEditingComplete: controller.save,
-              onSaved: (val) => controller.save(),
-              onTap: controller.save
+              onChanged: controller.validateEmailX
           ),
           if (controller.fizEmailValidate.value) Padding(
               padding: const EdgeInsets.only(top: 4, left: 16),

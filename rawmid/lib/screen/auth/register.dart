@@ -165,10 +165,10 @@ class RegisterView extends StatelessWidget {
           TextFormField(
               cursorHeight: 15,
               controller: controllerField,
-              obscureText: isVisible,
+              obscureText: !isVisible,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: decorationInput(hint: 'Введите пароль', contentPadding: const EdgeInsets.symmetric(horizontal: 16), suffixIcon: IconButton(
-                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                  icon: Icon(!isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
                   onPressed: toggleVisibility
               )),
               onChanged: (val) => controller.validate(),

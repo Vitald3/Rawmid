@@ -200,25 +200,23 @@ class ProfileApi {
     return false;
   }
 
-  static Future<bool> save(Map<String, dynamic> body) async {
+  static Future<ProfileModel?> save(Map<String, dynamic> body) async {
     try {
       final response = await http.post(Uri.parse(saveUrl), headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       }, body: body);
+
       final json = jsonDecode(response.body);
 
-      if (json['message'] != null) {
-        Helper.snackBar(error: true, text: json['message']);
-        return false;
+      if (json['user'] != null) {
+        return ProfileModel.fromJson(json['user']);
       }
-
-      return json['status'] ?? false;
     } catch (e) {
       debugPrint(e.toString());
     }
 
-    return false;
+    return null;
   }
 
   static Future<List<MyReviewModel>> getReviews() async {
@@ -229,6 +227,7 @@ class ProfileApi {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
+
       final json = jsonDecode(response.body);
 
       if (json['reviews'] != null) {

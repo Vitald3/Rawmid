@@ -12,15 +12,46 @@ import '../utils/constant.dart';
 import '../utils/helper.dart';
 
 class HomeApi {
-  static Future<String> getCityByIP() async {
-    final response = await http.get(Uri.parse('http://ip-api.com/json/?lang=ru'));
+  static Future<Map<String, String>> getCityByIP() async {
+    try {
+      final response = await http.get(Uri.parse('http://ip-api.com/json/?lang=ru'));
 
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      return data['city'];
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['city'] != null) {
+          await http.post(Uri.parse(changeRegionUrl), headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+          }, body: {'city': data['city']!});
+        }
+
+        return {'city': data['city'] ?? '', 'code': data['countryCode'] ?? ''};
+      }
+
+    } catch (e) {
+      debugPrint(e.toString());
     }
 
-    return '';
+    return {};
+  }
+
+  static Future<String> changeCity(int fId) async {
+    try {
+      final response = await http.post(Uri.parse(changeRegionUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'fias_id': '$fId'});
+      final data = jsonDecode(response.body);
+
+      if (data['code'] != null) {
+        return data['code'];
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return 'KZ';
   }
 
   static Future<List<Location>> searchCity(String query) async {
@@ -49,6 +80,7 @@ class HomeApi {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       }, body: body);
+
       final json = jsonDecode(response.body);
 
       if (json['banners'] != null) {
@@ -81,7 +113,7 @@ class HomeApi {
     return null;
   }
 
-  static Future<MapEntry<String, int>> getUrlType(String link) async {
+  static Future<MapEntry<String, String>> getUrlType(String link) async {
     try {
       final response = await http.post(Uri.parse(getUrlTypeUrl), headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -89,12 +121,12 @@ class HomeApi {
       }, body: {'link': link});
       final json = jsonDecode(response.body);
 
-      return MapEntry(json['type'] ?? '', json['id'] ?? 0);
+      return MapEntry(json['type'] ?? '', '${json['category'] ?? json['id'] ?? ''}');
     } catch (e) {
       debugPrint(e.toString());
     }
 
-    return MapEntry('', 0);
+    return MapEntry('', '');
   }
 
   static Future<List<RankModel>> getRanks() async {
@@ -149,6 +181,28 @@ class HomeApi {
         'Content-Type': 'application/json',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
+      final json = jsonDecode(response.body);
+
+      if (json['products'] != null) {
+        for (var i in json['products']) {
+          items.add(ProductModel.fromJson(i));
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<List<ProductModel>> getViewed(List<String> pids) async {
+    List<ProductModel> items = [];
+
+    try {
+      final response = await http.post(Uri.parse(getViewedUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'pids': pids.join(',')});
       final json = jsonDecode(response.body);
 
       if (json['products'] != null) {

@@ -5,6 +5,7 @@ import 'package:rawmid/model/home/news.dart';
 
 class BlogController extends GetxController {
   RxBool isLoading = false.obs;
+  RxBool isRecipe = false.obs;
   RxList<NewsModel> news = <NewsModel>[].obs;
   RxList<NewsModel> featured = <NewsModel>[].obs;
   RxInt activeIndex = 0.obs;
@@ -17,7 +18,8 @@ class BlogController extends GetxController {
   }
 
   Future initialize() async {
-    final api = await BlogApi.blog();
+    final api = await BlogApi.blog(Get.arguments != null);
+    isRecipe.value = Get.arguments != null;
 
     if (api.isNotEmpty) {
       for (var i in api['blog']['news']) {

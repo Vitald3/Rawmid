@@ -8,6 +8,7 @@ import '../../model/home/product.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../widget/h.dart';
+import '../../widget/module_title.dart';
 import '../../widget/nav_menu.dart';
 import '../../widget/product_card.dart';
 import '../../widget/search.dart';
@@ -53,10 +54,12 @@ class CategoryItemView extends StatelessWidget {
                     return const Center(child: CircularProgressIndicator(color: primaryColor));
                   }
 
-                  int count = controller.products.length + 1;
+                  int count = 1;
 
                   if (controller.tab.value == 0) {
-                    count = (controller.products.length + 1) ~/ 2 + 1;
+                    count += (controller.products.length / 2).ceil();
+                  } else {
+                    count += controller.products.length;
                   }
 
                   return Stack(
@@ -82,7 +85,10 @@ class CategoryItemView extends StatelessWidget {
                                       controller.banners.isNotEmpty ? Container(
                                           color: Colors.white,
                                           child: SlideshowCatalogView(title: category.name, banners: controller.banners)
-                                      ) : h(20),
+                                      ) : Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                          child: ModuleTitle(title: category.name, type: true)
+                                      ),
                                       _buildProductList(controller)
                                     ]
                                 );
@@ -92,10 +98,40 @@ class CategoryItemView extends StatelessWidget {
                                 return Obx(() => Center(child: CircularProgressIndicator(color: primaryColor)));
                               }
 
-                              return Obx(() =>
-                              controller.tab.value == 0
-                                  ? _buildGrid(controller)
-                                  : _buildList(controller, index - 1)
+                              final gridIndex = index - 1;
+
+                              return ValueListenableBuilder<int>(
+                                valueListenable: Helper.trigger,
+                                builder: (context, items, child) {
+                                  if (controller.tab.value == 0) {
+                                    final int first = gridIndex * 2;
+                                    if (first >= controller.products.length) return const SizedBox();
+
+                                    final int? second =
+                                    (first + 1 < controller.products.length) ? first + 1 : null;
+
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildProductCard(
+                                                controller.products[first], controller)
+                                          ),
+                                          Expanded(
+                                            child: second != null
+                                                ? _buildProductCard(
+                                                controller.products[second], controller)
+                                                : SizedBox()
+                                          )
+                                        ]
+                                      ),
+                                    );
+                                  } else {
+                                    if (gridIndex >= controller.products.length) return const SizedBox();
+                                    return _buildList(controller, gridIndex);
+                                  }
+                                }
                               );
                             }
                         ),
@@ -116,7 +152,7 @@ class CategoryItemView extends StatelessWidget {
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (controller.products.isNotEmpty) const FilterView(),
+              const FilterView(),
               h(20),
               Row(
                   key: controller.targetKey,
@@ -132,7 +168,7 @@ class CategoryItemView extends StatelessWidget {
                             onPressed: () {
                               showModalBottomSheet(
                                   context: Get.context!,
-                                  useSafeArea: true,
+                                  useSafeArea: false,
                                   useRootNavigator: true,
                                   isScrollControlled: true,
                                   shape: RoundedRectangleBorder(
@@ -140,7 +176,7 @@ class CategoryItemView extends StatelessWidget {
                                   ),
                                   builder: (context) {
                                     return Container(
-                                      height: Get.height * 0.74,
+                                      height: Get.height * 0.6,
                                       padding: EdgeInsets.only(
                                         left: 8, right: 16, top: 20, bottom: MediaQuery.of(Get.context!).viewInsets.bottom + 20
                                       ),
@@ -235,36 +271,10 @@ class CategoryItemView extends StatelessWidget {
             addWishlist: () => controller.addWishlist(product.id),
             buy: () async {
               await controller.navController.addCart(product.id);
-
-              if (controller.navController.cartProducts.isNotEmpty) {
-                Helper.snackBar(text: 'Товар успешно добавлен в корзину');
-              }
+              controller.update();
             },
             margin: false
         )
-    );
-  }
-
-  Widget _buildGrid(CategoryController controller) {
-    List<Widget> rows = [];
-
-    for (int i = 0; i < controller.products.length; i += 2) {
-      List<Widget> rowWidgets = [];
-
-      rowWidgets.add(Expanded(child: _buildProductCard(controller.products[i], controller)));
-
-      if (i + 1 < controller.products.length) {
-        rowWidgets.add(Expanded(child: _buildProductCard(controller.products[i + 1], controller)));
-      } else {
-        rowWidgets.add(Expanded(child: Container()));
-      }
-
-      rows.add(Row(children: rowWidgets));
-    }
-
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: Column(children: rows)
     );
   }
 
@@ -277,10 +287,7 @@ class CategoryItemView extends StatelessWidget {
             addWishlist: () => controller.addWishlist(controller.products[index].id),
             buy: () async {
               await controller.navController.addCart(controller.products[index].id);
-
-              if (controller.navController.cartProducts.isNotEmpty) {
-                Helper.snackBar(text: 'Товар успешно добавлен в корзину');
-              }
+              controller.update();
             }
         )
     );

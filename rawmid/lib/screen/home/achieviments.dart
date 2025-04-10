@@ -19,7 +19,7 @@ class AchievementsSection extends StatelessWidget {
     int rIndex = 0;
 
     for (var (index, i) in item.ranks.indexed) {
-      if (int.parse('${i.rewards ?? 0}') >= item.rang) {
+      if ((int.tryParse('${i.rewards ?? 0}') ?? 0) >= item.rang) {
         rIndex = index - 1;
         break;
       }

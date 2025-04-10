@@ -14,12 +14,14 @@ class HomeController extends GetxController {
   RxList<BannerModel> banners = <BannerModel>[].obs;
   Rxn<AchievimentModel> achieviment = Rxn<AchievimentModel>();
   RxList<ProductModel> myProducts = <ProductModel>[].obs;
+  RxList<ProductModel> viewedList = <ProductModel>[].obs;
   RxList<ProductModel> shopProducts = <ProductModel>[].obs;
   RxList<SpecialModel> specials = <SpecialModel>[].obs;
   RxList<NewsModel> news = <NewsModel>[].obs;
   RxList<NewsModel> recipes = <NewsModel>[].obs;
   final navController = Get.find<NavigationController>();
   RxList<String> wishlist = (Helper.prefs.getStringList('wishlist') ?? <String>[]).obs;
+  var viewed = (Helper.prefs.getStringList('viewed') ?? <String>[]).obs;
 
   @override
   void onInit() {
@@ -28,8 +30,9 @@ class HomeController extends GetxController {
   }
 
   Future initialize() async {
+    isLoading.value = false;
     final banners = await HomeApi.getBanner({});
-    this.banners.addAll(banners);
+    this.banners.value = banners;
 
     final items = await HomeApi.getRanks();
     List<RankModel> ranks = [];
@@ -43,7 +46,7 @@ class HomeController extends GetxController {
     final user = navController.user.value;
 
     achieviment.value = AchievimentModel(
-        name: user?.rangStr ?? ranks.first.title ?? 'Пионер',
+        name: user?.rangStr ?? (ranks.isNotEmpty ? ranks.first.title ?? '' : 'Пионер'),
         rang: user?.rang ?? 0,
         max: ranks.isNotEmpty ? int.tryParse('${ranks.last.rewards}') ?? 12000 : 12000,
         ranks: ranks
@@ -52,23 +55,29 @@ class HomeController extends GetxController {
     isLoading.value = true;
 
     HomeApi.getSernum().then((e) {
-      myProducts.addAll(e);
+      myProducts.value = e;
     });
 
+    if (viewed.isNotEmpty) {
+      HomeApi.getViewed(viewed).then((e) {
+        viewedList.value = e;
+      });
+    }
+
     HomeApi.getFeatured().then((e) {
-      shopProducts.addAll(e);
+      shopProducts.value = e;
     });
 
     HomeApi.getRecords().then((e) {
-      specials.addAll(e);
+      specials.value = e;
     });
 
     HomeApi.getNews().then((e) {
-      news.addAll(e);
+      news.value = e;
     });
 
     HomeApi.getRecipes().then((e) {
-      recipes.addAll(e);
+      recipes.value = e;
     });
   }
 

@@ -37,12 +37,21 @@ class HomeView extends StatelessWidget {
                             }
                           }),
                           if (controller.myProducts.isNotEmpty) MyProductsSection(products: controller.myProducts),
-                          if (controller.shopProducts.isNotEmpty) StoreSection(products: controller.shopProducts, showMore: () => controller.navController.onItemTapped(1), addWishlist: controller.addWishlist, buy: (id) => controller.navController.addCart(id)),
+                          if (controller.shopProducts.isNotEmpty) StoreSection(products: controller.shopProducts, showMore: () => controller.navController.onItemTapped(1), addWishlist: controller.addWishlist, buy: (id) async {
+                            await controller.navController.addCart(id);
+                            controller.update();
+                          }),
+                          if (controller.viewedList.isNotEmpty) StoreSection(title: 'Просмотренные товары', products: controller.viewedList, addWishlist: controller.addWishlist, buy: (id) async {
+                            await controller.navController.addCart(id);
+                            controller.update();
+                          }),
                           if (controller.specials.isNotEmpty) PromotionsSection(specials: controller.specials),
                           if (controller.news.isNotEmpty) NewsSection(news: controller.news, padding: true, callback: () => Get.toNamed('/blog')),
                           if (controller.recipes.isNotEmpty) RecipesSection(recipes: controller.recipes, callback: () {
                             if (controller.navController.user.value == null) {
                               Get.toNamed('register');
+                            } else {
+                              Get.toNamed('/blog', arguments: true);
                             }
                           }),
                           Container(height: 40, color: Colors.white)

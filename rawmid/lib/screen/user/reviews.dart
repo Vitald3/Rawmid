@@ -55,6 +55,7 @@ class MyReviewsView extends StatelessWidget {
                                         runSpacing: 32,
                                         children: controller.reviews.map((item) {
                                           return Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Row(
                                                     children: [
@@ -121,6 +122,7 @@ class MyReviewsView extends StatelessWidget {
                                                               )
                                                           ),
                                                           child: Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
                                                               children: [
                                                                 Row(
                                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -229,7 +231,7 @@ class MyReviewsView extends StatelessWidget {
                           )
                       ),
                       Positioned(
-                          bottom: 0,
+                          bottom: 10 + MediaQuery.of(context).viewPadding.bottom,
                           left: 20,
                           right: 20,
                           child: PrimaryButton(text: 'Вернуться на главную', height: 40, background: Colors.white, borderColor: primaryColor, borderWidth: 2, textStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.w700), onPressed: () => controller.navController.onItemTapped(0))
