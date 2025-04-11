@@ -116,4 +116,22 @@ class CatalogApi {
 
     return map;
   }
+
+  static Future<Map<String, dynamic>> loadSpecialProducts(Map<String, dynamic> body) async {
+    try {
+      final response = await http.post(Uri.parse(loadSpecialProductsUrl), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: jsonEncode(body));
+      final json = jsonDecode(response.body);
+
+      if (json['products'] != null) {
+        return json;
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return {};
+  }
 }

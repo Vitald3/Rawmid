@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:rawmid/api/cart.dart';
 import 'package:rawmid/api/profile.dart';
 import 'package:rawmid/controller/cart.dart';
-import 'package:rawmid/controller/compare.dart';
+import 'package:rawmid/controller/home.dart';
 import 'package:rawmid/controller/wishlist.dart';
 import 'package:rawmid/model/catalog/category.dart';
 import 'package:rawmid/model/city.dart';
@@ -19,7 +19,7 @@ import '../model/home/product.dart';
 import '../model/profile/profile.dart';
 import '../screen/cart/cart.dart';
 import '../screen/catalog/catalog.dart';
-import '../screen/compare.dart';
+import '../screen/club/club.dart';
 import '../screen/home/home.dart';
 import '../screen/wishlist/wishlist.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -37,16 +37,16 @@ class NavigationController extends GetxController {
   final List<Widget> widgetOptions = <Widget>[
     const HomeView(),
     const CatalogView(),
-    const CompareView(),
     const WishlistView(),
-    const CartView()
+    const CartView(),
+    const ClubView()
   ];
   final List<String> titles = [
     'Главная',
     'Каталог',
-    'Сравнение',
     'Избранное',
-    'Корзина'
+    'Корзина',
+    'Клуб'
   ];
   RxBool reset = false.obs;
   Rxn<ProfileModel> user = Rxn<ProfileModel>();
@@ -73,12 +73,12 @@ class NavigationController extends GetxController {
     searchNews.clear();
     searchCategories.clear();
 
-    if (index == 3 && activeTab.value != 3) {
+    if (index == 2 && activeTab.value != 2) {
       final wishlistController = Get.find<WishlistController>();
       wishlistController.initialize();
-    } else if (index == 2 && activeTab.value != 2) {
-      final compareController = Get.find<CompareController>();
-      compareController.initialize();
+    } else if (index == 4 && user.value == null) {
+      Get.toNamed('/login')?.then((_) => activeTab.value = index);
+      return;
     }
 
     activeTab.value = index;
@@ -135,6 +135,15 @@ class NavigationController extends GetxController {
     }
 
     user.value = await ProfileApi.user();
+
+    if (Get.isRegistered<HomeController>()) {
+      final home = Get.find<HomeController>();
+
+      if (home.achieviment.value != null) {
+        home.achieviment.value!.rang = user.value?.rang ?? 0;
+      }
+    }
+
     await loadJsonFromAssets();
     filteredCities.value = cities;
 

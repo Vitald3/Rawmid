@@ -34,6 +34,8 @@ class HomeView extends StatelessWidget {
                           if (controller.achieviment.value != null) AchievementsSection(item: controller.achieviment.value!, callback: () {
                             if (controller.navController.user.value == null) {
                               Get.toNamed('register');
+                            } else {
+                              Get.toNamed('/achieviment');
                             }
                           }),
                           if (controller.myProducts.isNotEmpty) MyProductsSection(products: controller.myProducts),
@@ -49,7 +51,7 @@ class HomeView extends StatelessWidget {
                           if (controller.news.isNotEmpty) NewsSection(news: controller.news, padding: true, callback: () => Get.toNamed('/blog')),
                           if (controller.recipes.isNotEmpty) RecipesSection(recipes: controller.recipes, callback: () {
                             if (controller.navController.user.value == null) {
-                              Get.toNamed('register');
+                              Get.toNamed('register', parameters: {'route': '/blog'});
                             } else {
                               Get.toNamed('/blog', arguments: true);
                             }

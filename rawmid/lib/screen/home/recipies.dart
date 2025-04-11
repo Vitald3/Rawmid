@@ -6,10 +6,13 @@ import '../../widget/module_title.dart';
 import 'news_card.dart';
 
 class RecipesSection extends StatefulWidget {
-  const RecipesSection({super.key, required this.recipes, required this.callback});
+  const RecipesSection({super.key, required this.recipes, required this.callback, this.title, this.button, this.padding});
 
   final List<NewsModel> recipes;
   final Function() callback;
+  final String? title;
+  final bool? button;
+  final EdgeInsets? padding;
 
   @override
   State<RecipesSection> createState() => RecipesSectionState();
@@ -18,9 +21,14 @@ class RecipesSection extends StatefulWidget {
 class RecipesSectionState extends State<RecipesSection> {
   final pageController = PageController(viewportFraction: 0.5);
   int activeIndex = 0;
+  bool button = true;
 
   @override
   Widget build(BuildContext context) {
+    if (widget.button != null) {
+      button = widget.button ?? false;
+    }
+
     return ColoredBox(
         color: Colors.white,
         child: Column(
@@ -29,11 +37,11 @@ class RecipesSectionState extends State<RecipesSection> {
               h(30),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: ModuleTitle(title: 'Рецепты', callback: widget.callback, type: true),
+                child: ModuleTitle(title: widget.title ?? 'Рецепты', callback: widget.callback, type: true),
               ),
               h(15),
               Container(
-                  padding: const EdgeInsets.only(left: 4, right: 20),
+                  padding: widget.padding ?? EdgeInsets.only(left: 4, right: 20),
                   height: 256,
                   child: PageView.builder(
                       clipBehavior: Clip.none,
@@ -44,7 +52,7 @@ class RecipesSectionState extends State<RecipesSection> {
                       padEnds: false,
                       itemCount: widget.recipes.length,
                       itemBuilder: (context, index) {
-                        return NewsCard(news: widget.recipes[index], button: true, recipe: true);
+                        return NewsCard(news: widget.recipes[index], button: button, recipe: true);
                       }
                   )
               ),

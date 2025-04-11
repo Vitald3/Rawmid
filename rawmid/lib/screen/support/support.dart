@@ -189,7 +189,7 @@ class SupportView extends GetView<NavigationController> {
                                                             TextSpan(
                                                                 text: 'авторизироваться',
                                                                 recognizer: TapGestureRecognizer()..onTap = () {
-                                                                  Get.toNamed('/login', parameters: {'route': 'support'});
+                                                                  Get.toNamed('/login', parameters: {'route': '/support'});
                                                                 },
                                                                 style: TextStyle(
                                                                     color: primaryColor,

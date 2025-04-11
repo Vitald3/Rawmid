@@ -30,7 +30,14 @@ class BlogView extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           IconButton(
-                              onPressed: Get.back,
+                              onPressed: () {
+                                if (controller.id.isNotEmpty && controller.categories.isNotEmpty) {
+                                  controller.id.value = '';
+                                  return;
+                                }
+
+                                Get.back();
+                              },
                               icon: Image.asset('assets/icon/left.png')
                           ),
                           Image.asset('assets/image/logo.png', width: 70)
@@ -69,11 +76,11 @@ class BlogView extends StatelessWidget {
                                                   child: Column(
                                                       children: [
                                                         h(20),
-                                                        ModuleTitle(title: 'Статьи', type: true)
+                                                        ModuleTitle(title: Get.parameters['my_recipes'] == '1' ? 'Мои рецепты' : Get.parameters['my_survey'] == '1' ? 'Мои статьи' : controller.isRecipe.value ? 'Рецепты' : 'Статьи', type: true)
                                                       ]
                                                   )
                                               ),
-                                              Container(
+                                              if (controller.featured.isNotEmpty) Container(
                                                   padding: const EdgeInsets.only(left: 20),
                                                   height: 254,
                                                   child: PageView.builder(
@@ -193,8 +200,54 @@ class BlogView extends StatelessWidget {
                                                       )
                                                   ))
                                               ),
-                                              h(30),
-                                              GridView.builder(
+                                              if (controller.featured.isNotEmpty) h(30),
+                                              controller.categories.isNotEmpty && controller.id.isEmpty ? GridView.builder(
+                                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                      crossAxisCount: 2,
+                                                      mainAxisSpacing: 24,
+                                                      crossAxisSpacing: 12,
+                                                      childAspectRatio: 1,
+                                                      mainAxisExtent: 165
+                                                  ),
+                                                  shrinkWrap: true,
+                                                  physics: NeverScrollableScrollPhysics(),
+                                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                                  itemCount: controller.categories.length,
+                                                  itemBuilder: (context, index) => GestureDetector(
+                                                    onTap: () => controller.setCategory(controller.categories[index].id),
+                                                    child: Container(
+                                                        width: double.infinity,
+                                                        height: 165,
+                                                        clipBehavior: Clip.antiAlias,
+                                                        decoration: BoxDecoration(
+                                                            color: const Color(0xFFE4E4E4),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                            image: DecorationImage(image: CachedNetworkImageProvider(controller.categories[index].image), fit: BoxFit.cover)
+                                                        ),
+                                                        child: Stack(
+                                                            alignment: Alignment.center,
+                                                            children: [
+                                                              Positioned(
+                                                                  left: 0,
+                                                                  top: 0,
+                                                                  right: 0,
+                                                                  bottom: 0,
+                                                                  child: ColoredBox(color: Colors.black.withOpacityX(0.6))
+                                                              ),
+                                                              Text(
+                                                                  controller.categories[index].name,
+                                                                  textAlign: TextAlign.center,
+                                                                  style: TextStyle(
+                                                                      color: Colors.white,
+                                                                      fontSize: 16,
+                                                                      fontWeight: FontWeight.w700
+                                                                  )
+                                                              )
+                                                            ]
+                                                        )
+                                                    )
+                                                  )
+                                              ) : GridView.builder(
                                                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                       crossAxisCount: 2,
                                                       mainAxisSpacing: 15,
@@ -206,7 +259,8 @@ class BlogView extends StatelessWidget {
                                                   padding: EdgeInsets.symmetric(horizontal: 10),
                                                   itemCount: controller.news.length,
                                                   itemBuilder: (context, index) => NewsCard(news: controller.news[index], recipe: controller.isRecipe.value)
-                                              )
+                                              ),
+                                              h(20 + MediaQuery.of(context).viewPadding.bottom)
                                             ]
                                         )
                                       ]

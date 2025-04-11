@@ -234,7 +234,14 @@ class MyReviewsView extends StatelessWidget {
                           bottom: 10 + MediaQuery.of(context).viewPadding.bottom,
                           left: 20,
                           right: 20,
-                          child: PrimaryButton(text: 'Вернуться на главную', height: 40, background: Colors.white, borderColor: primaryColor, borderWidth: 2, textStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.w700), onPressed: () => controller.navController.onItemTapped(0))
+                          child: PrimaryButton(text: 'Вернуться на главную', height: 40, background: Colors.white, borderColor: primaryColor, borderWidth: 2, textStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.w700), onPressed: () {
+                            controller.navController.onItemTapped(0);
+                            Get.back();
+
+                            if (Navigator.canPop(context)) {
+                              Get.back();
+                            }
+                          })
                       )
                     ]
                 ))

@@ -2,13 +2,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:rawmid/model/home/news.dart';
+import '../model/home/category_news.dart';
 import '../utils/constant.dart';
 import '../utils/helper.dart';
 
 class BlogApi {
-  static Future<Map<String, dynamic>> blog(bool recipe) async {
+  static Future<Map<String, dynamic>> blog(bool recipe, {bool mySurvey = false, bool myRecipes = false, String id = ''}) async {
     try {
-      final response = await http.get(Uri.parse('$getBlogUrl&recipe=${recipe ? 1 : 0}'), headers: {
+      final response = await http.get(Uri.parse('$getBlogUrl&recipe=${recipe ? 1 : 0}${mySurvey ? '&mySurvey=1' : ''}${myRecipes ? '&myRecipes=1' : ''}${id.isNotEmpty ? '&id=$id' : ''}'), headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
@@ -40,5 +41,27 @@ class BlogApi {
     }
 
     return null;
+  }
+
+  static Future<List<CategoryNewsModel>> getCategoriesRecipe() async {
+    var items = <CategoryNewsModel>[];
+
+    try {
+      final response = await http.get(Uri.parse(getCategoriesRecipeUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+      final json = jsonDecode(response.body);
+
+      if (json['recipe_categories'] != null) {
+        for (var i in json['recipe_categories']) {
+          items.add(CategoryNewsModel.fromJson(i));
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
   }
 }

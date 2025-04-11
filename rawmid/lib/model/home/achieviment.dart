@@ -1,23 +1,38 @@
-import 'package:rawmid/model/home/rank.dart';
+import 'package:rawmid/model/club/achievement.dart';
 
 class AchievimentModel {
   late String name;
-  late int rang;
+  int rang = 0;
   late int max;
-  late List<RankModel> ranks;
+  late List<AchievementModel> achievements;
+  late List<AchievementModel> notAchievements;
 
-  AchievimentModel({required this.name, required this.rang, required this.max, required this.ranks});
+  AchievimentModel({required this.name, required this.rang, required this.max, required this.achievements, required this.notAchievements});
 
   AchievimentModel.fromJson(Map<String, dynamic> json) {
     name = json['name'];
     rang = json['rang'];
     max = json['max'];
 
-    if (json['ranks'] != null) {
-      for (var i in json['ranks']) {
-        ranks.add(RankModel.fromJson(i));
+    var items = <AchievementModel>[];
+
+    if (json['achievements'] != null) {
+      for (var i in json['achievements']) {
+        items.add(AchievementModel.fromJson(i));
       }
     }
+
+    achievements = items;
+
+    items = <AchievementModel>[];
+
+    if (json['not_achievements'] != null) {
+      for (var i in json['not_achievements']) {
+        items.add(AchievementModel.fromJson(i));
+      }
+    }
+
+    notAchievements = items;
   }
 
   Map<String, dynamic> toJson() {
@@ -25,7 +40,7 @@ class AchievimentModel {
     data['name'] = name;
     data['rang'] = rang;
     data['max'] = max;
-    data['ranks'] = ranks;
+    data['achievements'] = achievements;
     return data;
   }
 }

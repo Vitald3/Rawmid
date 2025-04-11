@@ -15,8 +15,28 @@ class CompareView extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<CompareController>(
         init: CompareController(),
-        builder: (controller) =>
-            SafeArea(
+        builder: (controller) => Scaffold(
+            appBar: AppBar(
+                backgroundColor: Colors.white,
+                titleSpacing: 0,
+                leadingWidth: 0,
+                leading: SizedBox.shrink(),
+                title: Padding(
+                    padding: const EdgeInsets.only(left: 4, right: 20),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                              onPressed: Get.back,
+                              icon: Image.asset('assets/icon/left.png')
+                          ),
+                          Image.asset('assets/image/logo.png', width: 70)
+                        ]
+                    )
+                )
+            ),
+            backgroundColor: Colors.white,
+            body: SafeArea(
                 bottom: false,
                 child: Obx(() => Stack(
                     children: [
@@ -116,22 +136,22 @@ class CompareView extends StatelessWidget {
 
                                                               if (index == 1) {
                                                                 return GestureDetector(
-                                                                  onTap: () => Get.to(() => ProductView(id: compare.id)),
-                                                                  child: Container(
-                                                                      width: 130,
-                                                                      height: 120,
-                                                                      alignment: Alignment.center,
-                                                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: controller.height[index] != null ? 0 : 8),
-                                                                      child: CachedNetworkImage(
-                                                                          imageUrl: compare.image,
-                                                                          errorWidget: (c, e, i) {
-                                                                            return Image.asset('assets/image/no_image.png', fit: BoxFit.contain);
-                                                                          },
-                                                                          fit: BoxFit.contain,
-                                                                          height: 120,
-                                                                          width: double.infinity
-                                                                      )
-                                                                  )
+                                                                    onTap: () => Get.to(() => ProductView(id: compare.id)),
+                                                                    child: Container(
+                                                                        width: 130,
+                                                                        height: 120,
+                                                                        alignment: Alignment.center,
+                                                                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: controller.height[index] != null ? 0 : 8),
+                                                                        child: CachedNetworkImage(
+                                                                            imageUrl: compare.image,
+                                                                            errorWidget: (c, e, i) {
+                                                                              return Image.asset('assets/image/no_image.png', fit: BoxFit.contain);
+                                                                            },
+                                                                            fit: BoxFit.contain,
+                                                                            height: 120,
+                                                                            width: double.infinity
+                                                                        )
+                                                                    )
                                                                 );
                                                               }
 
@@ -180,33 +200,33 @@ class CompareView extends StatelessWidget {
 
                                                               if (title != null) {
                                                                 return GestureDetector(
-                                                                  onTap: () {
-                                                                    if (index == 0) {
-                                                                      Get.to(() => ProductView(id: compare.id));
-                                                                    }
-                                                                  },
-                                                                  child: Container(
-                                                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: controller.height[index] != null ? 0 : 8),
-                                                                      width: 130,
-                                                                      alignment: Alignment.center,
-                                                                      child: Row(
-                                                                          children: [
-                                                                            Expanded(
-                                                                                child: Text(
-                                                                                    title,
-                                                                                    maxLines: 3,
-                                                                                    overflow: TextOverflow.ellipsis,
-                                                                                    textAlign: TextAlign.center,
-                                                                                    style: TextStyle(
-                                                                                        color: index == 0 ? primaryColor : Color(0xFF1E1E1E),
-                                                                                        fontSize: 12,
-                                                                                        height: 1.40
-                                                                                    )
-                                                                                )
-                                                                            )
-                                                                          ]
-                                                                      )
-                                                                  )
+                                                                    onTap: () {
+                                                                      if (index == 0) {
+                                                                        Get.to(() => ProductView(id: compare.id));
+                                                                      }
+                                                                    },
+                                                                    child: Container(
+                                                                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: controller.height[index] != null ? 0 : 8),
+                                                                        width: 130,
+                                                                        alignment: Alignment.center,
+                                                                        child: Row(
+                                                                            children: [
+                                                                              Expanded(
+                                                                                  child: Text(
+                                                                                      title,
+                                                                                      maxLines: 3,
+                                                                                      overflow: TextOverflow.ellipsis,
+                                                                                      textAlign: TextAlign.center,
+                                                                                      style: TextStyle(
+                                                                                          color: index == 0 ? primaryColor : Color(0xFF1E1E1E),
+                                                                                          fontSize: 12,
+                                                                                          height: 1.40
+                                                                                      )
+                                                                                  )
+                                                                              )
+                                                                            ]
+                                                                        )
+                                                                    )
                                                                 );
                                                               }
 
@@ -250,6 +270,7 @@ class CompareView extends StatelessWidget {
                     ]
                 ))
             )
+        )
     );
   }
 }

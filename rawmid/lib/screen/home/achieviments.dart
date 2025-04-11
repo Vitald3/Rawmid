@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:rawmid/model/home/rank.dart';
+import 'package:rawmid/model/club/achievement.dart';
 import 'package:rawmid/widget/module_title.dart';
 import '../../model/home/achieviment.dart';
 import '../../widget/h.dart';
@@ -18,8 +18,8 @@ class AchievementsSection extends StatelessWidget {
     int colorIndex = 0;
     int rIndex = 0;
 
-    for (var (index, i) in item.ranks.indexed) {
-      if ((int.tryParse('${i.rewards ?? 0}') ?? 0) >= item.rang) {
+    for (var (index, i) in item.achievements.indexed) {
+      if ((int.tryParse('${i.reward}') ?? 0) >= item.rang) {
         rIndex = index - 1;
         break;
       }
@@ -135,25 +135,25 @@ class AchievementsSection extends StatelessWidget {
               ]
             )
           ),
-          if (item.ranks.isNotEmpty) h(30),
-          if (item.ranks.isNotEmpty) SizedBox(
+          if (item.achievements.isNotEmpty) h(30),
+          if (item.achievements.isNotEmpty) SizedBox(
             height: 192,
             child: PageView.builder(
               controller: PageController(viewportFraction: 0.5, initialPage: rIndex),
-              itemCount: item.ranks.length,
+              itemCount: item.achievements.length,
               itemBuilder: (context, index) {
                 colorIndex++;
-                return _buildAchievementCard(item.ranks[index], colorIndex);
+                return _buildAchievementCard(item.achievements[index], colorIndex);
               }
             )
           ),
-          if (item.ranks.isNotEmpty) h(30)
+          if (item.achievements.isNotEmpty) h(30)
         ]
       )
     );
   }
 
-  Widget _buildAchievementCard(RankModel e, int colorIndex) {
+  Widget _buildAchievementCard(AchievementModel e, int colorIndex) {
     List<AssetImage> cardColors = [AssetImage('assets/image/award1.png'), AssetImage('assets/image/award2.png'), AssetImage('assets/image/award3.png')];
 
     return Container(
@@ -171,20 +171,20 @@ class AchievementsSection extends StatelessWidget {
                   backgroundColor: Colors.white,
                   radius: 30,
                   child: CachedNetworkImage(
-                      imageUrl: e.image ?? '',
+                      imageUrl: e.image,
                       errorWidget: (c, e, i) {
                         return Image.asset('assets/image/no_image.png');
                       }
                   )
               ),
               h(8),
-              Text(e.title ?? '', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text(e.title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
               h(4),
               Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                        '${e.rewards}',
+                        '${e.reward}',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
@@ -194,12 +194,6 @@ class AchievementsSection extends StatelessWidget {
                     w(4),
                     Image.asset('assets/icon/rang.png')
                   ]
-              ),
-              h(4),
-              Text(e.description ?? '',
-                  textAlign: TextAlign.center,
-                  maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.white, fontSize: 12)
               )
             ]
         )

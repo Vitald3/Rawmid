@@ -6,9 +6,12 @@ import 'package:rawmid/screen/auth/login.dart';
 import 'package:rawmid/screen/auth/login_code.dart';
 import 'package:rawmid/screen/auth/register.dart';
 import 'package:rawmid/screen/checkout/checkout.dart';
+import 'package:rawmid/screen/club/achieviment.dart';
+import 'package:rawmid/screen/club/content.dart';
 import 'package:rawmid/screen/compare.dart';
 import 'package:rawmid/screen/main.dart';
 import 'package:rawmid/screen/news/blog.dart';
+import 'package:rawmid/screen/special.dart';
 import 'package:rawmid/screen/support/support.dart';
 import 'package:rawmid/screen/order/order.dart';
 import 'package:rawmid/screen/user/reviews.dart';
@@ -45,6 +48,9 @@ class App extends StatelessWidget {
           GetPage(name: '/support', page: () => const SupportView()),
           GetPage(name: '/orders', page: () => const OrderView()),
           GetPage(name: '/compare', page: () => const CompareView()),
+          GetPage(name: '/club_content', page: () => const ClubContentView()),
+          GetPage(name: '/achieviment', page: () => const AchievimentView()),
+          GetPage(name: '/specials', page: () => const SpecialView()),
         ],
         theme: theme,
         debugShowCheckedModeBanner: false,

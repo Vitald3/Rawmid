@@ -39,7 +39,7 @@ class MenuView extends StatelessWidget {
                             Get.toNamed('/compare');
                             Scaffold.of(context).closeDrawer();
                           }),
-                          _buildDrawerItem('special', 'Акции', () {}, divider: false),
+                          _buildDrawerItem('special', 'Акции', () => Get.toNamed('/specials'), divider: false),
                         ]),
                         _buildSection('Информация', [
                           _buildDrawerItem('news', 'Статьи', () => Get.toNamed('/blog')),

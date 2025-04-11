@@ -6,9 +6,11 @@ class NewsModel {
   late String time;
   late String date;
   late String link;
+  String? moderate;
   bool? recipe;
+  bool? survey;
 
-  NewsModel({required this.id, required this.title, required this.image, required this.text, required this.date, required this.time, required this.link, this.recipe});
+  NewsModel({required this.id, required this.title, required this.image, required this.text, required this.date, required this.time, required this.link, this.moderate, this.recipe, this.survey});
 
   NewsModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -18,7 +20,9 @@ class NewsModel {
     date = json['date_added'];
     time = getReadingTime(json['text2'] ?? json['text']);
     link = json['link'];
+    moderate = json['moderate'];
     recipe = json['recipe'] ?? false;
+    survey = json['survey'] ?? false;
   }
 
   String getReadingTime(String text, {int wpm = 280}) {
@@ -70,7 +74,9 @@ class NewsModel {
     data['date_added'] = date;
     data['time'] = time;
     data['link'] = link;
+    data['moderate'] = moderate;
     data['recipe'] = recipe;
+    data['survey'] = survey;
     return data;
   }
 }
