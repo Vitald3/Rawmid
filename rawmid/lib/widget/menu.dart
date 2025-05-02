@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/widget/w.dart';
@@ -16,6 +17,8 @@ class MenuView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = controller.user.value;
+
     return Drawer(
       backgroundColor: Colors.white,
       child: Obx(() => Column(
@@ -28,14 +31,14 @@ class MenuView extends StatelessWidget {
                       children: [
                         h(4),
                         _buildSection('Покупки', [
-                          if (controller.user.value != null) _buildDrawerItem('order', 'Мои заказы', () => Get.toNamed('/orders')),
-                          if (controller.user.value != null) _buildDrawerItem('my_product', 'Мои товары', () {}),
-                          if (controller.user.value != null) _buildDrawerItem('rev', 'Мои отзывы', () => Get.toNamed('/reviews')),
+                          if (user != null) _buildDrawerItem('order', 'Мои заказы', () => Get.toNamed('/orders')),
+                          if (user != null) _buildDrawerItem('my_product', 'Мои товары', () => Get.toNamed('/my_products')),
+                          if (user != null) _buildDrawerItem('rev', 'Мои отзывы', () => Get.toNamed('/reviews')),
                           _buildDrawerItem('shop', 'Магазин', () {
                             controller.onItemTapped(1);
                             Scaffold.of(context).closeDrawer();
                           }),
-                          _buildDrawerItem('compare', 'Сравнение товаров', () {
+                          _buildDrawerItem('rat', 'Сравнение товаров', () {
                             Get.toNamed('/compare');
                             Scaffold.of(context).closeDrawer();
                           }),
@@ -44,7 +47,7 @@ class MenuView extends StatelessWidget {
                         _buildSection('Информация', [
                           _buildDrawerItem('news', 'Статьи', () => Get.toNamed('/blog')),
                           _buildDrawerItem('receipe', 'Рецепты', () {
-                            if (controller.user.value == null) {
+                            if (user == null) {
                               Get.toNamed('register');
                             } else {
                               Get.toNamed('/blog', arguments: true);
@@ -52,7 +55,7 @@ class MenuView extends StatelessWidget {
                           }, divider: false),
                         ]),
                         _buildSection('Профиль', [
-                          if (controller.user.value != null) _buildDrawerItem('setting', 'Настройки', () => Get.toNamed('user')),
+                          if (user != null) _buildDrawerItem('setting', 'Настройки', () => Get.toNamed('user')),
                           _buildDrawerItem('support', 'Поддержка', () => Get.toNamed('/support'), divider: false),
                         ])
                       ]
@@ -61,13 +64,13 @@ class MenuView extends StatelessWidget {
             ),
             Padding(
                 padding: const EdgeInsets.only(left: 20),
-                child: _buildDrawerItem(controller.user.value != null ? 'logout' : 'login', controller.user.value != null ? 'Выйти' : 'Войти', () {
-                  if (controller.user.value != null) {
+                child: _buildDrawerItem(user != null ? 'logout' : 'login', user != null ? 'Выйти' : 'Войти', () {
+                  if (user != null) {
                     controller.logout();
                   } else {
-                    Get.toNamed('register');
+                    Get.toNamed('/login');
                   }
-                }, color: controller.user.value != null ? dangerColor : primaryColor, divider: false)
+                }, color: user != null ? dangerColor : primaryColor, divider: false)
             ),
             Padding(
                 padding: const EdgeInsets.only(left: 20, bottom: 20),
@@ -81,18 +84,38 @@ class MenuView extends StatelessWidget {
   }
 
   Widget _buildHeader() {
+    final user = controller.user.value;
+    
     return DrawerHeader(
       child: Column(
           children: [
-            if (controller.user.value != null) Row(
+            if (user != null) Row(
                 children: [
-                  CircleAvatar(
-                    backgroundImage: (controller.user.value?.image ?? '').isNotEmpty ? CachedNetworkImageProvider(controller.user.value!.image) : AssetImage('assets/image/empty.png'),
+                  GestureDetector(
+                      onTap: () => controller.pickImage(ImageSource.gallery),
+                      child: Container(
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(40)),
+                        clipBehavior: Clip.antiAlias,
+                        width: 40,
+                        height: 40,
+                        alignment: Alignment.center,
+                        child: controller.loadImage.value ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(color: primaryColor)
+                        ) : controller.imageFile.value != null ? Image.file(controller.imageFile.value!, fit: BoxFit.cover, width: 80, height: 80) : (controller.user.value?.image ?? '').isNotEmpty ? CachedNetworkImage(
+                            imageUrl: controller.user.value!.image, width: 80, height: 80,
+                            fit: BoxFit.cover,
+                            errorWidget: (c, e, i) {
+                              return Image.asset('assets/image/empty.png');
+                            }
+                        ) : Image.asset('assets/image/empty.png')
+                      )
                   ),
                   w(12),
                   Expanded(
                     child: Text(
-                        controller.user.value!.fio,
+                        user.fio,
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             height: 1
@@ -106,21 +129,27 @@ class MenuView extends StatelessWidget {
             h(10),
             Row(
                 children: [
-                  Chip(
-                      label: Row(
-                          children: [
-                            Text('${controller.user.value?.rang ?? '0'}', style: TextStyle(color: Colors.white)),
-                            w(4),
-                            Image.asset('assets/icon/rang.png')
-                          ]
-                      ),
-                      backgroundColor: Colors.blue
+                  GestureDetector(
+                    onTap: () => user != null ? Get.toNamed('/rewards') : null,
+                    child: Chip(
+                        label: Row(
+                            children: [
+                              Text('${user?.rang ?? '0'}', style: TextStyle(color: Colors.white)),
+                              w(4),
+                              Image.asset('assets/icon/rang.png')
+                            ]
+                        ),
+                        backgroundColor: Colors.blue
+                    )
                   ),
                   w(8),
-                  Chip(
-                    label: Text('Ранг: ${controller.user.value?.rangStr ?? 'Новичок'}', style: TextStyle(color: primaryColor)),
-                    backgroundColor: Colors.white,
-                    side: BorderSide(color: primaryColor),
+                  GestureDetector(
+                    onTap: () => user != null ? Get.toNamed('/achieviment') : null,
+                    child: Chip(
+                      label: Text('Ранг: ${user?.rangStr ?? 'Новичок'}', style: TextStyle(color: primaryColor)),
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: primaryColor),
+                    )
                   )
                 ]
             ),

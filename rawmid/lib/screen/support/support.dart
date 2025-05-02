@@ -2,12 +2,13 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_html_iframe/flutter_html_iframe.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/widget/module_title.dart';
 import 'package:rawmid/widget/primary_button.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../controller/support.dart';
+import '../../model/profile/sernum_support.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/utils.dart';
@@ -43,6 +44,7 @@ class SupportView extends GetView<NavigationController> {
                     )
                 )
             ),
+            resizeToAvoidBottomInset: false,
             backgroundColor: Colors.white,
             body: SafeArea(
                 bottom: false,
@@ -171,11 +173,15 @@ class SupportView extends GetView<NavigationController> {
                                                       }).toList(),
                                                       onChanged: (val) {
                                                         support.type.value = val;
-                                                        support.subjectField.text = support.types[val!];
+                                                        support.subjectField.text = [2, 3, 4, 5, 7].contains(val) ? '' : support.types[val!];
+
+                                                        if (val == 6) {
+                                                          support.textField.text = "Сумма:\r\nДата оплаты:\r\nВремя оплаты:\r\nКуда оплатили:\r\nФИО плательщика:\r\n";
+                                                        }
                                                       }
                                                   ),
-                                                  h(16),
-                                                  if (support.type.value == 1) Text.rich(
+                                                  if (![0, 1, 6].contains(support.type.value) && controller.user.value == null) h(16),
+                                                  if (support.type.value == 1 && controller.user.value == null) Text.rich(
                                                       TextSpan(
                                                           children: [
                                                             TextSpan(
@@ -201,12 +207,12 @@ class SupportView extends GetView<NavigationController> {
                                                           ]
                                                       )
                                                   ),
-                                                  if (support.type.value == 1) h(16),
+                                                  if (support.type.value == 1 && controller.user.value == null) h(16),
                                                   Form(
                                                     key: support.formKey,
                                                     child: Column(
                                                       children: [
-                                                        TextFormField(
+                                                        if (![0, 1, 2, 3, 4, 5, 6, 7].contains(support.type.value) || controller.user.value == null) TextFormField(
                                                             key: support.target,
                                                             cursorHeight: 15,
                                                             autofocus: support.orderId.value != null,
@@ -236,8 +242,8 @@ class SupportView extends GetView<NavigationController> {
                                                                 ]
                                                             )
                                                         ),
-                                                        h(16),
-                                                        TextFormField(
+                                                        if (![0, 1, 2, 3, 4, 5, 6, 7].contains(support.type.value) || controller.user.value == null) h(16),
+                                                        if (![0, 1, 2, 3, 4, 5, 6, 7].contains(support.type.value) || controller.user.value == null) TextFormField(
                                                             cursorHeight: 15,
                                                             controller: support.nameField,
                                                             decoration: decorationInput(hint: 'Имя *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
@@ -251,19 +257,60 @@ class SupportView extends GetView<NavigationController> {
                                                             },
                                                             textInputAction: TextInputAction.next
                                                         ),
-                                                        h(16),
-                                                        if (support.type.value == 0 || support.type.value == 6) TextFormField(
-                                                            cursorHeight: 15,
-                                                            controller: support.orderField,
-                                                            decoration: decorationInput(hint: 'Номер заказа', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                            textInputAction: TextInputAction.next
+                                                        if ((support.type.value == 0 || support.type.value == 6) && controller.user.value != null) h(16),
+                                                        if ((support.type.value == 0 || support.type.value == 6) && controller.user.value != null) DropdownButtonFormField<String?>(
+                                                            value: support.orderId.value,
+                                                            isExpanded: true,
+                                                            validator: (val) {
+                                                              if ((val ?? '').isEmpty) {
+                                                                return ' ';
+                                                              }
+
+                                                              return null;
+                                                            },
+                                                            decoration: decorationInput(hint: '№ заказа*', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
+                                                            items: support.orderIds.map((item) {
+                                                              return DropdownMenuItem<String?>(
+                                                                  value: item,
+                                                                  child: Text(item, style: TextStyle(fontSize: 14))
+                                                              );
+                                                            }).toList(),
+                                                            onChanged: (newValue) {
+                                                              support.orderId.value = newValue;
+                                                            }
                                                         ),
-                                                        if (support.type.value == 0 || support.type.value == 6) h(16),
+                                                        if (support.type.value == 1 && controller.user.value != null) h(16),
+                                                        if (support.type.value == 1 && controller.user.value != null) DropdownButtonFormField<SernumSupportModel?>(
+                                                            value: support.sernum.value,
+                                                            isExpanded: true,
+                                                            validator: (val) {
+                                                              if ((val?.sernum ?? '').isEmpty) {
+                                                                return ' ';
+                                                              }
+
+                                                              return null;
+                                                            },
+                                                            decoration: decorationInput(hint: 'Серийный номер*', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
+                                                            items: support.sernums.map((item) {
+                                                              return DropdownMenuItem<SernumSupportModel?>(
+                                                                  value: item,
+                                                                  child: Text('${item.model} № ${item.sernum}', style: TextStyle(fontSize: 14))
+                                                              );
+                                                            }).toList(),
+                                                            onChanged: (newValue) {
+                                                              support.sernum.value = newValue;
+
+                                                              if (newValue != null) {
+                                                                support.subjectField.text = 'Вопрос по товару сер. номер ${newValue.sernum}';
+                                                              }
+                                                            }
+                                                        ),
+                                                        if ([0, 1, 6, 7].contains(support.type.value) || controller.user.value == null) h(16),
                                                         TextFormField(
                                                             cursorHeight: 15,
+                                                            enabled: ![0, 1, 6].contains(support.type.value),
                                                             controller: support.subjectField,
-                                                            decoration: decorationInput(hint: 'Тема', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                                            decoration: decorationInput(hint: 'Тема*', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                                                             autovalidateMode: AutovalidateMode.onUserInteraction,
                                                             textInputAction: TextInputAction.next
                                                         ),
@@ -271,7 +318,7 @@ class SupportView extends GetView<NavigationController> {
                                                         TextFormField(
                                                             cursorHeight: 15,
                                                             controller: support.textField,
-                                                            maxLines: 3,
+                                                            maxLines: support.type.value == 6 ? 5 : 3,
                                                             validator: (value) {
                                                               String? item;
 
@@ -279,7 +326,7 @@ class SupportView extends GetView<NavigationController> {
 
                                                               return item;
                                                             },
-                                                            decoration: decorationInput(hint: 'Текст *', contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+                                                            decoration: decorationInput(hint: 'Текст*', contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
                                                             autovalidateMode: AutovalidateMode.onUserInteraction,
                                                             textInputAction: TextInputAction.done
                                                         )
@@ -298,10 +345,10 @@ class SupportView extends GetView<NavigationController> {
                                                         alignment: Alignment.center,
                                                         child: Column(
                                                             children: [
-                                                              Image.asset('assets/icon/download.png', width: 20),
+                                                              support.file.value != null ? Icon(Icons.check, color: Colors.green) : Image.asset('assets/icon/download.png', width: 20),
                                                               h(4),
                                                               Text(
-                                                                  'Загрузить файл',
+                                                                  support.file.value != null ? 'Файл загружен' : 'Загрузить файл',
                                                                   style: TextStyle(
                                                                       color: Color(0xFF8A95A8),
                                                                       fontSize: 14,
@@ -315,8 +362,8 @@ class SupportView extends GetView<NavigationController> {
                                                   h(16),
                                                   PrimaryButton(text: 'Задать вопрос', onPressed: support.send, height: 40),
                                                   h(32),
-                                                  if (support.locations.isNotEmpty) ModuleTitle(title: 'Карта магазинов', type: true),
-                                                  if (support.locations.isNotEmpty) Container(
+                                                  if (support.contact.value != null) ModuleTitle(title: 'Мы на карте', type: true),
+                                                  if (support.contact.value != null) Container(
                                                       decoration: BoxDecoration(
                                                         borderRadius: BorderRadius.circular(12)
                                                       ),
@@ -325,7 +372,7 @@ class SupportView extends GetView<NavigationController> {
                                                       width: double.infinity,
                                                       child: map.FlutterMap(
                                                           options: map.MapOptions(
-                                                              initialCenter: support.lng.value ?? support.locations.first.lng,
+                                                              initialCenter: support.contact.value!.map.center,
                                                               initialZoom: 12
                                                           ),
                                                           mapController: support.mapController,
@@ -335,8 +382,8 @@ class SupportView extends GetView<NavigationController> {
                                                                 subdomains: ['a', 'b', 'c']
                                                             ),
                                                             map.MarkerLayer(
-                                                                markers: support.locations.map((item) => map.Marker(
-                                                                    point: item.lng,
+                                                                markers: support.contact.value!.map.mark.map((item) => map.Marker(
+                                                                    point: item.coordinates,
                                                                     width: 40,
                                                                     height: 40,
                                                                     child: Icon(
@@ -349,13 +396,10 @@ class SupportView extends GetView<NavigationController> {
                                                           ]
                                                       )
                                                   ),
-                                                  if (support.locations.isNotEmpty) h(20),
-                                                  if (support.locations.isNotEmpty) Wrap(
+                                                  if (support.contact.value != null) h(20),
+                                                  if (support.contact.value != null) Wrap(
                                                     runSpacing: 16,
-                                                    children: support.locations.map((item) => GestureDetector(
-                                                      onTap: () {
-                                                        support.mapController.move(item.lng, 12);
-                                                      },
+                                                    children: support.contact.value!.contacts.map((item) => GestureDetector(
                                                       child: Container(
                                                           width: double.infinity,
                                                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -380,100 +424,23 @@ class SupportView extends GetView<NavigationController> {
                                                                     )
                                                                 ),
                                                                 h(24),
-                                                                Flexible(
-                                                                    child: Row(
-                                                                        mainAxisSize: MainAxisSize.min,
-                                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                                        spacing: 12,
-                                                                        children: [
-                                                                          Padding(
-                                                                              padding: EdgeInsets.only(top: 3),
-                                                                              child: Image.asset('assets/icon/mark.png', width: 16, height: 16)
-                                                                          ),
-                                                                          Flexible(
-                                                                              child: Text(
-                                                                                  item.map,
-                                                                                  style: TextStyle(
-                                                                                      color: Color(0xFF1E1E1E),
-                                                                                      fontSize: 16,
-                                                                                      fontWeight: FontWeight.w600,
-                                                                                      height: 1.40
-                                                                                  )
-                                                                              )
-                                                                          )
-                                                                        ]
-                                                                    )
-                                                                ),
-                                                                h(24),
-                                                                Flexible(
-                                                                    child: GestureDetector(
-                                                                        onTap: () async {
-                                                                          final url = Uri.parse('https://wa.me/${item.wa.replaceAll(RegExp(r'[^0-9]'), '')}');
-
-                                                                          if (await canLaunchUrl(url)) {
-                                                                            await launchUrl(url);
-                                                                          } else {
-                                                                            Helper.snackBar(error: true, text: 'Не удалось открыть WhatsApp');
-                                                                          }
-                                                                        },
-                                                                        child: Row(
-                                                                            mainAxisSize: MainAxisSize.min,
-                                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                                            spacing: 12,
-                                                                            children: [
-                                                                              Padding(
-                                                                                  padding: EdgeInsets.only(top: 3),
-                                                                                  child: Image.asset('assets/icon/whatsapp.png', width: 16, height: 16)
-                                                                              ),
-                                                                              Flexible(
-                                                                                  child: Text(
-                                                                                      item.wa,
-                                                                                      style: TextStyle(
-                                                                                          color: Color(0xFF1E1E1E),
-                                                                                          fontSize: 14,
-                                                                                          fontWeight: FontWeight.w500
-                                                                                      )
-                                                                                  )
-                                                                              )
-                                                                            ]
-                                                                        )
-                                                                    )
-                                                                ),
-                                                                h(11),
-                                                                Flexible(
-                                                                    child: GestureDetector(
-                                                                        onTap: () async {
-                                                                          final url = Uri.parse('https://t.me/${item.tg}');
-
-                                                                          if (await canLaunchUrl(url)) {
-                                                                            await launchUrl(url);
-                                                                          } else {
-                                                                            Helper.snackBar(error: true, text: 'Не удалось открыть WhatsApp');
-                                                                          }
-                                                                        },
-                                                                        child: Row(
-                                                                            mainAxisSize: MainAxisSize.min,
-                                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                                            spacing: 12,
-                                                                            children: [
-                                                                              Padding(
-                                                                                  padding: EdgeInsets.only(top: 3),
-                                                                                  child: Image.asset('assets/icon/telegram.png', width: 16, height: 16)
-                                                                              ),
-                                                                              Flexible(
-                                                                                  child: Text(
-                                                                                      '@${item.tg}',
-                                                                                      style: TextStyle(
-                                                                                          color: Color(0xFF1E1E1E),
-                                                                                          fontSize: 14,
-                                                                                          fontWeight: FontWeight.w500
-                                                                                      )
-                                                                                  )
-                                                                              )
-                                                                            ]
-                                                                        )
-                                                                    )
-                                                                ),
+                                                                Html(
+                                                                    data: item.info.trim(),
+                                                                    extensions: [
+                                                                      IframeHtmlExtension()
+                                                                    ],
+                                                                    style: {
+                                                                      '*': Style(
+                                                                          margin: Margins.all(0),
+                                                                          padding: HtmlPaddings.zero
+                                                                      )
+                                                                    },
+                                                                    onLinkTap: (val, map, element) {
+                                                                      if ((val ?? '').isNotEmpty) {
+                                                                        Helper.openLink(val!);
+                                                                      }
+                                                                    }
+                                                                )
                                                               ]
                                                           )
                                                       )

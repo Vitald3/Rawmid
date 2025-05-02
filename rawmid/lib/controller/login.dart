@@ -3,6 +3,7 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/api/profile.dart';
+import 'package:rawmid/controller/home.dart';
 import 'package:rawmid/controller/navigation.dart';
 import '../../utils/helper.dart';
 import '../api/login.dart';
@@ -36,17 +37,32 @@ class LoginController extends GetxController {
       });
 
       if (user != null) {
+        final carts = navController.cartProducts;
+        navController.cartProducts.clear();
+
+        for (var cart in carts) {
+          navController.addCart(cart.id);
+        }
+
         navController.user.value = user;
         update();
 
         final param = Get.parameters;
 
         if ((param['route'] ?? '').isNotEmpty) {
+          if (Get.isRegistered<HomeController>()) {
+            Get.delete<HomeController>();
+          }
+
+          Get.put(HomeController());
+          Get.find<HomeController>().initialize();
+
+          Get.toNamed('/home');
           Get.toNamed('/${param['route']}');
           return;
         }
 
-        Get.offAllNamed('home');
+        Get.offNamed('/home');
       }
     }
   }
@@ -65,6 +81,13 @@ class LoginController extends GetxController {
       });
 
       if (user != null) {
+        final carts = navController.cartProducts;
+        navController.cartProducts.clear();
+
+        for (var cart in carts) {
+          navController.addCart(cart.id);
+        }
+
         navController.user.value = user;
         update();
 

@@ -15,7 +15,7 @@ class BlogApi {
       });
       final json = jsonDecode(response.body);
 
-      if (json['blog']['news'] != null) {
+      if ((json['blog']?['news'] ?? []).isNotEmpty) {
         return json;
       }
     } catch (e) {
@@ -43,18 +43,18 @@ class BlogApi {
     return null;
   }
 
-  static Future<List<CategoryNewsModel>> getCategoriesRecipe() async {
+  static Future<List<CategoryNewsModel>> getCategoriesNews(bool recipe) async {
     var items = <CategoryNewsModel>[];
 
     try {
-      final response = await http.get(Uri.parse(getCategoriesRecipeUrl), headers: {
+      final response = await http.get(Uri.parse('$getCategoriesRecipeUrl&recipe=${recipe ? 1 : 0}'), headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
       final json = jsonDecode(response.body);
 
-      if (json['recipe_categories'] != null) {
-        for (var i in json['recipe_categories']) {
+      if (json['categories'] != null) {
+        for (var i in json['categories']) {
           items.add(CategoryNewsModel.fromJson(i));
         }
       }

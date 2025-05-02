@@ -3,20 +3,22 @@ class CartModel {
   late String name;
   late String image;
   late String price;
-  late int key;
+  late String key;
   int? quantity;
   late String color;
+  late String hdd;
 
-  CartModel({required this.id, required this.name, required this.image, required this.price, required this.key, required this.quantity, required this.color});
+  CartModel({required this.id, required this.name, required this.image, required this.price, required this.key, required this.quantity, required this.color, required this.hdd});
 
   CartModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     name = json['name'];
     image = json['image'];
     price = json['price'];
-    key = int.tryParse('${json['key']}') ?? 1;
+    key = '${json['key']}';
     quantity = int.tryParse('${json['quantity']}') ?? 1;
     color = json['color'];
+    hdd = json['hdd'] ?? '';
   }
 
   Map<String, dynamic> toJson() {
@@ -28,6 +30,7 @@ class CartModel {
     data['key'] = key;
     data['quantity'] = quantity;
     data['color'] = color;
+    data['hdd'] = hdd;
     return data;
   }
 }

@@ -38,7 +38,7 @@ class BannerViewState extends State<BannerView> {
           h(10),
           Container(
               padding: EdgeInsets.only(left: 10, right: widget.banners.length == 1 ? 10 : 0),
-              height: 160,
+              height: 320,
               child: PageView(
                 controller: pageController,
                 onPageChanged: (val) => setState(() {

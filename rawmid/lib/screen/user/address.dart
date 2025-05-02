@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/widget/primary_button.dart';
 import '../../../widget/h.dart';
 import '../../controller/user.dart';
+import '../../model/location.dart';
 import '../../utils/utils.dart';
 import '../../widget/switch.dart';
 import '../../widget/w.dart';
@@ -78,7 +81,7 @@ class AddressView extends GetView<UserController> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: ShapeDecoration(
                       color: Colors.white,
-                      image: DecorationImage(image: AssetImage('assets/image/border.png')),
+                      image: DecorationImage(image: AssetImage('assets/image/border.png'), fit: BoxFit.cover),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)
                       )
@@ -140,33 +143,60 @@ class AddressView extends GetView<UserController> {
                   validator: (value) => value == null ? 'Выберите регион' : null
               ),
               if (controller.regions.isNotEmpty) h(16),
-              if (controller.regions.isNotEmpty) TextFormField(
+              if (controller.regions.isNotEmpty) TypeAheadField<Location>(
+                  suggestionsCallback: controller.suggestionsCallback,
                   controller: controller.controllersAddress['city'],
                   focusNode: controller.focusNodeAddress['city'],
-                  cursorHeight: 15,
-                  validator: (value) => controller.activeField.value == 'city' ? controller.validators['city']!(value) : null,
-                  decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  textInputAction: TextInputAction.next
+                  itemBuilder: (context, e) => ListTile(title: Text(e.label)),
+                  onSelected: (e) {
+                    controller.controllersAddress['city']!.text = e.label;
+                  },
+                  builder: (context, textController, focusNode) {
+                    return TextFormField(
+                        controller: textController,
+                        focusNode: focusNode,
+                        cursorHeight: 15,
+                        validator: (value) => controller.activeField.value == 'city' ? controller.validators['city']!(value) : null,
+                        decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        textInputAction: TextInputAction.next
+                    );
+                  }
               ),
               if (controller.regions.isNotEmpty) h(16),
               if (controller.regions.isNotEmpty) TextFormField(
                   controller: controller.controllersAddress['postcode'],
                   focusNode: controller.focusNodeAddress['postcode'],
                   cursorHeight: 15,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(6)
+                  ],
                   decoration: decorationInput(hint: 'Индекс ', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                   autovalidateMode: AutovalidateMode.onUserInteraction,
                   textInputAction: TextInputAction.next
               ),
               if (controller.regions.isNotEmpty) h(16),
-              if (controller.regions.isNotEmpty) TextFormField(
+              if (controller.regions.isNotEmpty) TypeAheadField<String>(
+                  suggestionsCallback: controller.suggestionsCallback2,
                   controller: controller.controllersAddress['address_1'],
                   focusNode: controller.focusNodeAddress['address_1'],
-                  cursorHeight: 15,
-                  validator: (value) => controller.activeField.value == 'address_1' ? controller.validators['address_1']!(value) : null,
-                  decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  textInputAction: TextInputAction.done
+                  itemBuilder: (context, e) => ListTile(title: Text(e)),
+                  onSelected: (e) {
+                    controller.controllersAddress['address_1']!.text = e;
+                  },
+                  builder: (context, textController, focusNode) {
+                    return TextFormField(
+                        controller: textController,
+                        focusNode: focusNode,
+                        cursorHeight: 15,
+                        validator: (value) => controller.activeField.value == 'address_1' ? controller.validators['address_1']!(value) : null,
+                        decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        textInputAction: TextInputAction.done
+                    );
+                  }
               ),
               SwitchTile(title: 'Адрес по умолчанию', value: controller.addressDef.value, onChanged: (val) {
                 controller.addressDef.value = val;

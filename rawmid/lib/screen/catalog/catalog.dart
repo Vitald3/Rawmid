@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/screen/catalog/banner.dart';
 import 'package:rawmid/screen/catalog/slideshow.dart';
 import 'package:rawmid/utils/constant.dart';
@@ -10,15 +11,15 @@ import '../home/shop.dart';
 import '../../widget/h.dart';
 import 'category.dart';
 
-class CatalogView extends StatelessWidget {
+class CatalogView extends GetView<NavigationController> {
   const CatalogView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return GetBuilder<CatalogController>(
         init: CatalogController(),
-        builder: (controller) => Obx(() => SafeArea(
-            child: controller.isLoading.value ? SingleChildScrollView(
+        builder: (catalog) => Obx(() => SafeArea(
+            child: catalog.isLoading.value ? SingleChildScrollView(
                 child: Stack(
                     alignment: Alignment.topCenter,
                     children: [
@@ -31,16 +32,16 @@ class CatalogView extends StatelessWidget {
                               color: Colors.white,
                               child: Column(
                                 children: [
-                                  if (controller.homeController != null && controller.homeController!.banners.isNotEmpty) SlideshowCatalogView(banners: controller.homeController!.banners),
-                                  if (controller.categories.isNotEmpty) CategorySection(categories: controller.categories),
-                                  if (controller.specials.isNotEmpty) StoreSection(title: 'Товары со скидкой', products: controller.specials, addWishlist: controller.addWishlist, buy: (id) async {
-                                    await controller.navController.addCart(id);
-                                    controller.update();
+                                  if (catalog.banners2.isNotEmpty) SlideshowCatalogView(banners: catalog.banners2),
+                                  if (catalog.categories.isNotEmpty) CategorySection(categories: catalog.categories),
+                                  if (catalog.specials.isNotEmpty) StoreSection(title: 'Товары со скидкой', products: catalog.specials, addWishlist: catalog.addWishlist, buy: (id) async {
+                                    await controller.addCart(id);
+                                    catalog.update();
                                   }),
-                                  if (controller.banners.isNotEmpty) BannerView(banners: controller.banners, title: 'Особые предложения'),
-                                  if (controller.homeController != null && controller.homeController!.shopProducts.isNotEmpty) StoreSection(title: 'Рекомендуемые товары', products: controller.homeController!.shopProducts, addWishlist: controller.addWishlist, buy: (id) async {
-                                    await controller.navController.addCart(id);
-                                    controller.update();
+                                  if (catalog.banners.isNotEmpty) BannerView(banners: catalog.banners, title: 'Особые предложения'),
+                                  if (catalog.shopProducts.isNotEmpty) StoreSection(title: 'Рекомендуемые товары', products: catalog.shopProducts, addWishlist: catalog.addWishlist, buy: (id) async {
+                                    await controller.addCart(id);
+                                    catalog.update();
                                   }),
                                   h(40)
                                 ]

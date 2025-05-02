@@ -6,12 +6,14 @@ import '../../widget/module_title.dart';
 import 'news_card.dart';
 
 class RecipesSection extends StatefulWidget {
-  const RecipesSection({super.key, required this.recipes, required this.callback, this.title, this.button, this.padding});
+  const RecipesSection({super.key, required this.recipes, required this.callback, this.callback2, this.title, this.button, this.padding, this.my});
 
   final List<NewsModel> recipes;
   final Function() callback;
+  final Function()? callback2;
   final String? title;
   final bool? button;
+  final int? my;
   final EdgeInsets? padding;
 
   @override
@@ -42,7 +44,7 @@ class RecipesSectionState extends State<RecipesSection> {
               h(15),
               Container(
                   padding: widget.padding ?? EdgeInsets.only(left: 4, right: 20),
-                  height: 256,
+                  height: 264,
                   child: PageView.builder(
                       clipBehavior: Clip.none,
                       controller: pageController,
@@ -52,7 +54,7 @@ class RecipesSectionState extends State<RecipesSection> {
                       padEnds: false,
                       itemCount: widget.recipes.length,
                       itemBuilder: (context, index) {
-                        return NewsCard(news: widget.recipes[index], button: button, recipe: true);
+                        return NewsCard(news: widget.recipes[index], button: button, recipe: true, my: widget.my, callback: widget.callback2);
                       }
                   )
               ),

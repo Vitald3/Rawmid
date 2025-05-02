@@ -77,7 +77,7 @@ class ClubView extends GetView<NavigationController> {
                                                       )
                                                   ),
                                                   Spacer(),
-                                                  if (club.home.value?.achieviment.value != null) Stack(
+                                                  Stack(
                                                       children: [
                                                         Container(
                                                             height: 35,
@@ -89,7 +89,7 @@ class ClubView extends GetView<NavigationController> {
                                                         ),
                                                         Container(
                                                             height: 35,
-                                                            width: Get.width * ((controller.user.value?.rang ?? 0) / (club.home.value?.achieviment.value!.max ?? 0)),
+                                                            width: Get.width * ((controller.user.value?.rang ?? 0) / 12000),
                                                             decoration: BoxDecoration(
                                                               color: Colors.blue,
                                                               borderRadius: BorderRadius.circular(34),
@@ -131,7 +131,7 @@ class ClubView extends GetView<NavigationController> {
                                                                       spacing: 4,
                                                                       children: [
                                                                         Text(
-                                                                            '${club.home.value!.achieviment.value!.max}',
+                                                                            '12000',
                                                                             style: TextStyle(
                                                                                 color: Colors.white,
                                                                                 fontSize: 15,
@@ -150,134 +150,136 @@ class ClubView extends GetView<NavigationController> {
                                             )
                                         ),
                                         h(12),
-                                        Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            spacing: 12,
-                                            children: [
-                                              Expanded(
-                                                  child: Container(
-                                                      decoration: ShapeDecoration(
-                                                          gradient: LinearGradient(
-                                                              begin: Alignment(-0.16, -0.32),
-                                                              end: Alignment(0.88, 0.79),
-                                                              colors: [const Color(0xFF00E200), const Color(0xFF00AF7A)]
-                                                          ),
-                                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-                                                      ),
-                                                      clipBehavior: Clip.antiAlias,
-                                                      padding: EdgeInsets.all(16),
-                                                      child: Stack(
-                                                          clipBehavior: Clip.none,
-                                                          children: [
-                                                            Positioned(
-                                                                right: -16,
-                                                                top: -16,
-                                                                bottom: 0,
-                                                                child: Image.asset('assets/image/c1.png', fit: BoxFit.cover)
+                                        IntrinsicHeight(
+                                          child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              spacing: 12,
+                                              children: [
+                                                Expanded(
+                                                    child: Container(
+                                                        decoration: ShapeDecoration(
+                                                            gradient: LinearGradient(
+                                                                begin: Alignment(-0.16, -0.32),
+                                                                end: Alignment(0.88, 0.79),
+                                                                colors: [const Color(0xFF00E200), const Color(0xFF00AF7A)]
                                                             ),
-                                                            Column(
-                                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                                spacing: 40,
-                                                                children: [
-                                                                  Text(
-                                                                      'Полученные награды',
-                                                                      style: TextStyle(
-                                                                          color: Colors.white,
-                                                                          fontSize: 16,
-                                                                          fontWeight: FontWeight.w500,
-                                                                          height: 1.30
-                                                                      )
-                                                                  ),
-                                                                  if (club.home.value?.achieviment.value != null) Row(
-                                                                      spacing: 4,
-                                                                      children: [
-                                                                        Text(
-                                                                            '${club.home.value!.achieviment.value!.achievements.length}',
-                                                                            style: TextStyle(
-                                                                                color: Colors.white,
-                                                                                fontSize: 32,
-                                                                                fontWeight: FontWeight.w600
-                                                                            )
-                                                                        ),
-                                                                        Text(
-                                                                            '/',
-                                                                            style: TextStyle(
-                                                                                color: Colors.white,
-                                                                                fontSize: 16,
-                                                                                fontWeight: FontWeight.w500
-                                                                            )
-                                                                        ),
-                                                                        Text(
-                                                                            '${club.home.value?.ranks.length ?? 0}',
-                                                                            style: TextStyle(
-                                                                                color: Colors.white,
-                                                                                fontSize: 16,
-                                                                                fontWeight: FontWeight.w500
-                                                                            )
-                                                                        )
-                                                                      ]
-                                                                  )
-                                                                ]
-                                                            )
-                                                          ]
-                                                      )
-                                                  )
-                                              ),
-                                              Expanded(
-                                                  child: Container(
-                                                      decoration: ShapeDecoration(
-                                                        gradient: LinearGradient(
-                                                          begin: Alignment(0.25, -0.73),
-                                                          end: Alignment(0.88, 0.79),
-                                                          colors: [const Color(0xFF007FE2), const Color(0xFF0452C6)]
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
                                                         ),
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-                                                      ),
-                                                      clipBehavior: Clip.antiAlias,
-                                                      padding: EdgeInsets.all(16),
-                                                      child: Stack(
-                                                          clipBehavior: Clip.none,
-                                                          children: [
-                                                            Positioned(
-                                                                right: -16,
-                                                                top: -16,
-                                                                bottom: 0,
-                                                                child: Image.asset('assets/image/c2.png', fit: BoxFit.cover)
-                                                            ),
-                                                            Column(
-                                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                                spacing: 40,
-                                                                children: [
-                                                                  Text(
-                                                                      'Балланс бонусных баллов',
-                                                                      style: TextStyle(
-                                                                          color: Colors.white,
-                                                                          fontSize: 16,
-                                                                          fontWeight: FontWeight.w500,
-                                                                          height: 1.30
-                                                                      )
-                                                                  ),
-                                                                  Row(
-                                                                      spacing: 4,
-                                                                      children: [
-                                                                        Text(
-                                                                          '${controller.user.value?.rang ?? ''}',
-                                                                          style: TextStyle(
+                                                        clipBehavior: Clip.antiAlias,
+                                                        padding: EdgeInsets.all(16),
+                                                        child: Stack(
+                                                            clipBehavior: Clip.none,
+                                                            children: [
+                                                              Positioned(
+                                                                  right: -16,
+                                                                  top: -16,
+                                                                  bottom: 0,
+                                                                  child: Image.asset('assets/image/c1.png', fit: BoxFit.cover)
+                                                              ),
+                                                              Column(
+                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                  spacing: 40,
+                                                                  children: [
+                                                                    Text(
+                                                                        'Полученные награды',
+                                                                        style: TextStyle(
                                                                             color: Colors.white,
-                                                                            fontSize: 32,
-                                                                            fontWeight: FontWeight.w600
+                                                                            fontSize: 16,
+                                                                            fontWeight: FontWeight.w500,
+                                                                            height: 1.30
+                                                                        )
+                                                                    ),
+                                                                    Row(
+                                                                        spacing: 4,
+                                                                        children: [
+                                                                          Text(
+                                                                              '${club.achievements.length}',
+                                                                              style: TextStyle(
+                                                                                  color: Colors.white,
+                                                                                  fontSize: 32,
+                                                                                  fontWeight: FontWeight.w600
+                                                                              )
+                                                                          ),
+                                                                          Text(
+                                                                              '/',
+                                                                              style: TextStyle(
+                                                                                  color: Colors.white,
+                                                                                  fontSize: 16,
+                                                                                  fontWeight: FontWeight.w500
+                                                                              )
+                                                                          ),
+                                                                          Text(
+                                                                              '${club.ranks.length}',
+                                                                              style: TextStyle(
+                                                                                  color: Colors.white,
+                                                                                  fontSize: 16,
+                                                                                  fontWeight: FontWeight.w500
+                                                                              )
                                                                           )
-                                                                        ),
-                                                                        Image.asset('assets/icon/rang2.png', width: 24, height: 24)
-                                                                      ]
-                                                                  )
-                                                                ]
-                                                            )
-                                                          ]
-                                                      )
-                                                  )
-                                              )
-                                            ]
+                                                                        ]
+                                                                    )
+                                                                  ]
+                                                              )
+                                                            ]
+                                                        )
+                                                    )
+                                                ),
+                                                Expanded(
+                                                    child: Container(
+                                                        decoration: ShapeDecoration(
+                                                            gradient: LinearGradient(
+                                                                begin: Alignment(0.25, -0.73),
+                                                                end: Alignment(0.88, 0.79),
+                                                                colors: [const Color(0xFF007FE2), const Color(0xFF0452C6)]
+                                                            ),
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+                                                        ),
+                                                        clipBehavior: Clip.antiAlias,
+                                                        padding: EdgeInsets.all(16),
+                                                        child: Stack(
+                                                            clipBehavior: Clip.none,
+                                                            children: [
+                                                              Positioned(
+                                                                  right: -16,
+                                                                  top: -16,
+                                                                  bottom: 0,
+                                                                  child: Image.asset('assets/image/c2.png', fit: BoxFit.cover)
+                                                              ),
+                                                              Column(
+                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                  spacing: 40,
+                                                                  children: [
+                                                                    Text(
+                                                                        'Балланс бонусных баллов',
+                                                                        style: TextStyle(
+                                                                            color: Colors.white,
+                                                                            fontSize: 16,
+                                                                            fontWeight: FontWeight.w500,
+                                                                            height: 1.30
+                                                                        )
+                                                                    ),
+                                                                    Row(
+                                                                        spacing: 4,
+                                                                        children: [
+                                                                          Text(
+                                                                              '${controller.user.value?.rang ?? ''}',
+                                                                              style: TextStyle(
+                                                                                  color: Colors.white,
+                                                                                  fontSize: 32,
+                                                                                  fontWeight: FontWeight.w600
+                                                                              )
+                                                                          ),
+                                                                          Image.asset('assets/icon/rang2.png', width: 24, height: 24)
+                                                                        ]
+                                                                    )
+                                                                  ]
+                                                              )
+                                                            ]
+                                                        )
+                                                    )
+                                                )
+                                              ]
+                                          )
                                         ),
                                         h(12),
                                         PrimaryButton(text: 'Все достижения', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () => Get.toNamed('/achieviment')),
@@ -357,7 +359,7 @@ class ClubView extends GetView<NavigationController> {
                                                           ]
                                                       )
                                                   ),
-                                                  PrimaryButton(text: 'Подробнее', height: 40, width: 127, onPressed: () {})
+                                                  PrimaryButton(text: 'Подробнее', height: 40, width: 127, onPressed: () => Get.toNamed(banner['link'], arguments: banner['arguments'], parameters: banner['parameters']))
                                                 ]
                                             )
                                           ]

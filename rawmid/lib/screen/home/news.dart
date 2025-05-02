@@ -6,13 +6,15 @@ import '../../widget/module_title.dart';
 import 'news_card.dart';
 
 class NewsSection extends StatefulWidget {
-  const NewsSection({super.key, required this.news, this.callback, this.title, this.padding, this.recipe});
+  const NewsSection({super.key, required this.news, this.callback, this.callback2, this.title, this.padding, this.recipe, this.my});
 
   final List<NewsModel> news;
   final Function()? callback;
+  final Function()? callback2;
   final String? title;
   final bool? padding;
   final bool? recipe;
+  final int? my;
 
   @override
   State<NewsSection> createState() => NewsSectionState();
@@ -51,7 +53,7 @@ class NewsSectionState extends State<NewsSection> {
                                 }),
                                 itemCount: widget.news.length,
                                 itemBuilder: (context, index) {
-                                  return NewsCard(news: widget.news[index], recipe: widget.recipe ?? false);
+                                  return NewsCard(news: widget.news[index], recipe: widget.recipe ?? false, callback: widget.callback2, my: widget.my);
                                 }
                             )
                         )

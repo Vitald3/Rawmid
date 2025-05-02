@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
 import 'package:rawmid/api/profile.dart';
 import 'package:rawmid/controller/navigation.dart';
-import '../model/profile/reviews.dart';
+import '../model/home/product.dart';
 
 class UserReviewsController extends GetxController {
   RxBool isLoading = false.obs;
-  RxList<MyReviewModel> reviews = <MyReviewModel>[].obs;
+  RxList<ProductModel> products = <ProductModel>[].obs;
   RxInt isChecked = (-1).obs;
   final navController = Get.find<NavigationController>();
 
@@ -16,7 +16,7 @@ class UserReviewsController extends GetxController {
   }
 
   Future initialize() async {
-    reviews.value = await ProfileApi.getReviews();
+    products.value = await ProfileApi.getReviews();
     isLoading.value = true;
   }
 

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:phone_form_field/phone_form_field.dart';
@@ -16,6 +15,7 @@ import 'package:rawmid/model/checkout/total.dart';
 import 'package:rawmid/model/home/product.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../api/cart.dart';
+import '../api/home.dart';
 import '../api/login.dart';
 import '../api/profile.dart';
 import '../model/cart.dart';
@@ -23,6 +23,7 @@ import '../model/checkout/bb_item.dart';
 import '../model/checkout/pvz.dart';
 import '../model/checkout/shipping.dart';
 import '../model/country.dart';
+import '../model/location.dart';
 import '../model/order_history.dart';
 import '../screen/checkout/payment.dart';
 import '../utils/helper.dart';
@@ -31,6 +32,7 @@ class CheckoutController extends GetxController {
   final navController = Get.find<NavigationController>();
   RxBool isLoading = false.obs;
   RxBool preload = false.obs;
+  RxBool isPayLoad = false.obs;
   RxBool emailValidate = false.obs;
   RxBool addAddress = false.obs;
   RxBool cDek = false.obs;
@@ -170,11 +172,11 @@ class CheckoutController extends GetxController {
         return null;
       },
       'city': (value) {
-        if ((value ?? '').isEmpty && cDek.value) return 'Заполните город';
+        if ((value ?? '').isEmpty && (cDek.value || selectedShipping.value.isEmpty)) return 'Заполните город';
         return null;
       },
       'address_1': (value) {
-        if ((value ?? '').isEmpty && cDek.value) return 'Заполните адрес';
+        if ((value ?? '').isEmpty && (cDek.value || selectedShipping.value.isEmpty)) return 'Заполните адрес';
         return null;
       },
       'postcode': (value) {
@@ -284,7 +286,9 @@ class CheckoutController extends GetxController {
     fizControllers.forEach((e, v) {
       errors.putIfAbsent(e, () => GlobalKey<FormFieldState>());
 
-      if (items[e] != null) {
+      if (items[e] != null && e == 'telephone') {
+        phoneField.value = PhoneNumber.parse(items[e]!);
+      } else if (items[e] != null) {
         v.text = items[e]!;
       }
     });
@@ -369,10 +373,10 @@ class CheckoutController extends GetxController {
       try {
         phoneField.value = PhoneNumber.parse(user.phone);
         phoneBuhField.value = PhoneNumber.parse(user.ur.phoneBuh);
-      } catch(e) {
-        phoneField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
-        phoneBuhField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
+      } catch(_) {
+        //
       }
+
       fizControllers['firstname']!.text = user.firstname;
       fizControllers['lastname']!.text = user.lastname;
       fizControllers['email']!.text = user.email;
@@ -396,8 +400,6 @@ class CheckoutController extends GetxController {
       countries.value = val;
       regions.value = countries.firstWhereOrNull((e) => e.countryId == country.value)?.zone ?? <ZoneModel>[];
     });
-
-    getUserLocation();
   }
 
   Future setAddress(int id) async {
@@ -433,36 +435,6 @@ class CheckoutController extends GetxController {
     }
 
     saveField('country_id', id);
-  }
-
-  Future getUserLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-
-    if (!serviceEnabled) {
-      userLocation.value = LatLng(55.853593, 37.501265);
-      return;
-    }
-
-    permission = await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-
-      if (permission == LocationPermission.deniedForever) {
-        return;
-      }
-    }
-
-    Position position = await Geolocator.getCurrentPosition(
-      locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.high
-      )
-    );
-
-    userLocation.value = LatLng(position.latitude, position.longitude);
   }
 
   Future updateCart(CartModel cart) async {
@@ -733,7 +705,7 @@ class CheckoutController extends GetxController {
 
   Future checkout() async {
     if (formKey.currentState?.validate() ?? false) {
-      if (cDek.value && (selectedPvz.value == null || selectedBBPvz.value == null)) {
+      if (cDek.value && selectedPvz.value == null && selectedBBPvz.value == null) {
         Helper.snackBar(error: true, text: 'Выберите ПВЗ');
         return;
       }
@@ -775,7 +747,7 @@ class CheckoutController extends GetxController {
         if (controller.text.isNotEmpty) {
           body.putIfAbsent(key, () => controller.text);
         }
-        if (key == 'phone_buh') {
+        if (key == 'phone_buh' && phoneBuhField.value.nsn.isNotEmpty) {
           body.putIfAbsent(key, () => '+${phoneBuhField.value.countryCode}${phoneBuhField.value.nsn}');
         }
       });
@@ -795,18 +767,16 @@ class CheckoutController extends GetxController {
 
       if (api != null) {
         order.value = api;
+        isPayLoad.value = false;
 
-        showModalBottomSheet(
-            context: Get.context!,
-            isScrollControlled: true,
-            useSafeArea: true,
-            useRootNavigator: true,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20))
-            ),
-            builder: (context) {
-              return PaymentView(order: order.value!);
-            }
+        showDialog(
+          context: Get.context!,
+          barrierDismissible: false,
+          builder: (context) => Dialog(
+            insetPadding: EdgeInsets.zero,
+            backgroundColor: Colors.white,
+            child: PaymentView(order: order.value!)
+          )
         );
       }
     } else {
@@ -832,5 +802,18 @@ class CheckoutController extends GetxController {
     CartApi.clear();
     navController.cartProducts.clear();
     Get.back();
+  }
+
+  Future<List<Location>> suggestionsCallback(String pattern) async {
+    if (pattern.isEmpty) return [];
+    return await HomeApi.searchCity(pattern);
+  }
+
+  Future<List<String>> suggestionsCallback2(String pattern) async {
+    if (controllersAddress['city'] != null && controllersAddress['city']!.text.isNotEmpty) {
+      pattern = '${controllersAddress['city']!.text} $pattern'.trim();
+    }
+
+    return await HomeApi.searchAddress(pattern);
   }
 }

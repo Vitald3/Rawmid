@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/utils/constant.dart';
@@ -12,108 +11,109 @@ class NavMenuView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final navController = Get.find<NavigationController>();
+    final controller = Get.find<NavigationController>();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacityX(0.2), offset: Offset(0, -2), blurRadius: 2)
-        ]
-      ),
-      clipBehavior: Clip.none,
-      padding: EdgeInsets.only(left: 10, right: 10),
-      height: (Platform.isAndroid ? 60 : 30) + MediaQuery.of(context).viewPadding.bottom,
-      child: Obx(() => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: List.generate(5, (index) => Flexible(
-            child: IconButton(
-                onPressed: () {
-                  navController.onItemTapped(index);
+    return Obx(() => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacityX(0.2),
+              spreadRadius: 1,
+              blurRadius: 8,
+              offset: Offset(0, 3)
+            )
+          ]
+        ),
+        child: TabBar(
+        controller: controller.tabController,
+        indicatorColor: Colors.transparent,
+        padding: EdgeInsets.symmetric(horizontal: 10),
+        tabs: List.generate(5, (index) => IconButton(
+            onPressed: () {
+              controller.tabController.index = index;
+              controller.activeTab.value = index;
 
-                  if (nav ?? false) {
-                    Get.back();
+              if (nav ?? false) {
+                Get.back();
 
-                    if (Navigator.canPop(context)) {
-                      Get.back();
-                    }
-                  }
-                },
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(minWidth: 56, minHeight: 56, maxHeight: 56),
-                icon: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset('assets/icon/${index + 1}${navController.activeTab.value == index ? '_active' : ''}.png', width: 16, height: 16),
-                            FittedBox(
-                                fit: BoxFit.cover,
-                                child: Text(
-                                    navController.titles[index],
-                                    style: TextStyle(
-                                        color: navController.activeTab.value == index ? Color(0xFF14BFFF) : Color(0xFFBABABA),
-                                        fontSize: 10,
-                                        letterSpacing: 0.1,
-                                        fontWeight: FontWeight.w900
-                                    )
+                if (Navigator.canPop(context)) {
+                  Get.back();
+                }
+              }
+            },
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints(minWidth: 56, minHeight: 56, maxHeight: 56),
+            icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset('assets/icon/${index + 1}${controller.activeTab.value == index ? '_active' : ''}.png', width: 20, height: 20),
+                        FittedBox(
+                            fit: BoxFit.cover,
+                            child: Text(
+                                controller.titles[index],
+                                style: TextStyle(
+                                    color: controller.activeTab.value == index ? Color(0xFF14BFFF) : Color(0xFFBABABA),
+                                    fontSize: 11,
+                                    letterSpacing: 0.1,
+                                    fontWeight: FontWeight.w900
                                 )
                             )
-                          ]
-                      ),
-                      if (index == 3 && navController.cartProducts.isNotEmpty) Positioned(
-                          right: 2,
-                          top: 2,
-                          child: Container(
-                              padding: EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                  color: primaryColor,
-                                  shape: BoxShape.circle
+                        )
+                      ]
+                  ),
+                  if (index == 3 && controller.cartProducts.isNotEmpty) Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                              color: primaryColor,
+                              shape: BoxShape.circle
+                          ),
+                          constraints: BoxConstraints(
+                              minWidth: 20,
+                              minHeight: 20
+                          ),
+                          child: Text(
+                              '${controller.cartProducts.map((e) => e.quantity).reduce((a, b) => (a ?? 0) + (b ?? 0))}',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11
                               ),
-                              constraints: BoxConstraints(
-                                  minWidth: 16,
-                                  minHeight: 16
-                              ),
-                              child: Text(
-                                  '${navController.cartProducts.map((e) => e.quantity).reduce((a, b) => (a ?? 0) + (b ?? 0))}',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11
-                                  ),
-                                  textAlign: TextAlign.center
-                              )
-                          )
-                      ),
-                      if (index == 2 && navController.wishlist.isNotEmpty) Positioned(
-                          right: 6,
-                          top: 2,
-                          child: Container(
-                              padding: EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                  color: primaryColor,
-                                  shape: BoxShape.circle
-                              ),
-                              constraints: BoxConstraints(
-                                  minWidth: 16,
-                                  minHeight: 16
-                              ),
-                              child: Text(
-                                  '${navController.wishlist.length}',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11
-                                  ),
-                                  textAlign: TextAlign.center
-                              )
+                              textAlign: TextAlign.center
                           )
                       )
-                    ]
-                )
+                  ),
+                  if (index == 2 && controller.wishlist.isNotEmpty) Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                              color: primaryColor,
+                              shape: BoxShape.circle
+                          ),
+                          constraints: BoxConstraints(
+                              minWidth: 20,
+                              minHeight: 20
+                          ),
+                          child: Text(
+                              '${controller.wishlist.length}',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11
+                              ),
+                              textAlign: TextAlign.center
+                          )
+                      )
+                  )
+                ]
             )
-          ))
-      ))
-    );
+        ))
+    )));
   }
 }

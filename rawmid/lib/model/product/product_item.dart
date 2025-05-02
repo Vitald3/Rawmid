@@ -20,6 +20,7 @@ class ProductItemModel {
   late int reward;
   late int quantity;
   late String uCen;
+  late String hdd;
   DateTime? dateEnd;
   late List<String> images;
   late List<ProductModel> childProducts;
@@ -47,6 +48,7 @@ class ProductItemModel {
     required this.reward,
     required this.quantity,
     required this.uCen,
+    required this.hdd,
     required this.dateEnd,
     required this.images,
     required this.childProducts,
@@ -75,6 +77,7 @@ class ProductItemModel {
     reward = int.tryParse('${json['reward']}') ?? 0;
     quantity = int.tryParse('${json['quantity']}') ?? 0;
     uCen = json['ucen'] ?? '';
+    hdd = json['hdd'] ?? '';
 
     dateEnd = DateTime.tryParse('${json['date_end']}');
 
@@ -164,6 +167,7 @@ class ProductItemModel {
     data['reward'] = reward;
     data['quantity'] = quantity;
     data['ucen'] = uCen;
+    data['hdd'] = hdd;
     data['date_end'] = dateEnd;
     data['images'] = images;
     data['child_products'] = childProducts;

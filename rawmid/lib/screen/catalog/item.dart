@@ -282,6 +282,7 @@ class CategoryItemView extends StatelessWidget {
     return Container(
         height: 128,
         padding: const EdgeInsets.only(top: 16, left: 20, right: 20),
+        margin: EdgeInsets.only(bottom: 10),
         child: ProductCardList(
             product: controller.products[index],
             addWishlist: () => controller.addWishlist(controller.products[index].id),

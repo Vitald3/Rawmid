@@ -1,5 +1,3 @@
-import 'package:rawmid/model/home/product.dart';
-
 class MyReviewModel {
   late String id;
   late String author;
@@ -7,11 +5,10 @@ class MyReviewModel {
   late String text;
   late int rating;
   late List<MyReviewModel> comments;
-  late ProductModel product;
   late bool parent;
   bool checked = false;
 
-  MyReviewModel({required this.id, required this.author, this.date, required this.text, required this.rating, required this.comments, required this.product, required this.parent});
+  MyReviewModel({required this.id, required this.author, this.date, required this.text, required this.rating, required this.comments, required this.parent});
 
   MyReviewModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -26,7 +23,6 @@ class MyReviewModel {
         comments.add(MyReviewModel.fromJson(i));
       }
     }
-    product = ProductModel.fromJson(json['product']);
   }
 
   Map<String, dynamic> toJson() {
@@ -38,7 +34,6 @@ class MyReviewModel {
     data['rating'] = rating;
     data['parent'] = parent;
     data['comments'] = comments;
-    data['product'] = product;
     return data;
   }
 }

@@ -1,17 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:rawmid/controller/home.dart';
-import 'package:rawmid/model/home/product.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/widget/module_title.dart';
+import '../../model/profile/sernum.dart';
 import '../../widget/h.dart';
-import '../product/product.dart';
+import '../user/register_product.dart';
 
-class MyProductsSection extends GetView<HomeController> {
+class MyProductsSection extends StatelessWidget {
   const MyProductsSection({super.key, required this.products});
 
-  final List<ProductModel> products;
+  final List<SernumModel> products;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +22,7 @@ class MyProductsSection extends GetView<HomeController> {
           h(20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ModuleTitle(title: 'Мои товары', callback: () {})
+            child: ModuleTitle(title: 'Мои товары', callback: () => Get.toNamed('/my_products'))
           ),
           Container(
             padding: const EdgeInsets.only(left: 20),
@@ -32,7 +31,7 @@ class MyProductsSection extends GetView<HomeController> {
               scrollDirection: Axis.horizontal,
               itemCount: products.length,
               itemBuilder: (context, index) {
-                return _buildProductCard(products[index], controller);
+                return _buildProductCard(products[index]);
               }
             )
           ),
@@ -42,7 +41,7 @@ class MyProductsSection extends GetView<HomeController> {
     );
   }
 
-  Widget _buildProductCard(ProductModel product, HomeController controller) {
+  Widget _buildProductCard(SernumModel product) {
     return Container(
       width: 160,
       margin: EdgeInsets.only(right: 12),
@@ -80,20 +79,12 @@ class MyProductsSection extends GetView<HomeController> {
                   constraints: BoxConstraints(maxWidth: 92),
                   child: Text(product.category, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: primaryColor, fontSize: 12))
                 )
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Obx(() => InkWell(
-                    onTap: () => controller.addWishlist(product.id),
-                    child: Icon(controller.wishlist.contains(product.id) ? Icons.favorite : Icons.favorite_border, color: Colors.white, size: 18)
-                ))
               )
             ]
           ),
           h(8),
           Text(
-            product.title,
+            product.name,
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
             maxLines: 2,
             overflow: TextOverflow.ellipsis
@@ -112,7 +103,7 @@ class MyProductsSection extends GetView<HomeController> {
               ),
               minimumSize: Size(double.infinity, 36),
             ),
-            onPressed: () => Get.to(() => ProductView(id: product.id)),
+            onPressed: () => Get.to(() => RegisterProductView(item: product)),
             child: Text('К товару', style: TextStyle(fontSize: 14, color: Colors.white))
           )
         ]

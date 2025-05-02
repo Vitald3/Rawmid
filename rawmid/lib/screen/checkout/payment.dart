@@ -60,22 +60,28 @@ class PaymentView extends GetView<CheckoutController> {
       });
     })();
   ''');
+
+    Future.delayed(Duration(seconds: 3), () {
+      controller.isPayLoad.value = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    _initializeWebView();
+    if (!controller.isPayLoad.value) {
+      _initializeWebView();
+    }
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12)
       ),
+      height: Get.height * 0.8,
       clipBehavior: Clip.antiAlias,
-      height: MediaQuery.of(context).size.height * 0.7,
       child: Obx(() => Stack(
         children: [
-          controller.isLoading2.value ? Column(
+          Column(
               children: [
                 Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -96,10 +102,16 @@ class PaymentView extends GetView<CheckoutController> {
                 const Divider(height: 1),
                 h(16),
                 if (controller.webController != null) Expanded(
-                    child: WebViewWidget(controller: controller.webController!)
+                  child: Container(
+                    color: Colors.transparent,
+                    child: WebViewWidget(
+                      controller: controller.webController!
+                    )
+                  )
                 )
               ]
-          ) : Center(child: CircularProgressIndicator(color: primaryColor))
+          ),
+          if (!controller.isPayLoad.value) Container(alignment: Alignment.center, color: Colors.white, width: Get.width, height: Get.height, child: CircularProgressIndicator(color: primaryColor))
         ]
       ))
     );

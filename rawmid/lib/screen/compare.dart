@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/screen/product/product.dart';
 import 'package:rawmid/utils/constant.dart';
+import 'package:rawmid/utils/helper.dart';
 import 'package:rawmid/widget/module_title.dart';
 import 'package:rawmid/widget/primary_button.dart';
 import '../controller/compare.dart';
 import '../widget/h.dart';
+import '../widget/nav_menu.dart';
 
 class CompareView extends StatelessWidget {
   const CompareView({super.key});
@@ -46,8 +48,31 @@ class CompareView extends StatelessWidget {
                               children: [
                                 h(16),
                                 ModuleTitle(title: 'Сравнение товаров', type: true),
+                                if (controller.compares.isNotEmpty) Transform.translate(
+                                  offset: Offset(-10, 0),
+                                  child: GestureDetector(
+                                    onTap: controller.setCompares,
+                                    child: Row(
+                                        children: [
+                                          Checkbox(
+                                              overlayColor: WidgetStatePropertyAll(primaryColor),
+                                              side: BorderSide(color: primaryColor, width: 2),
+                                              checkColor: Colors.white,
+                                              activeColor: primaryColor,
+                                              visualDensity: VisualDensity.compact,
+                                              value: controller.isC.value,
+                                              onChanged: (val) {}
+                                          ),
+                                          Text(
+                                              'Показать различия',
+                                              style: TextStyle(fontSize: 14)
+                                          )
+                                        ]
+                                    )
+                                  )
+                                ),
                                 h(10),
-                                controller.compares.isNotEmpty ? Row(
+                                controller.search.isNotEmpty ? Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Container(
@@ -99,13 +124,22 @@ class CompareView extends StatelessWidget {
                                                   children: List.generate(controller.titles.length + 1, (index) {
                                                     if (index == controller.titles.length) {
                                                       return Row(
-                                                          children: List.generate(controller.compares.length, (index3) {
+                                                          children: List.generate(controller.search.length, (index3) {
                                                             return Container(
                                                                 width: 130,
                                                                 padding: EdgeInsets.only(left: 10, right: 10, top: 15),
-                                                                child: PrimaryButton(text: controller.navController.isCart(controller.compares[index3].id) ? 'В корзине' : 'Купить', height: 40, onPressed: () {
-                                                                  controller.navController.addCart(controller.compares[index3].id);
-                                                                })
+                                                                child: Column(
+                                                                  spacing: 4,
+                                                                  children: [
+                                                                    PrimaryButton(text: controller.navController.isCart(controller.search[index3].id) ? 'В корзине' : 'Купить', height: 40, loader: true, onPressed: () async {
+                                                                      await controller.navController.addCart(controller.search[index3].id);
+                                                                    }),
+                                                                    PrimaryButton(text: 'Удалить', background: dangerColor, height: 40, onPressed: () {
+                                                                      Helper.addCompare(controller.search[index3].id);
+                                                                      controller.search.removeAt(index3);
+                                                                    })
+                                                                  ]
+                                                                )
                                                             );
                                                           })
                                                       );
@@ -131,8 +165,8 @@ class CompareView extends StatelessWidget {
                                                             key: controller.keys2[index],
                                                             spacing: 4,
                                                             crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: List.generate(controller.compares.length, (index2) {
-                                                              final compare = controller.compares[index2];
+                                                            children: List.generate(controller.search.length, (index2) {
+                                                              final compare = controller.search[index2];
 
                                                               if (index == 1) {
                                                                 return GestureDetector(
@@ -155,7 +189,7 @@ class CompareView extends StatelessWidget {
                                                                 );
                                                               }
 
-                                                              if (index == 3) {
+                                                              if (controller.titles[index] == 'Цена') {
                                                                 return Container(
                                                                     width: 130,
                                                                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: controller.height[index] != null ? 0 : 8),
@@ -170,7 +204,7 @@ class CompareView extends StatelessWidget {
                                                                 );
                                                               }
 
-                                                              if (index == 7) {
+                                                              if (controller.titles[index] == 'Рейтинг') {
                                                                 return Container(
                                                                     width: 130,
                                                                     alignment: Alignment.center,
@@ -186,15 +220,15 @@ class CompareView extends StatelessWidget {
 
                                                               if (index == 0) {
                                                                 title = compare.name;
-                                                              } else if (index == 2) {
+                                                              } else if (controller.titles[index] == 'Категория') {
                                                                 title = compare.category;
-                                                              } else if (index == 4) {
+                                                              } else if (controller.titles[index] == 'Производитель') {
                                                                 title = compare.manufacturer;
-                                                              } else if (index == 5) {
+                                                              } else if (controller.titles[index] == 'Модель') {
                                                                 title = compare.model;
-                                                              } else if (index == 6) {
+                                                              } else if (controller.titles[index] == 'Наличие') {
                                                                 title = compare.availability;
-                                                              } else if (index == 8) {
+                                                              } else if (controller.titles[index] == 'Цвет') {
                                                                 title = compare.color;
                                                               }
 
@@ -258,7 +292,8 @@ class CompareView extends StatelessWidget {
                                           )
                                       )
                                     ]
-                                ) : Center(
+                                ) : SizedBox(
+                                    width: double.infinity,
                                     child: Text('Вы еще не добавляли в сравнение', style: TextStyle(fontSize: 16))
                                 ),
                                 h(20 + MediaQuery.of(context).padding.bottom)
@@ -269,7 +304,8 @@ class CompareView extends StatelessWidget {
                       )
                     ]
                 ))
-            )
+            ),
+            bottomNavigationBar: NavMenuView(nav: true)
         )
     );
   }

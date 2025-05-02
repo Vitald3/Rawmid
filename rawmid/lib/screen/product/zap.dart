@@ -38,7 +38,7 @@ class ZapView extends StatelessWidget {
                       ),
                       Positioned(
                           top: 10,
-                          right: 10,
+                          right: 0,
                           child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 26, color: Colors.white))
                       )
                     ]

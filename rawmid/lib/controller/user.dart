@@ -7,8 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/api/profile.dart';
 import 'package:rawmid/controller/navigation.dart';
+import '../api/home.dart';
 import '../api/login.dart';
 import '../model/country.dart';
+import '../model/location.dart';
 import '../model/profile/profile.dart';
 import '../utils/helper.dart';
 
@@ -256,9 +258,8 @@ class UserController extends GetxController {
       try {
         phoneField.value = PhoneNumber.parse(api.phone);
         phoneBuhField.value = PhoneNumber.parse(api.ur.phoneBuh);
-      } catch(e) {
-        phoneField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
-        phoneBuhField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
+      } catch(_) {
+        //
       }
 
       controllers['firstname']!.text = api.firstname;
@@ -460,5 +461,18 @@ class UserController extends GetxController {
     }
 
     loadImage.value = false;
+  }
+
+  Future<List<Location>> suggestionsCallback(String pattern) async {
+    if (pattern.isEmpty) return [];
+    return await HomeApi.searchCity(pattern);
+  }
+
+  Future<List<String>> suggestionsCallback2(String pattern) async {
+    if (controllersAddress['city'] != null && controllersAddress['city']!.text.isNotEmpty) {
+      pattern = '${controllersAddress['city']!.text} $pattern'.trim();
+    }
+
+    return await HomeApi.searchAddress(pattern);
   }
 }

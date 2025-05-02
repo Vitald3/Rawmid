@@ -20,7 +20,7 @@ class CartView extends StatelessWidget {
         builder: (controller) => ColoredBox(
             color: Colors.white,
             child: Obx(() {
-              if (controller.isLoading.value) {
+              if (!controller.isLoading.value) {
                 return Center(
                     child: CircularProgressIndicator(color: primaryColor)
                 );
@@ -111,8 +111,16 @@ class CartView extends StatelessWidget {
                                 product.name,
                                 style: TextStyle(
                                     color: Color(0xFF1E1E1E),
-                                    fontSize: 11,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w700
+                                )
+                            ),
+                            if (product.hdd.isNotEmpty) h(4),
+                            if (product.hdd.isNotEmpty) Text(
+                                product.hdd,
+                                style: TextStyle(
+                                    color: Color(0xFF1E1E1E),
+                                    fontSize: 11
                                 )
                             ),
                             if (product.color.isNotEmpty) h(4),
@@ -120,7 +128,6 @@ class CartView extends StatelessWidget {
                                 'Цвет: ${product.color}',
                                 style: TextStyle(fontSize: 12, color: Colors.grey[600])
                             ),
-                            h(8),
                             Text(
                                 product.price,
                                 style: TextStyle(

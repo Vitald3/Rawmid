@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../model/order_history.dart';
 import '../utils/constant.dart';
 
 class PopupMenuNoPadding extends StatefulWidget {
-  const PopupMenuNoPadding({super.key, required this.callback});
+  const PopupMenuNoPadding({super.key, required this.order, required this.callback});
 
+  final OrdersModel order;
   final Function(int) callback;
 
   @override
@@ -31,13 +33,21 @@ class PopupMenuNoPaddingState extends State<PopupMenuNoPadding> {
       menuPadding: EdgeInsets.zero,
       color: Colors.white,
       items: [
-        PopupMenuItem<int>(
+        if (widget.order.cancel) PopupMenuItem<int>(
           value: 1,
-          child: const Text('Переоформить')
+          child: const Text('Отменить заказ', style: TextStyle(color: dangerColor))
         ),
         PopupMenuItem<int>(
-          value: 2,
-          child: const Text('Задать вопрос')
+            value: 2,
+            child: const Text('Задать вопрос')
+        ),
+        PopupMenuItem<int>(
+            value: 3,
+            child: const Text('Переоформить')
+        ),
+        if (widget.order.payLink.isNotEmpty) PopupMenuItem<int>(
+            value: 4,
+            child: Text(widget.order.payText)
         )
       ],
       shape: RoundedRectangleBorder(

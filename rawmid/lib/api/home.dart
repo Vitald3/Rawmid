@@ -8,6 +8,10 @@ import '../model/home/rank.dart';
 import '../model/home/search.dart';
 import '../model/home/special.dart';
 import '../model/location.dart';
+import '../model/product/product_autocomplete.dart';
+import '../model/profile/sernum.dart';
+import '../model/profile/sernum_support.dart';
+import '../model/support/contact.dart';
 import '../utils/constant.dart';
 import '../utils/helper.dart';
 
@@ -52,6 +56,40 @@ class HomeApi {
     }
 
     return 'KZ';
+  }
+
+  static Future<List<String>> searchAddress(String query) async {
+    List<String> items = [];
+
+    try {
+      const String apiKey = '2f0980328dabb04ad1203cf872acf82ac55d77b5';
+      const String url = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address';
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Token $apiKey'
+        },
+        body: jsonEncode({
+          'query': query,
+          'count': 5,
+          'restrict_value': false,
+          'language': 'ru'
+        })
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final suggestions = data['suggestions'] as List;
+        return suggestions.map((item) => item['value'] as String).toList();
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
   }
 
   static Future<List<Location>> searchCity(String query) async {
@@ -121,7 +159,7 @@ class HomeApi {
       }, body: {'link': link});
       final json = jsonDecode(response.body);
 
-      return MapEntry(json['type'] ?? '', '${json['category'] ?? json['id'] ?? ''}');
+      return MapEntry(json?['type'] ?? '', '${json?['category'] ?? json?['id'] ?? ''}');
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -173,8 +211,67 @@ class HomeApi {
     return items;
   }
 
-  static Future<List<ProductModel>> getSernum() async {
-    List<ProductModel> items = [];
+  static Future<List<String>> getOrderIds() async {
+    List<String> items = [];
+
+    try {
+      final response = await http.get(Uri.parse(getOrderIdsUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+      final json = jsonDecode(response.body);
+
+      if (json['ids'] != null) {
+        for (var i in json['ids']) {
+          items.add('$i');
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<List<SernumSupportModel>> getSernumSupport() async {
+    List<SernumSupportModel> items = [];
+
+    try {
+      final response = await http.get(Uri.parse(getSernumSupportUrl), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+      final json = jsonDecode(response.body);
+
+      if (json['sernums'] != null) {
+        for (var i in json['sernums']) {
+          items.add(SernumSupportModel.fromJson(i));
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<ContactMapData?> getContact() async {
+    try {
+      final response = await http.get(Uri.parse(contactsUrl), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+      final json = jsonDecode(response.body);
+      return ContactMapData.fromJson(json);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return null;
+  }
+
+  static Future<List<SernumModel>> getSernum() async {
+    List<SernumModel> items = [];
 
     try {
       final response = await http.get(Uri.parse(getSernumUrl), headers: {
@@ -185,7 +282,7 @@ class HomeApi {
 
       if (json['products'] != null) {
         for (var i in json['products']) {
-          items.add(ProductModel.fromJson(i));
+          items.add(SernumModel.fromJson(i));
         }
       }
     } catch (e) {
@@ -193,6 +290,69 @@ class HomeApi {
     }
 
     return items;
+  }
+
+  static Future<List<ProductAutocompleteModel>> getAutocomplete(Map<String, dynamic> body) async {
+    List<ProductAutocompleteModel> items = [];
+
+    try {
+      final response = await http.post(Uri.parse(getAutocompleteUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: body);
+
+      final json = jsonDecode(response.body);
+
+      if (json['products'] != null) {
+        for (var i in json['products']) {
+          items.add(ProductAutocompleteModel.fromJson(i));
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<bool> registerProduct(Map<String, dynamic> body) async {
+    try {
+      final response = await http.post(Uri.parse(registerProductUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: body);
+      final json = jsonDecode(response.body);
+
+      if ((json['error'] ?? '').isEmpty) {
+        return true;
+      } else {
+        Helper.snackBar(error: true, text: '${json['error']}');
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return false;
+  }
+
+  static Future<String> warrantyProduct(Map<String, dynamic> body) async {
+    try {
+      final response = await http.post(Uri.parse(warrantyProductUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: body);
+      final json = jsonDecode(response.body);
+
+      if ((json['warranty'] ?? '').isNotEmpty) {
+        return '${json['warranty']}';
+      } else {
+        Helper.snackBar(error: true, text: '${json['error']}');
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return '';
   }
 
   static Future<List<ProductModel>> getViewed(List<String> pids) async {

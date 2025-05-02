@@ -10,13 +10,14 @@ import '../model/home/achieviment.dart';
 import '../model/home/banner.dart';
 import '../model/home/product.dart';
 import '../model/home/special.dart';
+import '../model/profile/sernum.dart';
 
 class HomeController extends GetxController {
   RxBool isLoading = false.obs;
   RxList<BannerModel> banners = <BannerModel>[].obs;
   Rxn<AchievimentModel> achieviment = Rxn<AchievimentModel>();
   var ranks = <RankModel>[].obs;
-  RxList<ProductModel> myProducts = <ProductModel>[].obs;
+  RxList<SernumModel> myProducts = <SernumModel>[].obs;
   RxList<ProductModel> viewedList = <ProductModel>[].obs;
   RxList<ProductModel> shopProducts = <ProductModel>[].obs;
   RxList<SpecialModel> specials = <SpecialModel>[].obs;
@@ -34,8 +35,17 @@ class HomeController extends GetxController {
 
   Future initialize() async {
     isLoading.value = false;
+    final fId = Helper.prefs.getInt('fias_id') ?? 0;
+
+    if (fId > 0) {
+      await HomeApi.changeCity(fId);
+    }
+
     final banners = await HomeApi.getBanner({});
     this.banners.value = banners;
+
+    final featured = await HomeApi.getFeatured();
+    shopProducts.value = featured;
 
     final map = await ClubApi.getAchievements();
     var items = <AchievementModel>[];
@@ -66,9 +76,8 @@ class HomeController extends GetxController {
 
     isLoading.value = true;
 
-    HomeApi.getRanks().then((e) {
-      ranks.value = e;
-    });
+    final e = await HomeApi.getRanks();
+    ranks.value = e;
 
     HomeApi.getSernum().then((e) {
       myProducts.value = e;
@@ -79,10 +88,6 @@ class HomeController extends GetxController {
         viewedList.value = e;
       });
     }
-
-    HomeApi.getFeatured().then((e) {
-      shopProducts.value = e;
-    });
 
     HomeApi.getRecords().then((e) {
       specials.value = e;

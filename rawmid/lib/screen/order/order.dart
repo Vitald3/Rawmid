@@ -211,7 +211,7 @@ class OrderView extends StatelessWidget {
                                                                                               'Статус:',
                                                                                               style: TextStyle(
                                                                                                   color: Color(0xFF8A95A8),
-                                                                                                  fontSize: 12,
+                                                                                                  fontSize: 15,
                                                                                                   fontWeight: FontWeight.w600
                                                                                               )
                                                                                           ),
@@ -220,27 +220,12 @@ class OrderView extends StatelessWidget {
                                                                                               order.status,
                                                                                               style: TextStyle(
                                                                                                   color: Color(0xFF0D80D9),
-                                                                                                  fontSize: 12,
+                                                                                                  fontSize: 16,
                                                                                                   fontWeight: FontWeight.w600
                                                                                               )
                                                                                           )
                                                                                         ]
                                                                                     )
-                                                                                ),
-                                                                                Row(
-                                                                                    mainAxisSize: MainAxisSize.min,
-                                                                                    children: [
-                                                                                      Image.asset('assets/icon/${order.payD == 1 ? 'check' : 'clo'}.png', width: 9),
-                                                                                      w(4),
-                                                                                      Text(
-                                                                                          order.payD == 1 ? 'Оплачено' : 'Не оплачено',
-                                                                                          style: TextStyle(
-                                                                                              color: Color(order.payD == 1 ? 0xFF03A34B : 0xFFDA2E2E),
-                                                                                              fontSize: 8,
-                                                                                              fontWeight: FontWeight.w600
-                                                                                          )
-                                                                                      )
-                                                                                    ]
                                                                                 )
                                                                               ]
                                                                           ),
@@ -338,7 +323,7 @@ class OrderView extends StatelessWidget {
                                                         })
                                                     );
                                                   }
-                                                ) : Center(child: Text('Вы еще не оформляли заказ')),
+                                                ) : Container(padding: EdgeInsets.symmetric(horizontal: 20), child: Text('Вы еще не оформляли заказ')),
                                                 h(20 + MediaQuery.of(context).padding.bottom)
                                               ]
                                           )

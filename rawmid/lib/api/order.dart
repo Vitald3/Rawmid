@@ -46,6 +46,21 @@ class OrderApi {
     return null;
   }
 
+  static Future<bool> cancelOrder(String id) async {
+    try {
+      final response = await http.post(Uri.parse(orderCancelUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'id': id});
+      final json = jsonDecode(response.body);
+      return json['success'] ?? false;
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return false;
+  }
+
   static Future<String> printStr(String link) async {
     try {
       final request = http.Request('GET', Uri.parse(link));

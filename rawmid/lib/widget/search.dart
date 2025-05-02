@@ -163,9 +163,13 @@ class SearchWidget extends GetView<NavigationController> {
 
                                             if (Get.currentRoute == '/ProductView') {
                                               final id = Get.find<ProductController>().id;
+                                              Get.delete<ProductController>();
+                                              Get.put(ProductController(suggestion.id));
                                               Get.find<ProductController>().setId(suggestion.id);
                                               Get.find<ProductController>().initialize();
                                               Get.to(() => ProductView(id: suggestion.id), preventDuplicates: false)?.then((_) {
+                                                Get.delete<ProductController>();
+                                                Get.put(ProductController(suggestion.id));
                                                 Get.find<ProductController>().setId(id);
                                                 Get.find<ProductController>().initialize();
                                               });
@@ -219,14 +223,19 @@ class SearchWidget extends GetView<NavigationController> {
 
                                             if (Get.currentRoute == '/NewsView') {
                                               final id = Get.find<NewsController>().id;
+                                              final recipe = Get.find<NewsController>().recipe;
                                               Get.find<NewsController>().setId(suggestion.id);
+                                              Get.find<NewsController>().setRecipe(suggestion.recipe ?? false);
                                               Get.find<NewsController>().initialize();
-                                              Get.to(() => NewsView(id: suggestion.id, recipe: suggestion.recipe ?? false), preventDuplicates: false)?.then((_) {
+                                              Get.to(() => NewsView(), preventDuplicates: false)?.then((_) {
                                                 Get.find<NewsController>().setId(id);
+                                                Get.find<NewsController>().setRecipe(recipe);
                                                 Get.find<NewsController>().initialize();
                                               });
                                             } else {
-                                              Get.to(() => NewsView(id: suggestion.id, recipe: suggestion.recipe ?? false));
+                                              Get.delete<NewsController>();
+                                              Get.put(NewsController(suggestion.id, suggestion.recipe ?? false));
+                                              Get.to(() => NewsView());
                                             }
 
                                             controller.clearSearch();

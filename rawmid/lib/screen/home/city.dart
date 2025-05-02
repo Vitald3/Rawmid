@@ -27,8 +27,7 @@ class CitySearch extends GetView<NavigationController> {
                   cursorHeight: 15,
                   style: TextStyle(
                       color: firstColor,
-                      fontSize: 11,
-                      fontFamily: 'Manrope',
+                      fontSize: 15,
                       fontWeight: FontWeight.w500
                   ),
                   onChanged: controller.filterCities,

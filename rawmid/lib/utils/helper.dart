@@ -11,6 +11,7 @@ import 'package:rawmid/screen/catalog/item.dart';
 import 'package:rawmid/screen/news/news.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../controller/news.dart';
 import '../model/catalog/category.dart';
 import '../screen/product/product.dart';
 import 'constant.dart';
@@ -33,6 +34,7 @@ class Helper {
   static late final SharedPreferences prefs;
   static ValueNotifier<List<String>> wishlist = ValueNotifier([]);
   static ValueNotifier<List<String>> compares = ValueNotifier([]);
+  static bool compareAlert = Helper.prefs.getBool('compareAlert') ?? false;
   static ValueNotifier<int> trigger = ValueNotifier(0);
 
   static void snackBar({String text = '', String title = '', String yes = 'OK', bool notTitle = false, bool hide = false, bool error = false, bool prev = false, Function? callback, Function? callback2}) {
@@ -109,9 +111,13 @@ class Helper {
         if (api.key == 'product') {
           Get.to(() => ProductView(id: api.value));
         } else if (api.key == 'record') {
-          Get.to(() => NewsView(id: api.value, recipe: false));
+          Get.delete<NewsController>();
+          Get.put(NewsController(api.value, false));
+          Get.to(() => NewsView());
         } else if (api.key == 'recipe') {
-          Get.to(() => NewsView(id: api.value, recipe: true));
+          Get.delete<NewsController>();
+          Get.put(NewsController(api.value, true));
+          Get.to(() => NewsView());
         } else if (api.key == 'category') {
           try {
             final category = jsonDecode(api.value);
@@ -124,6 +130,8 @@ class Helper {
       } else {
         Helper.launchInBrowser(link);
       }
+    } else {
+      Helper.launchInBrowser(link);
     }
   }
 
@@ -133,6 +141,12 @@ class Helper {
   }
 
   static addCompare(String id) {
+    if (!compareAlert) {
+      Helper.prefs.setBool('compareAlert', true);
+      compareAlert = true;
+      Helper.snackBar(title: '', text: 'Для просмотра списка товаров, перейдите в меню -> Сравнение товаров');
+    }
+
     if (compares.value.contains(id)) {
       compares.value.remove(id);
     } else {

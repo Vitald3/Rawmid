@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 import 'package:rawmid/api/blog.dart';
 import 'package:rawmid/model/home/news.dart';
 
+import '../api/home.dart';
 import '../model/home/category_news.dart';
+import '../utils/helper.dart';
 
 class BlogController extends GetxController {
   var id = ''.obs;
@@ -11,6 +13,8 @@ class BlogController extends GetxController {
   var isRecipe = false.obs;
   var news = <NewsModel>[].obs;
   var featured = <NewsModel>[].obs;
+  RxInt isChecked = (-1).obs;
+  var revHeight = 0.0.obs;
   var activeIndex = 0.obs;
   final pageController = PageController(viewportFraction: 0.85);
   var categories = <CategoryNewsModel>[].obs;
@@ -25,7 +29,7 @@ class BlogController extends GetxController {
     this.id.value = id;
     isLoading.value = false;
 
-    final api = await BlogApi.blog(true, id: id);
+    final api = await BlogApi.blog(isRecipe.value, id: id);
     news.clear();
 
     if (api.isNotEmpty) {
@@ -38,19 +42,20 @@ class BlogController extends GetxController {
   }
 
   Future initialize() async {
-    isRecipe.value = Get.arguments != null;
+    final fId = Helper.prefs.getInt('fias_id') ?? 0;
 
-    if (isRecipe.value) {
-      final categories = await BlogApi.getCategoriesRecipe();
-      this.categories.value = categories;
-
-      if (categories.isNotEmpty) {
-        isLoading.value = true;
-        return;
-      }
+    if (fId > 0) {
+      await HomeApi.changeCity(fId);
     }
 
-    final api = await BlogApi.blog(Get.arguments != null, mySurvey: Get.parameters['my_survey'] == '1', myRecipes: Get.parameters['my_recipes'] == '1');
+    isRecipe.value = Get.arguments != null || Get.parameters['my_recipes'] == '1';
+
+    if (Get.arguments != null && (Get.parameters['my_recipes'] == null || Get.parameters['my_survey'] == null)) {
+      final categories = await BlogApi.getCategoriesNews(isRecipe.value);
+      this.categories.value = categories;
+    }
+
+    final api = await BlogApi.blog(Get.arguments != null || Get.parameters['my_recipes'] == '1', mySurvey: Get.parameters['my_survey'] == '1', myRecipes: Get.parameters['my_recipes'] == '1');
 
     if (api.isNotEmpty) {
       for (var i in api['blog']['news'] ?? []) {

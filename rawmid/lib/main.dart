@@ -14,10 +14,17 @@ import 'package:rawmid/screen/news/blog.dart';
 import 'package:rawmid/screen/special.dart';
 import 'package:rawmid/screen/support/support.dart';
 import 'package:rawmid/screen/order/order.dart';
+import 'package:rawmid/screen/user/add_news.dart';
+import 'package:rawmid/screen/user/add_product.dart';
+import 'package:rawmid/screen/user/add_recept.dart';
+import 'package:rawmid/screen/user/my_product.dart';
 import 'package:rawmid/screen/user/reviews.dart';
+import 'package:rawmid/screen/user/reward.dart';
 import 'package:rawmid/screen/user/user.dart';
+import 'package:rawmid/screen/user/warranty_product.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/utils/helper.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +32,6 @@ void main() async {
     DeviceOrientation.portraitUp
   ]);
   await Helper.initialize();
-
   runApp(const App());
 }
 
@@ -51,6 +57,21 @@ class App extends StatelessWidget {
           GetPage(name: '/club_content', page: () => const ClubContentView()),
           GetPage(name: '/achieviment', page: () => const AchievimentView()),
           GetPage(name: '/specials', page: () => const SpecialView()),
+          GetPage(name: '/my_products', page: () => const MyProductView()),
+          GetPage(name: '/add_product', page: () => const AddProductView()),
+          GetPage(name: '/warranty_product', page: () => const WarrantyProductView()),
+          GetPage(name: '/rewards', page: () => const RewardView()),
+          GetPage(name: '/add_recipe', page: () => const AddReceptView()),
+          GetPage(name: '/add_news', page: () => const AddNewsView()),
+        ],
+        locale: Locale('ru', 'RU'),
+        supportedLocales: [
+          Locale('ru', 'RU')
+        ],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate
         ],
         theme: theme,
         debugShowCheckedModeBanner: false,

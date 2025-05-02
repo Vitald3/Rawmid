@@ -1,22 +1,21 @@
 import 'dart:async';
-
 import 'package:get/get.dart';
-import 'package:rawmid/controller/home.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/model/catalog/category.dart';
 import 'package:rawmid/model/home/banner.dart';
 import 'package:rawmid/model/home/product.dart';
 import 'package:rawmid/utils/helper.dart';
 import '../api/catalog.dart';
+import '../api/home.dart';
 
 class CatalogController extends GetxController {
   RxBool isLoading = false.obs;
-  final navController = Get.find<NavigationController>();
-  HomeController? homeController;
   RxList<String> wishlist = (Helper.prefs.getStringList('wishlist') ?? <String>[]).obs;
   RxList<CategoryModel> categories = <CategoryModel>[].obs;
   RxList<ProductModel> specials = <ProductModel>[].obs;
+  RxList<ProductModel> shopProducts = <ProductModel>[].obs;
   RxList<BannerModel> banners = <BannerModel>[].obs;
+  RxList<BannerModel> banners2 = <BannerModel>[].obs;
 
   @override
   void onInit() {
@@ -25,13 +24,17 @@ class CatalogController extends GetxController {
   }
 
   Future initialize() async {
-    Timer.periodic(const Duration(seconds: 1), (t) {
-      homeController ??= Get.find<HomeController>();
-    });
+    final fId = Helper.prefs.getInt('fias_id') ?? 0;
 
-    CatalogApi.getCategories().then((e) {
-      categories.value = e;
-    });
+    if (fId > 0) {
+      await HomeApi.changeCity(fId);
+    }
+
+    final e = await CatalogApi.getCategories();
+    categories.value = e;
+
+    final api = await HomeApi.getBanner({});
+    banners2.value = api;
 
     CatalogApi.getSpecials().then((e) {
       specials.value = e;
@@ -39,6 +42,10 @@ class CatalogController extends GetxController {
 
     CatalogApi.getPredloz().then((e) {
       banners.value = e;
+    });
+
+    HomeApi.getFeatured().then((e) {
+      shopProducts.value = e;
     });
 
     isLoading.value = true;
@@ -54,6 +61,7 @@ class CatalogController extends GetxController {
     Helper.prefs.setStringList('wishlist', wishlist);
     Helper.wishlist.value = wishlist;
     Helper.trigger.value++;
+    final navController = Get.find<NavigationController>();
     navController.wishlist.value = wishlist;
   }
 }

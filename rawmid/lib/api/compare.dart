@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../model/compare.dart';
 import '../utils/constant.dart';
 import '../utils/helper.dart';
 
 class CompareApi {
-  static Future<List<CompareProductModel>> getCompares(String ids) async {
-    List<CompareProductModel> items = [];
+  static Future<Map<String, dynamic>> getCompares(String ids) async {
+    Map<String, dynamic> items = {};
 
     try {
       final response = await http.post(Uri.parse(comparesUrl), headers: {
@@ -17,9 +16,7 @@ class CompareApi {
       final json = jsonDecode(response.body);
 
       if (json['products'] != null) {
-        for (var i in json['products']) {
-          items.add(CompareProductModel.fromJson(i));
-        }
+        return json;
       }
     } catch (e) {
       debugPrint(e.toString());

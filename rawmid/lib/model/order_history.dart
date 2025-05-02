@@ -10,8 +10,11 @@ class OrdersModel {
   late String comment;
   late String avatar;
   late String address;
+  late String payLink;
+  late String payText;
   late int payD;
   late int end;
+  late bool cancel;
   late List<CartModel> products;
   late List<HistoryOrder> history;
   late List<TotalOrder> totals;
@@ -26,8 +29,11 @@ class OrdersModel {
         required this.comment,
         required this.avatar,
         required this.address,
+        required this.payLink,
+        required this.payText,
         required this.payD,
         required this.end,
+        required this.cancel,
         required this.products,
         required this.history,
         required this.totals});
@@ -42,8 +48,11 @@ class OrdersModel {
     comment = json['comment'];
     avatar = json['avatar'];
     address = json['address'];
+    payLink = json['pay_link'];
+    payText = json['pay_text'];
     payD = json['payd'];
     end = json['end'];
+    cancel = (int.tryParse('${json['can_cancel']}') ?? 0) == 1;
     products = <CartModel>[];
     if (json['products'] != null) {
       json['products'].forEach((v) {
@@ -75,8 +84,11 @@ class OrdersModel {
     data['comment'] = comment;
     data['avatar'] = avatar;
     data['address'] = address;
+    data['pay_link'] = payLink;
+    data['pay_text'] = payText;
     data['payd'] = payD;
     data['end'] = end;
+    data['can_cancel'] = cancel;
     data['products'] = products.map((v) => v.toJson()).toList();
     data['history'] = history.map((v) => v.toJson()).toList();
     data['totals'] = totals.map((v) => v.toJson()).toList();

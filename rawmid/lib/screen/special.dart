@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/controller/navigation.dart';
@@ -6,8 +7,6 @@ import 'package:rawmid/utils/constant.dart';
 import '../../widget/search.dart';
 import '../../widget/search_bar.dart';
 import '../../widget/h.dart';
-import '../controller/cart.dart';
-import '../controller/home.dart';
 import '../controller/special.dart';
 import '../model/home/product.dart';
 import '../utils/helper.dart';
@@ -57,17 +56,8 @@ class SpecialView extends GetView<NavigationController> {
                                     ).then((_) {
                                       controller.filteredCities.value = controller.cities;
                                       controller.filteredLocation.clear();
+                                      special.initialize();
                                       controller.initialize();
-
-                                      if (Get.isRegistered<HomeController>()) {
-                                        final home = Get.find<HomeController>();
-                                        home.initialize();
-                                      }
-
-                                      if (Get.isRegistered<CartController>()) {
-                                        final cart = Get.find<CartController>();
-                                        cart.initialize();
-                                      }
                                     });
                                   },
                                   child: Padding(
@@ -235,17 +225,19 @@ class SpecialView extends GetView<NavigationController> {
                                 },
                                 child: Container(
                                     height: 32,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
                                     decoration: ShapeDecoration(
                                         color: Color(special.tab.value == 1 ? 0xFF80AEBF : 0xFFEBF3F6),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
-                                        'Распродажа',
+                                        'Товары распродажи',
+                                        textAlign: TextAlign.center,
                                         style: TextStyle(
                                             color: special.tab.value != 1 ? Color(0xFF80AEBF) : Colors.white,
                                             fontSize: 12,
+                                            height: 1,
                                             fontWeight: FontWeight.w600,
                                             letterSpacing: 0.24
                                         )
@@ -284,6 +276,52 @@ class SpecialView extends GetView<NavigationController> {
                   )
               ),
               h(10),
+              if (special.banners.isNotEmpty && special.tab.value == 1) SizedBox(
+                  height: 160,
+                  child: PageView.builder(
+                      controller: special.pageController,
+                      onPageChanged: (val) => special.setTimer(val),
+                      itemCount: special.banners.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: CachedNetworkImage(
+                                    imageUrl: special.banners[index].image2,
+                                    errorWidget: (c, e, i) {
+                                      return Image.asset('assets/image/no_image.png');
+                                    },
+                                    width: double.infinity,
+                                    fit: BoxFit.contain
+                                )
+                            )
+                        );
+                      }
+                  )
+              ),
+              if (special.time.value.inSeconds > 0 && special.tab.value == 1) h(10),
+              if (special.time.value.inSeconds > 0 && special.tab.value == 1) Text('До окончания акции:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              if (special.time.value.inSeconds > 0 && special.tab.value == 1) h(10),
+              if (special.time.value.inSeconds > 0 && special.tab.value == 1) Container(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF009FE6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildTimerItem(special.time.value.inDays, Helper.getNoun(special.time.value.inDays, 'День', 'Дня', 'Дней', before: false)),
+                        _buildTimerItem(special.time.value.inHours % 24, Helper.getNoun(special.time.value.inHours % 24, 'Час', 'Часа', 'Часов', before: false)),
+                        _buildTimerItem(special.time.value.inMinutes % 24, Helper.getNoun(special.time.value.inMinutes % 24, 'Минута', 'Минуты', 'Минут', before: false))
+                      ]
+                  )
+              ),
+              if (special.time.value.inSeconds > 0 && special.tab.value == 1) h(10),
               Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -341,6 +379,25 @@ class SpecialView extends GetView<NavigationController> {
             },
             margin: false
         )
+    );
+  }
+
+  Widget _buildTimerItem(int value, String label) {
+    return Row(
+        children: [
+          Container(
+              width: 43,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(8)
+              ),
+              child: Text('$value', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white))
+          ),
+          w(5),
+          Text(label, style: TextStyle(fontSize: 14, color: Colors.white))
+        ]
     );
   }
 

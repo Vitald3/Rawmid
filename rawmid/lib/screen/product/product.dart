@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_html_iframe/flutter_html_iframe.dart';
 import 'package:get/get.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/model/product/question.dart';
@@ -70,6 +72,7 @@ class ProductView extends StatelessWidget {
                                     controller.navController.filteredCities.value = controller.navController.cities;
                                     controller.navController.filteredLocation.clear();
                                     controller.initialize();
+                                    controller.update();
                                   });
                                 },
                                 child: Padding(
@@ -161,6 +164,43 @@ class ProductView extends StatelessWidget {
                                       ),
                                       h(22),
                                       _imageCard(controller),
+                                      if (controller.product.value!.hdd.isNotEmpty) h(20),
+                                      if (controller.product.value!.hdd.isNotEmpty) Container(
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: primaryColor),
+                                          borderRadius: BorderRadius.circular(12),
+                                          color: primaryColor.withOpacityX(0.2)
+                                        ),
+                                        padding: EdgeInsets.all(8),
+                                        alignment: Alignment.center,
+                                        child: Row(
+                                          spacing: 4,
+                                          children: [
+                                            Icon(Icons.info, color: dangerColor, size: 30,),
+                                            Expanded(
+                                              child: Html(
+                                                  data: controller.product.value!.hdd,
+                                                  extensions: [
+                                                    IframeHtmlExtension()
+                                                  ],
+                                                  style: {
+                                                    '*': Style(
+                                                        margin: Margins.all(0),
+                                                        padding: HtmlPaddings.zero,
+                                                        textAlign: TextAlign.center
+                                                    )
+                                                  },
+                                                  onLinkTap: (val, map, element) {
+                                                    if ((val ?? '').isNotEmpty) {
+                                                      Helper.openLink(val!);
+                                                    }
+                                                  }
+                                              )
+                                            )
+                                          ]
+                                        )
+                                      ),
+                                      if (controller.product.value!.hdd.isNotEmpty) h(20),
                                       if (controller.webController != null) PrimaryButton(text: 'Описание товара', height: 40, onPressed: () {
                                         Navigator.of(context).push(
                                             PageRouteBuilder(
@@ -232,38 +272,42 @@ class ProductView extends StatelessWidget {
 
                                                             return GestureDetector(
                                                                 onTap: () => controller.selectChild.value = child.id,
-                                                                child: Column(
-                                                                    children: [
-                                                                      Container(
-                                                                          decoration: BoxDecoration(
-                                                                              borderRadius: BorderRadius.circular(8),
-                                                                              color: controller.selectChild.value == child.id || controller.selectChild.isEmpty && index == 0 ? primaryColor : Colors.grey
-                                                                          ),
-                                                                          clipBehavior: Clip.antiAlias,
-                                                                          padding: EdgeInsets.all(3),
-                                                                          child: ClipRRect(
-                                                                              borderRadius: BorderRadius.circular(4),
-                                                                              child: CachedNetworkImage(
-                                                                                  imageUrl: child.image,
-                                                                                  errorWidget: (c, e, i) {
-                                                                                    return Image.asset('assets/image/no_image.png');
-                                                                                  },
-                                                                                  height: 40,
-                                                                                  width: 40,
-                                                                                  fit: BoxFit.cover
-                                                                              )
-                                                                          )
-                                                                      ),
-                                                                      h(4),
-                                                                      Text(
-                                                                          child.color,
-                                                                          textAlign: TextAlign.right,
-                                                                          style: TextStyle(
-                                                                              color: Color(0xFF8A95A8),
-                                                                              fontSize: 11
-                                                                          )
-                                                                      )
-                                                                    ]
+                                                                child: SizedBox(
+                                                                  width: 70,
+                                                                  child: Column(
+                                                                      children: [
+                                                                        Container(
+                                                                            decoration: BoxDecoration(
+                                                                                borderRadius: BorderRadius.circular(8),
+                                                                                color: controller.selectChild.value == child.id || controller.selectChild.isEmpty && index == 0 ? primaryColor : Colors.grey
+                                                                            ),
+                                                                            clipBehavior: Clip.antiAlias,
+                                                                            padding: EdgeInsets.all(3),
+                                                                            child: ClipRRect(
+                                                                                borderRadius: BorderRadius.circular(4),
+                                                                                child: CachedNetworkImage(
+                                                                                    imageUrl: child.image,
+                                                                                    errorWidget: (c, e, i) {
+                                                                                      return Image.asset('assets/image/no_image.png');
+                                                                                    },
+                                                                                    height: 40,
+                                                                                    width: 40,
+                                                                                    fit: BoxFit.cover
+                                                                                )
+                                                                            )
+                                                                        ),
+                                                                        h(4),
+                                                                        Text(
+                                                                            child.color,
+                                                                            textAlign: TextAlign.center,
+                                                                            style: TextStyle(
+                                                                                color: Color(0xFF8A95A8),
+                                                                                height: 1.1,
+                                                                                fontSize: 11
+                                                                            )
+                                                                        )
+                                                                      ]
+                                                                  )
                                                                 )
                                                             );
                                                           })
@@ -338,7 +382,7 @@ class ProductView extends StatelessWidget {
                                       if (controller.time.value.inSeconds > 0) h(10),
                                       if (controller.time.value.inSeconds > 0) _buildTimerBox(controller),
                                       if (controller.time.value.inSeconds > 0) h(20),
-                                      if (controller.time.value.inSeconds > 0) PrimaryButton(text: 'Посмотреть все акции', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {}),
+                                      if (controller.time.value.inSeconds > 0) PrimaryButton(text: 'Посмотреть все акции', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () => Get.toNamed('/specials')),
                                       if (controller.reviews.isNotEmpty) _buildReviews(controller),
                                       if (controller.product.value?.chain?.products != null) _buildChains(controller),
                                       if (controller.childProducts.isNotEmpty) _buildChilds(controller),
@@ -348,8 +392,8 @@ class ProductView extends StatelessWidget {
                                       if (controller.recipes.isNotEmpty) NewsSection(news: controller.recipes, title: 'Рецепты', recipe: true),
                                       if (controller.surveys.isNotEmpty) NewsSection(news: controller.surveys, title: 'Обзоры'),
                                       if (controller.rec.isNotEmpty) NewsSection(news: controller.rec, title: 'Советы'),
-                                      h(20),
-                                      PrimaryButton(text: 'Остались вопросы к товару', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {
+                                      if (controller.questions.isNotEmpty) h(20),
+                                      if (controller.questions.isNotEmpty) PrimaryButton(text: 'Остались вопросы к товару', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {
                                         showModalBottomSheet(
                                             context: Get.context!,
                                             isScrollControlled: true,
@@ -970,7 +1014,7 @@ class ProductView extends StatelessWidget {
                                       product.name,
                                       style: TextStyle(
                                           color: Color(0xFF1E1E1E),
-                                          fontSize: 10,
+                                          fontSize: 15,
                                           fontWeight: FontWeight.w700
                                       )
                                   ),
@@ -978,7 +1022,7 @@ class ProductView extends StatelessWidget {
                                       'Цвет: ${product.color}',
                                       style: TextStyle(
                                           color: Color(0xFF8A95A8),
-                                          fontSize: 10
+                                          fontSize: 12
                                       )
                                   )
                                 ]
@@ -1332,7 +1376,7 @@ class ProductView extends StatelessWidget {
                                   product.name,
                                   style: TextStyle(
                                       color: Color(0xFF1E1E1E),
-                                      fontSize: 10,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.w700
                                   )
                               ),
@@ -1340,7 +1384,7 @@ class ProductView extends StatelessWidget {
                                   'Цвет: ${product.color}',
                                   style: TextStyle(
                                       color: Color(0xFF8A95A8),
-                                      fontSize: 10
+                                      fontSize: 12
                                   )
                               )
                             ]
@@ -2111,7 +2155,7 @@ class ProductView extends StatelessWidget {
                           itemCount: count,
                           padEnds: false,
                           itemBuilder: (context, index) {
-                            return Wrap(
+                            return Obx(() => Wrap(
                                 runSpacing: 10,
                                 children: List.generate(4, (colIndex) {
                                   int productIndex = index * 4 + colIndex;
@@ -2167,7 +2211,8 @@ class ProductView extends StatelessWidget {
                                           ),
                                           w(8),
                                           PrimaryButton(text: controller.navController.isCart(zap[productIndex].id) ? 'В корзине' : 'Купить', loader: true, width: 97, height: 44, onPressed: () async {
-                                            controller.navController.addCart(zap[productIndex].id);
+                                            await controller.navController.addCart(zap[productIndex].id);
+                                            controller.navController.update();
                                           })
                                         ]
                                     );
@@ -2175,7 +2220,7 @@ class ProductView extends StatelessWidget {
                                     return SizedBox.shrink();
                                   }
                                 })
-                            );
+                            ));
                           }
                         )
                       ),

@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:rawmid/api/wishlist.dart';
 import 'package:rawmid/controller/navigation.dart';
+import '../api/home.dart';
 import '../model/home/product.dart';
 import '../utils/helper.dart';
 
@@ -18,24 +19,29 @@ class WishlistController extends GetxController {
   }
 
   Future initialize() async {
+    final fId = Helper.prefs.getInt('fias_id') ?? 0;
+
+    if (fId > 0) {
+      await HomeApi.changeCity(fId);
+    }
+
     products.clear();
     wishlist.value = Helper.prefs.getStringList('wishlist') ?? <String>[];
 
     if (wishlist.isNotEmpty) {
-      isLoading.value = false;
-      WishlistApi.getWishlist(wishlist.join(',')).then((e) {
-        products.addAll(e);
+      final e = await WishlistApi.getWishlist(wishlist.join(','));
 
-        if (e.isNotEmpty) {
-          navController.wishlist.value = e.map((item) => item.id).toList();
-        } else {
-          navController.wishlist.clear();
-          Helper.prefs.setStringList('wishlist', []);
-        }
+      products.addAll(e);
 
-        isLoading.value = true;
-      });
+      if (e.isNotEmpty) {
+        navController.wishlist.value = e.map((item) => item.id).toList();
+      } else {
+        navController.wishlist.clear();
+        Helper.prefs.setStringList('wishlist', []);
+      }
     }
+
+    isLoading.value = true;
   }
 
   Future removeWishlist(String id) async {

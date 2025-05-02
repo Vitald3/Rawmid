@@ -4,9 +4,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:rawmid/model/country.dart';
-import 'package:rawmid/model/profile/reviews.dart';
+import 'package:rawmid/model/profile/edit_survey.dart';
 import 'package:rawmid/model/support/question.dart';
+import '../model/home/product.dart';
+import '../model/profile/edit_recipe.dart';
 import '../model/profile/profile.dart';
+import '../model/profile/reward.dart';
 import '../utils/constant.dart';
 import '../utils/helper.dart';
 
@@ -30,6 +33,123 @@ class ProfileApi {
     return null;
   }
 
+  static Future<EditRecipeModel?> getRecipe({String id = ''}) async {
+    try {
+      final response = await http.get(Uri.parse('$getRecipeUrl&recipe_edit_id=$id'), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+
+      final json = jsonDecode(response.body);
+      return EditRecipeModel.fromJson(json);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return null;
+  }
+
+  static Future<EditSurveyModel?> getSurvey({String id = ''}) async {
+    try {
+      final response = await http.get(Uri.parse('$getSurveyUrl&survey_edit_id=$id'), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+
+      final json = jsonDecode(response.body);
+      return EditSurveyModel.fromJson(json['survey']);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return null;
+  }
+
+  static Future<String> editSurvey(Map<String, dynamic> body, File? image, List<File> images) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse(editSurveyUrl));
+
+      final count = images.length;
+
+      for (var x = 0; x < count; x++) {
+        if (images[x].path.isNotEmpty) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'survey_steps[$x][image_file]',
+              images[x].path
+          ));
+        }
+      }
+
+      if (image != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+            'image_file',
+            image.path
+        ));
+      }
+
+      request.headers.addAll({
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+
+      request.fields['body'] = jsonEncode(body);
+
+      final response = await request.send();
+      final json = jsonDecode(await response.stream.bytesToString());
+      return '${json?['id'] ?? ''}';
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return '';
+  }
+
+  static Future<String> editRecipe(Map<String, dynamic> body, File? image, Map<String, File?> images) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse(editRecipeUrl));
+
+      final count = images.length;
+
+      for (var x = 0; x < count; x++) {
+        if (images['image1_$x'] != null && images['image1_$x']!.path.isNotEmpty) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'recipe_steps[$x][image_file]',
+              images['image1_$x']!.path
+          ));
+        }
+
+        if (images['image2_$x'] != null && images['image2_$x']!.path.isNotEmpty) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'recipe_steps[$x][image_file2]',
+              images['image2_$x']!.path
+          ));
+        }
+      }
+
+      if (image != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+            'image_file',
+            image.path
+        ));
+      }
+
+      request.headers.addAll({
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+
+      request.fields['body'] = jsonEncode(body);
+
+      final response = await request.send();
+      final json = jsonDecode(await response.stream.bytesToString());
+      return '${json?['id'] ?? ''}';
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return '';
+  }
+
   static Future<List<CountryModel>> countries() async {
     List<CountryModel> items = [];
 
@@ -44,6 +164,31 @@ class ProfileApi {
       if (json['countries'] != null) {
         for (var i in json['countries']) {
           items.add(CountryModel.fromJson(i));
+        }
+
+        return items;
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future<List<RewardModel>> rewards() async {
+    List<RewardModel> items = [];
+
+    try {
+      final response = await http.get(Uri.parse(rewardsUrl), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+
+      final json = jsonDecode(response.body);
+
+      if (json['rewards'] != null) {
+        for (var i in json['rewards']) {
+          items.add(RewardModel.fromJson(i));
         }
 
         return items;
@@ -219,8 +364,8 @@ class ProfileApi {
     return null;
   }
 
-  static Future<List<MyReviewModel>> getReviews() async {
-    List<MyReviewModel> items = [];
+  static Future<List<ProductModel>> getReviews() async {
+    List<ProductModel> items = [];
 
     try {
       final response = await http.get(Uri.parse(getMyReviewsUrl), headers: {
@@ -230,9 +375,9 @@ class ProfileApi {
 
       final json = jsonDecode(response.body);
 
-      if (json['reviews'] != null) {
-        for (var i in json['reviews']) {
-          items.add(MyReviewModel.fromJson(i));
+      if (json['products'] != null) {
+        for (var i in json['products']) {
+          items.add(ProductModel.fromJson(i));
         }
       }
     } catch (e) {

@@ -4,15 +4,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/api/product.dart';
-import 'package:rawmid/controller/home.dart';
 import 'package:rawmid/model/home/product.dart';
 import 'package:rawmid/model/product/product_item.dart';
 import 'package:rawmid/model/product/question.dart';
 import 'package:rawmid/model/product/review.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../api/home.dart';
 import '../api/login.dart';
 import '../model/home/news.dart';
+import '../screen/product/zap.dart';
 import '../utils/helper.dart';
 import 'navigation.dart';
 
@@ -79,7 +78,7 @@ class ProductController extends GetxController {
   final formKey3 = GlobalKey<FormState>();
   final formKey4 = GlobalKey<FormState>();
   final formKey5 = GlobalKey<FormState>();
-  RxInt rating = 4.obs;
+  RxInt rating = 0.obs;
   final phoneField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.KZ, nsn: ''));
   final phonePreField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.KZ, nsn: ''));
   RxList<ProductModel> childProducts = <ProductModel>[].obs;
@@ -137,6 +136,7 @@ class ProductController extends GetxController {
   }
 
   Future initialize() async {
+    isLoading.value = false;
     timer?.cancel();
     timer = null;
 
@@ -146,12 +146,6 @@ class ProductController extends GetxController {
 
     Helper.prefs.setStringList('viewed', viewed);
 
-    final home = Get.find<HomeController>();
-
-    HomeApi.getViewed(viewed).then((e) {
-      home.viewedList.value = e;
-    });
-
     final api = await ProductApi.getProduct(id);
     ProductApi.getAccessories(id).then((e) {
       accessories.value = e;
@@ -159,7 +153,10 @@ class ProductController extends GetxController {
     ProductApi.getReviews(id).then((e) {
       reviews.value = e;
     });
+    fioField.text = navController.user.value?.fio ?? '';
     fioReviewField.text = navController.user.value?.fio ?? '';
+    emailReviewField.text = navController.user.value?.email ?? '';
+    emailField.text = navController.user.value?.email ?? '';
 
     if (api != null) {
       product.value = api;
@@ -178,7 +175,36 @@ class ProductController extends GetxController {
       if (api.text.isNotEmpty) {
         webController = WebViewController()
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..loadHtmlString(api.text);
+          ..setNavigationDelegate(
+            NavigationDelegate(
+              onNavigationRequest: (request) {
+                final url = request.url;
+
+                if (url.endsWith(".jpg") ||
+                    url.endsWith(".jpeg") ||
+                    url.endsWith(".png") ||
+                    url.endsWith(".webp") ||
+                    url.endsWith(".gif")) {
+
+                  Navigator.push(
+                      Get.context!,
+                      PageRouteBuilder(
+                          opaque: false,
+                          pageBuilder: (context, animation, secondaryAnimation) => ZapView(image: url),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            return FadeTransition(opacity: animation, child: child);
+                          }
+                      )
+                  );
+
+                  return NavigationDecision.prevent;
+                }
+
+                return NavigationDecision.navigate;
+              }
+            )
+          )
+          ..loadHtmlString('<style>#colorbox{scale:0.5!important}</style><meta name="viewport" content="width=device-width, initial-scale=1.0">${api.text}');
       }
 
       if (api.dateEnd != null && api.dateEnd!.millisecondsSinceEpoch > now.millisecondsSinceEpoch) {
@@ -336,6 +362,11 @@ class ProductController extends GetxController {
   }
 
   Future addReview() async {
+    if (rating.value == 0) {
+      Helper.snackBar(error: true, text: 'Выберите оценку');
+      return;
+    }
+
     if (formKey3.currentState?.validate() ?? false) {
       bool api;
 
@@ -374,7 +405,7 @@ class ProductController extends GetxController {
           Get.back();
           textReviewField.clear();
           fioReviewField.clear();
-          rating.value = 5;
+          rating.value = 0;
           emailReviewField.clear();
 
           t.cancel();

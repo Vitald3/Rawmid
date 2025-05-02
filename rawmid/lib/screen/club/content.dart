@@ -78,7 +78,7 @@ class ClubContentView extends GetView<ClubController> {
                                         ]
                                     )
                                 ),
-                                Padding(
+                                if (controller.reviews.isNotEmpty) Padding(
                                   padding: EdgeInsets.only(left: 10),
                                   child: Column(
                                     children: [
@@ -136,25 +136,25 @@ class ClubContentView extends GetView<ClubController> {
                                     ]
                                   )
                                 ),
-                                if (controller.recipes.isNotEmpty) RecipesSection(recipes: controller.recipes, padding: EdgeInsets.symmetric(horizontal: 12), button: false, title: 'Мои рецепты', callback: () {
+                                if (controller.recipes.isNotEmpty) RecipesSection(recipes: controller.recipes, my: 0, padding: EdgeInsets.symmetric(horizontal: 12), button: false, title: 'Мои рецепты', callback: () {
                                   Get.toNamed('/blog', arguments: true, parameters: {'my_recipes': '1'});
-                                }),
+                                }, callback2: () => controller.initialize()),
                                 h(16),
                                 Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 20),
-                                  child: PrimaryButton(text: 'Написать рецепт', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {})
+                                  child: PrimaryButton(text: 'Написать рецепт', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () => Get.toNamed('/add_recipe')?.then((_) => controller.initialize()))
                                 ),
-                                h(16),
+                                if (controller.news.isNotEmpty) h(16),
                                 if (controller.news.isNotEmpty) Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 20),
-                                  child: NewsSection(news: controller.news, title: 'Мои статьи', callback: () {
+                                  child: NewsSection(news: controller.news, my: 1, title: 'Мои статьи', callback: () {
                                     Get.toNamed('/blog', parameters: {'my_survey': '1'});
-                                  })
+                                  }, callback2: () => controller.initialize())
                                 ),
-                                h(16),
+                                if (controller.news.isNotEmpty) h(16),
                                 Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 20),
-                                    child: PrimaryButton(text: 'Написать статью', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {})
+                                    child: PrimaryButton(text: 'Написать статью', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () => Get.toNamed('/add_news')?.then((_) => controller.initialize()))
                                 ),
                                 h(20 + MediaQuery.of(context).viewPadding.bottom),
                               ]
@@ -583,7 +583,7 @@ class ClubContentView extends GetView<ClubController> {
                       }
                   ),
                   h(10),
-                  if (controller.nav.value?.user.value == null) TextFormField(
+                  if (controller.user.value == null) TextFormField(
                       controller: controller.emailReviewField,
                       cursorHeight: 15,
                       decoration: decorationInput(error: controller.emailValidate.value ? dangerColor : null, hint: 'E-mail', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
@@ -600,7 +600,7 @@ class ClubContentView extends GetView<ClubController> {
                         return null;
                       }
                   ),
-                  if (controller.nav.value?.user.value == null && controller.emailValidate.value) Padding(
+                  if (controller.user.value == null && controller.emailValidate.value) Padding(
                       padding: const EdgeInsets.only(top: 4, left: 16),
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
@@ -612,7 +612,7 @@ class ClubContentView extends GetView<ClubController> {
                           ]
                       )
                   ),
-                  if (controller.nav.value?.user.value == null) h(10),
+                  if (controller.user.value == null) h(10),
                   TextFormField(
                       controller: controller.textReviewField,
                       decoration: decorationInput(hint: 'Текст', contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4)),

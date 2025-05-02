@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:rawmid/utils/constant.dart';
+import '../../controller/news.dart';
 import '../../model/home/news.dart';
 import '../../widget/h.dart';
 import '../../widget/w.dart';
@@ -8,16 +9,32 @@ import '../news/news.dart';
 import 'package:get/get.dart';
 
 class NewsCard extends StatelessWidget {
-  const NewsCard({super.key, required this.news, this.button, this.recipe});
+  const NewsCard({super.key, required this.news, this.button, this.recipe, this.my, this.callback});
 
   final NewsModel news;
   final bool? button;
   final bool? recipe;
+  final int? my;
+  final Function()? callback;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Get.to(() => NewsView(id: news.id, recipe: recipe ?? false)),
+      onTap: () {
+        final t = (my ?? 0);
+
+        if (t == 0) {
+          Get.toNamed('/add_recipe', parameters: {'id': news.id})?.then((_) => callback != null ? callback!() : null);
+          return;
+        } else if (t == 1) {
+          Get.toNamed('/add_news', parameters: {'id': news.id})?.then((_) => callback != null ? callback!() : null);
+          return;
+        }
+
+        Get.delete<NewsController>();
+        Get.put(NewsController(news.id, recipe ?? false));
+        Get.to(() => NewsView(), preventDuplicates: false)?.then((_) => callback != null ? callback!() : null);
+      },
       child: Container(
           margin: EdgeInsets.symmetric(horizontal: 8),
           padding: EdgeInsets.all(12),
@@ -36,7 +53,7 @@ class NewsCard extends StatelessWidget {
                     child: CachedNetworkImage(
                         imageUrl: news.image,
                         errorWidget: (c, e, i) {
-                          return Image.asset('assets/image/no_image.png');
+                          return SizedBox();
                         },
                         height: 100,
                         width: double.infinity,
@@ -58,6 +75,8 @@ class NewsCard extends StatelessWidget {
                       Text(
                           news.time,
                           textAlign: TextAlign.right,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                               color: Color(0xFF8A95A8),
                               fontSize: 11
@@ -70,7 +89,7 @@ class NewsCard extends StatelessWidget {
                     news.text,
                     style: TextStyle(
                         color: Color(0xFF1B1B1B),
-                        fontSize: 11
+                        fontSize: 12
                     ),
                     maxLines: !(button ?? false) ? 2 : 5,
                     overflow: TextOverflow.ellipsis
@@ -84,7 +103,21 @@ class NewsCard extends StatelessWidget {
                         ),
                         minimumSize: Size(double.infinity, 40)
                     ),
-                    onPressed: () => Get.to(() => NewsView(id: news.id, recipe: false)),
+                    onPressed: () {
+                      final t = (my ?? 0);
+
+                      if (t == 0) {
+                        Get.toNamed('/add_recipe', parameters: {'id': news.id})?.then((_) => callback != null ? callback!() : null);
+                        return;
+                      } else if (t == 1) {
+                        Get.toNamed('/add_news', parameters: {'id': news.id})?.then((_) => callback != null ? callback!() : null);
+                        return;
+                      }
+
+                      Get.delete<NewsController>();
+                      Get.put(NewsController(news.id, recipe ?? false));
+                      Get.to(() => NewsView())?.then((_) => callback != null ? callback!() : null);
+                    },
                     child: Text('Читать', style: TextStyle(fontSize: 14, color: Colors.white))
                 )
               ]

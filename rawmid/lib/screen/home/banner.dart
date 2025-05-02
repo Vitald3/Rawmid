@@ -13,44 +13,49 @@ class BannerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: !(button ?? false) ? 20 : 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Color(0xFFF0F0F0)
-      ),
-      alignment: Alignment.center,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: CachedNetworkImage(
-                  imageUrl: banner.image2,
-                  errorWidget: (c, e, i) {
-                    return Image.asset('assets/image/no_image.png', fit: BoxFit.cover);
-                  },
-                  fit: BoxFit.cover,
-                  width: double.infinity
-              )
+    return GestureDetector(
+      onTap: () {
+        if (banner.link.isNotEmpty) Helper.openLink(banner.link);
+      },
+      child: Container(
+          margin: EdgeInsets.symmetric(horizontal: !(button ?? false) ? 20 : 10),
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: Color(0xFFF0F0F0)
           ),
-          if (!(button ?? false)) Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  h(12),
-                  if (banner.link.isNotEmpty) PrimaryButton(
-                      onPressed: () => Helper.openLink(banner.link),
-                      text: 'Узнать больше',
-                      height: 40,
-                      borderColor: Colors.transparent
-                  )
-                ]
-            )
+          alignment: Alignment.center,
+          child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                        imageUrl: banner.image2,
+                        errorWidget: (c, e, i) {
+                          return Image.asset('assets/image/no_image.png', fit: BoxFit.cover);
+                        },
+                        fit: BoxFit.cover,
+                        width: double.infinity
+                    )
+                ),
+                if (!(button ?? false)) Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          h(12),
+                          if (banner.link.isNotEmpty) PrimaryButton(
+                              onPressed: () => Helper.openLink(banner.link),
+                              text: 'Узнать больше',
+                              height: 40,
+                              borderColor: Colors.transparent
+                          )
+                        ]
+                    )
+                )
+              ]
           )
-        ]
       )
     );
   }

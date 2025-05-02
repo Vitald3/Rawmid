@@ -4,6 +4,7 @@ import 'package:rawmid/utils/helper.dart';
 import 'package:rawmid/widget/module_title.dart';
 import '../../model/home/special.dart';
 import '../../widget/h.dart';
+import 'package:get/get.dart';
 
 class PromotionsSection extends StatefulWidget {
   const PromotionsSection({super.key, required this.specials, this.title});
@@ -29,7 +30,7 @@ class PromotionsSectionState extends State<PromotionsSection> {
           h(20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ModuleTitle(title: widget.title ?? 'Акции', callback: () {})
+            child: ModuleTitle(title: widget.title ?? 'Акции', callback: () => Get.toNamed('/specials'))
           ),
           h(10),
           SizedBox(
@@ -106,7 +107,7 @@ class PromotionsSectionState extends State<PromotionsSection> {
               ),
               minimumSize: Size(double.infinity, 40)
             ),
-            onPressed: () => Helper.launchInBrowser(special.link),
+            onPressed: () => Helper.openLink(special.link),
             child: Text('Подробнее', style: TextStyle(fontSize: 16, color: Colors.white))
           )
         ]

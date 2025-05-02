@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:phone_form_field/phone_form_field.dart';
@@ -13,6 +15,7 @@ import '../../controller/cart.dart';
 import '../../controller/home.dart';
 import '../../model/cart.dart';
 import '../../model/checkout/shipping.dart';
+import '../../model/location.dart';
 import '../../utils/helper.dart';
 import '../../utils/utils.dart';
 import '../../widget/h.dart';
@@ -20,6 +23,7 @@ import '../../widget/primary_button.dart';
 import '../../widget/w.dart';
 import '../home/city.dart';
 import '../order/info.dart';
+import '../product/product.dart';
 
 class CheckoutView extends StatelessWidget {
   const CheckoutView({super.key});
@@ -439,8 +443,8 @@ class CheckoutView extends StatelessWidget {
                                             )
                                         ),
                                         h(24),
-                                        controller.shipping.isNotEmpty ? Column(
-                                            children: controller.shipping.map((item) => _buildRadioTile(
+                                        controller.shipping.where((e) => e.quote.isNotEmpty).isNotEmpty ? Column(
+                                            children: controller.shipping.where((e) => e.quote.isNotEmpty).map((item) => _buildRadioTile(
                                                 item: item,
                                                 controller: controller
                                             )).toList()
@@ -537,15 +541,26 @@ class CheckoutView extends StatelessWidget {
                                                             validator: (value) => value == null ? 'Выберите регион' : null
                                                         ),
                                                         if (controller.regions.isNotEmpty) h(16),
-                                                        if (controller.regions.isNotEmpty) TextFormField(
-                                                          key: controller.errors['city'],
-                                                          cursorHeight: 15,
-                                                          controller: controller.controllersAddress['city'],
-                                                          validator: (value) => controller.validators['city']!(value),
-                                                          decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                          textInputAction: TextInputAction.next,
-                                                          onChanged: (val) => controller.saveField('city', val),
+                                                        if (controller.regions.isNotEmpty) TypeAheadField<Location>(
+                                                            suggestionsCallback: controller.suggestionsCallback,
+                                                            controller: controller.controllersAddress['city'],
+                                                            itemBuilder: (context, e) => ListTile(title: Text(e.label)),
+                                                            onSelected: (e) {
+                                                              controller.controllersAddress['city']!.text = e.label;
+                                                            },
+                                                            builder: (context, textController, focusNode) {
+                                                              return TextFormField(
+                                                                controller: textController,
+                                                                focusNode: focusNode,
+                                                                key: controller.errors['city'],
+                                                                cursorHeight: 15,
+                                                                validator: (value) => controller.validators['city']!(value),
+                                                                decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                                textInputAction: TextInputAction.next,
+                                                                onChanged: (val) => controller.saveField('city', val)
+                                                              );
+                                                            }
                                                         ),
                                                         if (controller.regions.isNotEmpty) h(16),
                                                         if (controller.regions.isNotEmpty) TextFormField(
@@ -553,20 +568,36 @@ class CheckoutView extends StatelessWidget {
                                                             cursorHeight: 15,
                                                             onChanged: (val) => controller.saveField('postcode', val),
                                                             controller: controller.controllersAddress['postcode'],
+                                                            keyboardType: TextInputType.number,
+                                                            inputFormatters: [
+                                                              FilteringTextInputFormatter.digitsOnly,
+                                                              LengthLimitingTextInputFormatter(6)
+                                                            ],
                                                             decoration: decorationInput(hint: 'Индекс ', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                                                             autovalidateMode: AutovalidateMode.onUserInteraction,
                                                             textInputAction: TextInputAction.next
                                                         ),
                                                         if (controller.regions.isNotEmpty) h(16),
-                                                        if (controller.regions.isNotEmpty) TextFormField(
-                                                            key: controller.errors['address_1'],
-                                                            cursorHeight: 15,
-                                                            onChanged: (val) => controller.saveField('address_1', val),
+                                                        if (controller.regions.isNotEmpty) TypeAheadField<String>(
+                                                            suggestionsCallback: controller.suggestionsCallback2,
                                                             controller: controller.controllersAddress['address_1'],
-                                                            validator: (value) => controller.validators['address_1']!(value),
-                                                            decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                            textInputAction: TextInputAction.done
+                                                            itemBuilder: (context, e) => ListTile(title: Text(e)),
+                                                            onSelected: (e) {
+                                                              controller.controllersAddress['address_1']!.text = e;
+                                                            },
+                                                            builder: (context, textController, focusNode) {
+                                                              return TextFormField(
+                                                                  controller: textController,
+                                                                  focusNode: focusNode,
+                                                                  key: controller.errors['address_1'],
+                                                                  cursorHeight: 15,
+                                                                  onChanged: (val) => controller.saveField('address_1', val),
+                                                                  validator: (value) => controller.validators['address_1']!(value),
+                                                                  decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                                  textInputAction: TextInputAction.done
+                                                              );
+                                                            }
                                                         ),
                                                         h(20)
                                                       ]
@@ -910,6 +941,7 @@ class CheckoutView extends StatelessWidget {
                     if (e.title.contains('пункта выдачи')) {
                       controller.selectedPvz.value = null;
                       controller.selectedBBPvz.value = null;
+                      controller.cDek.value = true;
                     } else {
                       controller.setShipping();
                     }
@@ -1002,7 +1034,7 @@ class CheckoutView extends StatelessWidget {
                       )
                   )
               ),
-              if (controller.selectedShipping.value == e.code && e.title.contains('До дверей')) Column(
+              if (controller.selectedShipping.value == e.code && (e.title.contains('До дверей') || e.title.contains('урьерская доставка'))) Column(
                 children: [
                   Padding(
                     padding: EdgeInsets.only(left: 32, top: 10),
@@ -1102,15 +1134,26 @@ class CheckoutView extends StatelessWidget {
                                   validator: (value) => value == null ? 'Выберите регион' : null
                               ),
                               if (controller.regions.isNotEmpty) h(16),
-                              if (controller.regions.isNotEmpty) TextFormField(
-                                  key: controller.errors['city'],
-                                  cursorHeight: 15,
-                                  onChanged: (val) => controller.saveField('city', val),
+                              if (controller.regions.isNotEmpty) TypeAheadField<Location>(
+                                  suggestionsCallback: controller.suggestionsCallback,
                                   controller: controller.controllersAddress['city'],
-                                  validator: (value) => controller.validators['city']!(value),
-                                  decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                                  textInputAction: TextInputAction.next
+                                  itemBuilder: (context, e) => ListTile(title: Text(e.label)),
+                                  onSelected: (e) {
+                                    controller.controllersAddress['city']!.text = e.label;
+                                  },
+                                  builder: (context, textController, focusNode) {
+                                    return TextFormField(
+                                        controller: textController,
+                                        focusNode: focusNode,
+                                        key: controller.errors['city'],
+                                        cursorHeight: 15,
+                                        validator: (value) => controller.validators['city']!(value),
+                                        decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                                        textInputAction: TextInputAction.next,
+                                        onChanged: (val) => controller.saveField('city', val)
+                                    );
+                                  }
                               ),
                               if (controller.regions.isNotEmpty) h(16),
                               if (controller.regions.isNotEmpty) TextFormField(
@@ -1118,20 +1161,36 @@ class CheckoutView extends StatelessWidget {
                                   cursorHeight: 15,
                                   onChanged: (val) => controller.saveField('postcode', val),
                                   controller: controller.controllersAddress['postcode'],
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(6)
+                                  ],
                                   decoration: decorationInput(hint: 'Индекс ', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                                   autovalidateMode: AutovalidateMode.onUserInteraction,
                                   textInputAction: TextInputAction.next
                               ),
                               if (controller.regions.isNotEmpty) h(16),
-                              if (controller.regions.isNotEmpty) TextFormField(
-                                  key: controller.errors['address_1'],
-                                  cursorHeight: 15,
-                                  onChanged: (val) => controller.saveField('address_1', val),
+                              if (controller.regions.isNotEmpty) TypeAheadField<String>(
+                                  suggestionsCallback: controller.suggestionsCallback2,
                                   controller: controller.controllersAddress['address_1'],
-                                  validator: (value) => controller.validators['address_1']!(value),
-                                  decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                                  textInputAction: TextInputAction.done
+                                  itemBuilder: (context, e) => ListTile(title: Text(e)),
+                                  onSelected: (e) {
+                                    controller.controllersAddress['address_1']!.text = e;
+                                  },
+                                  builder: (context, textController, focusNode) {
+                                    return TextFormField(
+                                        controller: textController,
+                                        focusNode: focusNode,
+                                        key: controller.errors['address_1'],
+                                        cursorHeight: 15,
+                                        onChanged: (val) => controller.saveField('address_1', val),
+                                        validator: (value) => controller.validators['address_1']!(value),
+                                        decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                                        textInputAction: TextInputAction.done
+                                    );
+                                  }
                               ),
                               h(20)
                             ]
@@ -1185,17 +1244,13 @@ class CheckoutView extends StatelessWidget {
   }
 
   Widget _buildMap(CheckoutController controller) {
-    if (controller.userLocation.value == null) {
-      controller.getUserLocation();
-    }
-
     return Obx(() => Container(
         height: Get.height * 0.8,
         padding: EdgeInsets.only(top: 20),
         child: FlutterMap(
             options: MapOptions(
-                initialCenter: controller.userLocation.value ?? LatLng(55.853593, 37.501265),
-                initialZoom: 3.0
+                initialCenter: LatLng(55.853593, 37.501265),
+                initialZoom: 6.0
             ),
             children: [
               TileLayer(
@@ -1303,17 +1358,13 @@ class CheckoutView extends StatelessWidget {
   }
 
   Widget _buildMapBB(CheckoutController controller) {
-    if (controller.userLocation.value == null) {
-      controller.getUserLocation();
-    }
-
     return Obx(() => Container(
         height: Get.height * 0.8,
         padding: EdgeInsets.only(top: 20),
         child: FlutterMap(
             options: MapOptions(
-                initialCenter: controller.userLocation.value ?? LatLng(55.853593, 37.501265),
-                initialZoom: 3.0
+                initialCenter: LatLng(55.853593, 37.501265),
+                initialZoom: 6.0
             ),
             children: [
               TileLayer(
@@ -1413,112 +1464,116 @@ class CheckoutView extends StatelessWidget {
   }
 
   Widget _cartItemTile(CartModel product, Function(CartModel) plus, Function(CartModel) minus, Function(String) addWishlist) {
-    return Padding(
-        padding: const EdgeInsets.only(bottom: 24),
-        child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      image: DecorationImage(
-                          image: product.image.isNotEmpty ? CachedNetworkImageProvider(product.image) : AssetImage('assets/image/empty.png'),
-                          fit: BoxFit.cover
+    return GestureDetector(
+        onTap: () {
+          Get.to(() => ProductView(id: product.id));
+        },
+        child: Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                      width: 70,
+                      height: 70,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          image: DecorationImage(
+                              image: product.image.isNotEmpty ? CachedNetworkImageProvider(product.image) : AssetImage('assets/image/empty.png'),
+                              fit: BoxFit.cover
+                          )
                       )
-                  )
-              ),
-              w(12),
-              Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            product.name,
-                            style: TextStyle(
-                                color: Color(0xFF1E1E1E),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700
+                  ),
+                  w(12),
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                product.name,
+                                style: TextStyle(
+                                    color: Color(0xFF1E1E1E),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700
+                                )
+                            ),
+                            if (product.color.isNotEmpty) h(4),
+                            if (product.color.isNotEmpty) Text(
+                                'Цвет: ${product.color}',
+                                style: TextStyle(fontSize: 12, color: Colors.grey[600])
+                            ),
+                            h(8),
+                            Text(
+                                product.price,
+                                style: TextStyle(
+                                    color: Color(0xFF1E1E1E),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700
+                                )
                             )
+                          ]
+                      )
+                  ),
+                  w(6),
+                  Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        InkWell(
+                            onTap: () => addWishlist(product.id),
+                            child: Icon(Helper.wishlist.value.contains(product.id) ? Icons.favorite : Icons.favorite_border, color: Helper.wishlist.value.contains(product.id) ? primaryColor : Colors.black, size: 18)
                         ),
-                        if (product.color.isNotEmpty) h(4),
-                        if (product.color.isNotEmpty) Text(
-                            'Цвет: ${product.color}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600])
-                        ),
-                        h(8),
-                        Text(
-                            product.price,
-                            style: TextStyle(
-                                color: Color(0xFF1E1E1E),
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700
+                        h(28),
+                        Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                                border: Border.all(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(8)
+                            ),
+                            child: Row(
+                                children: [
+                                  Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () {
+                                          product.quantity = product.quantity! - 1;
+                                          minus(product);
+                                        },
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: Icon(Icons.remove, color: Colors.blue, size: 18),
+                                      )
+                                  ),
+                                  Container(
+                                      alignment: Alignment.center,
+                                      width: 35,
+                                      child: Text(
+                                          '${product.quantity}',
+                                          style: TextStyle(
+                                              color: primaryColor,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                              height: 1.30
+                                          )
+                                      )
+                                  ),
+                                  Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                          onTap: () {
+                                            product.quantity = product.quantity! + 1;
+                                            plus(product);
+                                          },
+                                          borderRadius: BorderRadius.circular(20),
+                                          child: Icon(Icons.add, color: Colors.blue, size: 18)
+                                      )
+                                  )
+                                ]
                             )
                         )
                       ]
                   )
-              ),
-              w(6),
-              Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    InkWell(
-                        onTap: () => addWishlist(product.id),
-                        child: Icon(Helper.wishlist.value.contains(product.id) ? Icons.favorite : Icons.favorite_border, color: Helper.wishlist.value.contains(product.id) ? primaryColor : Colors.black, size: 18)
-                    ),
-                    h(28),
-                    Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        decoration: BoxDecoration(
-                            border: Border.all(color: Colors.blue),
-                            borderRadius: BorderRadius.circular(8)
-                        ),
-                        child: Row(
-                            children: [
-                              Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () {
-                                      product.quantity = product.quantity! - 1;
-                                      minus(product);
-                                    },
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Icon(Icons.remove, color: Colors.blue, size: 18),
-                                  )
-                              ),
-                              Container(
-                                  alignment: Alignment.center,
-                                  width: 35,
-                                  child: Text(
-                                      '${product.quantity}',
-                                      style: TextStyle(
-                                          color: primaryColor,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          height: 1.30
-                                      )
-                                  )
-                              ),
-                              Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                      onTap: () {
-                                        product.quantity = product.quantity! + 1;
-                                        plus(product);
-                                      },
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Icon(Icons.add, color: Colors.blue, size: 18)
-                                  )
-                              )
-                            ]
-                        )
-                    )
-                  ]
-              )
-            ]
-        )
-    );
+                ]
+            )
+        ));
   }
 }

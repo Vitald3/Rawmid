@@ -24,9 +24,13 @@ class ProductCard extends GetView<NavigationController> {
       onTap: () {
         if (Get.currentRoute == '/ProductView') {
           final id = Get.find<ProductController>().id;
+          Get.delete<ProductController>();
+          Get.put(ProductController(product.id));
           Get.find<ProductController>().setId(product.id);
           Get.find<ProductController>().initialize();
           Get.to(() => ProductView(id: product.id), preventDuplicates: false)?.then((_) {
+            Get.delete<ProductController>();
+            Get.put(ProductController(product.id));
             Get.find<ProductController>().setId(id);
             Get.find<ProductController>().initialize();
           });
@@ -96,25 +100,74 @@ class ProductCard extends GetView<NavigationController> {
                     overflow: TextOverflow.ellipsis
                 ),
                 h(4),
-                if (product.color.isNotEmpty) Text(
+                if ((product.colors ?? []).isNotEmpty) Row(
+                  spacing: 4,
+                  children: [
+                    Text(
+                        'Цвет:',
+                        style: TextStyle(color: Colors.black54, fontSize: 12)
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                              spacing: 6,
+                              children: List.generate(product.colors!.length, (index) {
+                                final item = product.colors![index];
+                                final color = int.tryParse('0xFF${item.color.replaceAll('#', '')}');
+
+                                if (color == null) return SizedBox.shrink();
+
+                                return GestureDetector(
+                                    onTap: () {
+                                      if (Get.currentRoute == '/ProductView') {
+                                        final id = Get.find<ProductController>().id;
+                                        Get.find<ProductController>().setId(item.productId);
+                                        Get.find<ProductController>().initialize();
+                                        Get.to(() => ProductView(id: item.productId), preventDuplicates: false)?.then((_) {
+                                          Get.find<ProductController>().setId(id);
+                                          Get.find<ProductController>().initialize();
+                                        });
+                                      } else {
+                                        Get.to(() => ProductView(id: item.productId));
+                                      }
+                                    },
+                                    child: Container(
+                                        decoration: BoxDecoration(
+                                            color: Color(color),
+                                            border: Border.all(color: color == 4294967295 ? primaryColor : Colors.transparent),
+                                            borderRadius: BorderRadius.circular(20)
+                                        ),
+                                        width: 20,
+                                        height: 20
+                                    )
+                                );
+                              })
+                          )
+                      )
+                    )
+                  ]
+                ),
+                if ((product.colors ?? []).isEmpty && product.color.isNotEmpty) Text(
                     'Цвет: ${product.color}',
                     style: TextStyle(color: Colors.black54, fontSize: 12)
                 ),
                 h(4),
-                (product.rating ?? 0) > 0 ? Stack(
-                    alignment: Alignment.centerRight,
-                    children: [
-                      Row(
-                          children: [1,2,3,4,5].map((e) => Icon(e <= product.rating! ? Icons.star : Icons.star_half, color: Colors.amber, size: 16)).toList()
-                      ),
-                      InkWell(
-                          onTap: () => Helper.addCompare(product.id),
-                          child: Image.asset('assets/icon/rat${Helper.compares.value.contains(product.id) ? '2' : ''}.png', width: 24, fit: BoxFit.cover)
-                      ),
-                    ]
-                ) : SizedBox(height: 16),
-                Spacer(),
-                h(4),
+                SizedBox(
+                  width: double.infinity,
+                  child: Stack(
+                      alignment: Alignment.centerRight,
+                      children: [
+                        if ((product.rating ?? 0) > 0) Row(
+                            children: [1,2,3,4,5].map((e) => Icon(e <= product.rating! ? Icons.star : Icons.star_half, color: Colors.amber, size: 16)).toList()
+                        ),
+                        InkWell(
+                            onTap: () => Helper.addCompare(product.id),
+                            child: Image.asset('assets/icon/rat${Helper.compares.value.contains(product.id) ? '2' : ''}.png', width: 24, fit: BoxFit.cover)
+                        )
+                      ]
+                  )
+                ),
                 Container(
                     alignment: Alignment.bottomLeft,
                     height: 47,
@@ -134,7 +187,7 @@ class ProductCard extends GetView<NavigationController> {
                         ]
                     )
                 ),
-                h(8),
+                Spacer(),
                 PrimaryButton(text: controller.isCart(product.id) ? 'В корзине' : 'Купить', loader: true, onPressed: buy, height: 40)
               ]
           )

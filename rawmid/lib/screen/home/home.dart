@@ -33,7 +33,7 @@ class HomeView extends StatelessWidget {
                           if (controller.banners.isNotEmpty) SlideshowView(banners: controller.banners, button: true),
                           if (controller.achieviment.value != null) AchievementsSection(item: controller.achieviment.value!, callback: () {
                             if (controller.navController.user.value == null) {
-                              Get.toNamed('register');
+                              Get.toNamed('/login', parameters: {'route': 'achieviment'});
                             } else {
                               Get.toNamed('/achieviment');
                             }
@@ -51,7 +51,7 @@ class HomeView extends StatelessWidget {
                           if (controller.news.isNotEmpty) NewsSection(news: controller.news, padding: true, callback: () => Get.toNamed('/blog')),
                           if (controller.recipes.isNotEmpty) RecipesSection(recipes: controller.recipes, callback: () {
                             if (controller.navController.user.value == null) {
-                              Get.toNamed('register', parameters: {'route': '/blog'});
+                              Get.toNamed('login', parameters: {'route': 'blog'});
                             } else {
                               Get.toNamed('/blog', arguments: true);
                             }

@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:rawmid/api/cart.dart';
 import 'package:rawmid/api/profile.dart';
 import 'package:rawmid/controller/cart.dart';
+import 'package:rawmid/controller/club.dart';
 import 'package:rawmid/controller/home.dart';
 import 'package:rawmid/controller/wishlist.dart';
 import 'package:rawmid/model/catalog/category.dart';
@@ -24,16 +27,11 @@ import '../screen/home/home.dart';
 import '../screen/wishlist/wishlist.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'catalog.dart';
 
 class NavigationController extends GetxController {
+  late TabController tabController;
   RxInt activeTab = 0.obs;
-  final Map<int, GlobalKey<NavigatorState>> navigatorKeys = {
-    0: GlobalKey<NavigatorState>(),
-    1: GlobalKey<NavigatorState>(),
-    2: GlobalKey<NavigatorState>(),
-    4: GlobalKey<NavigatorState>(),
-    5: GlobalKey<NavigatorState>()
-  };
   final List<Widget> widgetOptions = <Widget>[
     const HomeView(),
     const CatalogView(),
@@ -64,23 +62,17 @@ class NavigationController extends GetxController {
   late stt.SpeechToText speech;
   RxBool isListening = false.obs;
   RxBool isAvailable = false.obs;
+  RxBool loadImage = false.obs;
   RxBool isSearch = false.obs;
   RxString searchText = ''.obs;
   RxList<String> wishlist = (Helper.prefs.getStringList('wishlist') ?? <String>[]).obs;
+  Rxn<File> imageFile = Rxn<File>();
+  final ImagePicker picker = ImagePicker();
 
   onItemTapped(int index) {
     searchProducts.clear();
     searchNews.clear();
     searchCategories.clear();
-
-    if (index == 2 && activeTab.value != 2) {
-      final wishlistController = Get.find<WishlistController>();
-      wishlistController.initialize();
-    } else if (index == 4 && user.value == null) {
-      Get.toNamed('/login')?.then((_) => activeTab.value = index);
-      return;
-    }
-
     activeTab.value = index;
   }
 
@@ -89,11 +81,38 @@ class NavigationController extends GetxController {
   }
 
   Future changeCity(CityModel val) async {
+    if (fId.value == val.id) {
+      Get.back();
+      return;
+    }
+
     final code = await HomeApi.changeCity(val.id);
     countryCode.value = code;
     Helper.prefs.setString('city', val.name);
     Helper.prefs.setInt('fias_id', val.id);
     Helper.prefs.setString('countryCode', code);
+    fId.value = val.id;
+
+    if (Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().initialize();
+    }
+
+    if (Get.isRegistered<CatalogController>()) {
+      Get.find<CatalogController>().initialize();
+    }
+
+    if (Get.isRegistered<WishlistController>()) {
+      Get.find<WishlistController>().initialize();
+    }
+
+    if (Get.isRegistered<CartController>()) {
+      Get.find<CartController>().initialize();
+    }
+
+    if (Get.isRegistered<ClubController>()) {
+      Get.find<ClubController>().initialize();
+    }
+
     Get.back();
   }
 
@@ -118,6 +137,8 @@ class NavigationController extends GetxController {
   }
 
   Future initialize() async {
+    CartApi.getProducts().then((e) => cartProducts.value = e);
+
     if (city.isEmpty) {
       if (Get.arguments != null) {
         city.value = Get.arguments['city'] ?? '';
@@ -189,12 +210,7 @@ class NavigationController extends GetxController {
   }
 
   bool isCart(String id) {
-    if (Get.isRegistered<CartController>()) {
-      final cart = Get.find<CartController>();
-      return cart.cartProducts.where((e) => e.id == id).isNotEmpty;
-    }
-
-    return false;
+    return cartProducts.where((e) => e.id == id).isNotEmpty;
   }
 
   Future clear() async {
@@ -232,6 +248,12 @@ class NavigationController extends GetxController {
         searchCategories.value = api.categories;
         searchProducts.value = api.products;
         searchNews.value = api.news;
+
+        Future.delayed(Duration(seconds: 2), () {
+          if (searchCategories.isEmpty && searchProducts.isEmpty && searchNews.isEmpty) {
+            searchText.value = '';
+          }
+        });
       }
     }
   }
@@ -268,6 +290,12 @@ class NavigationController extends GetxController {
                   searchCategories.value = api.categories;
                   searchProducts.value = api.products;
                   searchNews.value = api.news;
+
+                  Future.delayed(Duration(seconds: 2), () {
+                    if (searchCategories.isEmpty && searchProducts.isEmpty && searchNews.isEmpty) {
+                      searchText.value = '';
+                    }
+                  });
                 }
               });
             }
@@ -294,7 +322,27 @@ class NavigationController extends GetxController {
   Future logout() async {
     ProfileApi.logout();
     user.value = null;
-    Helper.prefs.setString('PHPSESSID', '');
+    await Helper.prefs.setString('PHPSESSID', '');
+    if (Get.isRegistered<HomeController>()) {
+      final home = Get.find<HomeController>();
+      home.initialize();
+    }
+    onItemTapped(0);
     Get.back();
+  }
+
+  Future pickImage(ImageSource source) async {
+    loadImage.value = true;
+    final pickedFile = await picker.pickImage(source: source);
+
+    if (pickedFile != null) {
+      final api = await ProfileApi.uploadImage(File(pickedFile.path));
+
+      if (api) {
+        imageFile.value = File(pickedFile.path);
+      }
+    }
+
+    loadImage.value = false;
   }
 }

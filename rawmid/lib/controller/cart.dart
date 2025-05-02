@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/utils/helper.dart';
 import '../api/cart.dart';
+import '../api/home.dart';
 import '../model/cart.dart';
 
 class CartController extends GetxController {
@@ -17,16 +18,22 @@ class CartController extends GetxController {
   }
 
   Future initialize() async {
-    CartApi.getProducts().then((e) {
-      cartProducts.value = e;
-      navController.cartProducts.value = e;
-    });
+    final fId = Helper.prefs.getInt('fias_id') ?? 0;
+
+    if (fId > 0) {
+      await HomeApi.changeCity(fId);
+    }
+
+    final e = await CartApi.getProducts();
+    cartProducts.value = e;
+    navController.cartProducts.value = e;
+    isLoading.value = true;
   }
 
   Future updateCart(CartModel cart) async {
     CartApi.updateCart({
       'key': cart.key,
-      'quantity': cart.quantity
+      'quantity': '${cart.quantity}'
     }).then((e) {
       cartProducts.value = e;
       navController.cartProducts.value = e;

@@ -87,9 +87,9 @@ class CartApi {
 
     try {
       final response = await http.post(Uri.parse(updateCartUrl), headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
-      }, body: jsonEncode(body));
+      }, body: body);
       final json = jsonDecode(response.body);
 
       if (json['message'] != null) {

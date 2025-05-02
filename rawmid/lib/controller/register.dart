@@ -29,6 +29,13 @@ class RegisterController extends GetxController {
       });
 
       if (user != null) {
+        final carts = navController.cartProducts;
+        navController.cartProducts.clear();
+
+        for (var cart in carts) {
+          navController.addCart(cart.id);
+        }
+
         navController.user.value = user;
         update();
 

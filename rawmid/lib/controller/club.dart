@@ -1,23 +1,24 @@
 import 'dart:async';
-
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/api/club.dart';
-import 'package:rawmid/controller/home.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/model/home/news.dart';
 import 'package:rawmid/model/product/review.dart';
+import '../api/home.dart';
 import '../api/login.dart';
 import '../api/product.dart';
+import '../api/profile.dart';
 import '../api/wishlist.dart';
+import '../model/club/achievement.dart';
 import '../model/home/product.dart';
+import '../model/home/rank.dart';
+import '../model/profile/profile.dart';
 import '../utils/helper.dart';
 
 class ClubController extends GetxController {
   RxBool isLoading = false.obs;
-  var home = Rxn<HomeController>();
-  var nav = Rxn<NavigationController>();
   var banners = <Map<String, dynamic>>[].obs;
   final pageController = PageController(viewportFraction: 0.9);
   final reviewsController = PageController(viewportFraction: 0.947);
@@ -39,6 +40,10 @@ class ClubController extends GetxController {
   final textField = TextEditingController();
   final textReviewField = TextEditingController();
   var emailValidate = false.obs;
+  var achievements = <AchievementModel>[];
+  var notAchievements = <AchievementModel>[];
+  var ranks = <RankModel>[].obs;
+  var user = Rxn<ProfileModel>();
 
   @override
   void onInit() {
@@ -47,48 +52,80 @@ class ClubController extends GetxController {
   }
 
   Future initialize() async {
-    ClubApi.getClub().then((api) {
-      if (api != null) {
-        reviews.value = api.reviews;
-        recipes.value = api.recipes;
-        news.value = api.news;
+    final fId = Helper.prefs.getInt('fias_id') ?? 0;
+
+    if (fId > 0) {
+      await HomeApi.changeCity(fId);
+    }
+
+    user.value = await ProfileApi.user();
+
+    if (user.value == null) {
+      Get.toNamed('/login');
+      return;
+    }
+
+    final api = await ClubApi.getClub();
+
+    if (api != null) {
+      reviews.value = api.reviews;
+      recipes.value = api.recipes;
+      news.value = api.news;
+    }
+
+    final map = await ClubApi.getAchievements();
+
+    if (map['achievements'] != null) {
+      for (var i in map['achievements']) {
+        achievements.add(AchievementModel.fromJson(i));
       }
+    }
 
-      banners.value = [
-        {
-          'title': 'Мои отзывы',
-          'count': reviews.length,
-          'icon': 'assets/icon/rev2.png',
-          'image': 'assets/image/chat.png',
-          'index': 0
-        },
-        {
-          'title': 'Мои рецепты',
-          'count': recipes.length,
-          'icon': 'assets/icon/recep.png',
-          'image': 'assets/image/vil.png',
-          'index': 1
-        },
-        {
-          'title': 'Мои статьи',
-          'count': news.length,
-          'icon': 'assets/icon/stat.png',
-          'image': 'assets/image/tet.png',
-          'index': 2
-        }
-      ];
+    if (map['not_achievements'] != null) {
+      for (var i in map['not_achievements']) {
+        notAchievements.add(AchievementModel.fromJson(i));
+      }
+    }
+
+    banners.value = [
+      {
+        'title': 'Мои отзывы',
+        'count': reviews.length,
+        'icon': 'assets/icon/rev2.png',
+        'image': 'assets/image/chat.png',
+        'index': 0,
+        'link': '/reviews'
+      },
+      {
+        'title': 'Мои рецепты',
+        'count': recipes.length,
+        'icon': 'assets/icon/recep.png',
+        'image': 'assets/image/vil.png',
+        'index': 1,
+        'link': '/blog',
+        'parameters': {'my_recipes': '1'}
+      },
+      {
+        'title': 'Мои статьи',
+        'count': news.length,
+        'icon': 'assets/icon/stat.png',
+        'image': 'assets/image/tet.png',
+        'index': 2,
+        'link': '/blog',
+        'parameters': {'my_survey': '1'}
+      }
+    ];
+
+    HomeApi.getRanks().then((e) {
+      ranks.value = e;
     });
-
-    home.value = Get.find<HomeController>();
-    nav.value = Get.find<NavigationController>();
 
     products.clear();
     final wishlist = Helper.prefs.getStringList('wishlist') ?? <String>[];
 
     if (wishlist.isNotEmpty) {
-      WishlistApi.getWishlist(wishlist.join(',')).then((e) {
-        products.addAll(e);
-      });
+      final e = await WishlistApi.getWishlist(wishlist.join(','));
+      products.addAll(e);
     }
 
     isLoading.value = true;
@@ -104,7 +141,7 @@ class ClubController extends GetxController {
     Helper.prefs.setStringList('wishlist', wishlist);
     Helper.wishlist.value = wishlist;
     Helper.trigger.value++;
-    final main = Get.find<HomeController>();
+    final main = Get.find<NavigationController>();
     main.wishlist.value = wishlist;
   }
 
@@ -141,7 +178,7 @@ class ClubController extends GetxController {
           'qa_id': isQuestionComment.value,
           'name': fioReviewField.text,
           'text': textReviewField.text,
-          'email': nav.value?.user.value?.email ?? emailReviewField.text
+          'email': user.value?.email ?? emailReviewField.text
         });
       } else if (isComment.isNotEmpty) {
         api = await ProductApi.addComment({
@@ -149,7 +186,7 @@ class ClubController extends GetxController {
           'parent_id': isComment.value,
           'name': fioReviewField.text,
           'text': textReviewField.text,
-          'email': nav.value?.user.value?.email ?? emailReviewField.text,
+          'email': user.value?.email ?? emailReviewField.text,
           'rating': '${rating.value}'
         });
       } else {
@@ -157,7 +194,7 @@ class ClubController extends GetxController {
           'product_id': id,
           'name': fioReviewField.text,
           'text': textReviewField.text,
-          'email': nav.value?.user.value?.email ?? emailReviewField.text,
+          'email': user.value?.email ?? emailReviewField.text,
           'rating': '${rating.value}'
         });
       }

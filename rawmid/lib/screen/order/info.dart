@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
@@ -6,9 +7,11 @@ import 'package:rawmid/screen/product/product.dart';
 import 'package:rawmid/widget/module_title.dart';
 import 'package:rawmid/widget/primary_button.dart';
 import '../../controller/order.dart';
+import '../../model/cart.dart';
 import '../../model/order_history.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
+import '../../utils/utils.dart';
 import '../../widget/h.dart';
 import '../../widget/popup_menu.dart';
 import '../../widget/w.dart';
@@ -60,7 +63,7 @@ class OrderInfoView extends GetView<OrderController> {
                                   ),
                                   Transform.translate(
                                     offset: Offset(8, 0),
-                                    child: PopupMenuNoPadding(callback: (val) async => controller.setParam(val, order))
+                                    child: PopupMenuNoPadding(order: order, callback: (val) async => controller.setParam(val, order))
                                   )
                                 ]
                             ),
@@ -111,6 +114,32 @@ class OrderInfoView extends GetView<OrderController> {
                                                       fontSize: 18,
                                                       fontWeight: FontWeight.w700
                                                   )
+                                              ),
+                                              h(8),
+                                              GestureDetector(
+                                                onTap: () {
+                                                  showModalBottomSheet(
+                                                      context: Get.context!,
+                                                      isScrollControlled: true,
+                                                      useSafeArea: true,
+                                                      useRootNavigator: true,
+                                                      shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+                                                      ),
+                                                      builder: (context) {
+                                                        return _openReview(controller, item);
+                                                      }
+                                                  );
+                                                },
+                                                child: Text(
+                                                    'Разместить отзыв',
+                                                    style: TextStyle(
+                                                        color: const Color(0xFF8A95A8),
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w500,
+                                                        decoration: TextDecoration.underline
+                                                    )
+                                                )
                                               )
                                             ]
                                         )
@@ -195,11 +224,23 @@ class OrderInfoView extends GetView<OrderController> {
                                 items = order.history;
                               }
 
+                              var icon = 's2';
+
                               return Row(
                                   spacing: 12,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: List.generate(items.length, (index) {
                                     final history = items[index];
+
+                                    if (history.status.trim() == 'Ожидает оплату' || history.status.trim() == 'В процессе отгрузки') {
+                                      icon = 's1';
+                                    } else if (history.status.trim() == 'Доставляется' || history.status.trim() == 'Отправляем') {
+                                      icon = 's3';
+                                    } else if (history.status.trim() == 'Завершён' || history.status.trim() == 'Укомплектован' || history.status.trim() == 'Завершен' || history.status.trim() == 'Возврат' || history.status.trim() == 'Отменен') {
+                                      icon = 's2';
+                                    } else {
+                                      icon = '';
+                                    }
 
                                     return Flexible(
                                         child: Container(
@@ -207,8 +248,9 @@ class OrderInfoView extends GetView<OrderController> {
                                             width: double.infinity,
                                             child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.start,
+                                                spacing: 4,
                                                 children: [
-                                                  Icon(Icons.local_shipping, color: Colors.white),
+                                                  icon =='pay' ? Icon(Icons.payment, color: Colors.white) : icon.isNotEmpty ? Image.asset('assets/icon/$icon.png', width: 24, height: 24) : Icon(Icons.close_rounded, color: Colors.white),
                                                   Text(
                                                       history.status,
                                                       textAlign: TextAlign.center,
@@ -368,15 +410,25 @@ class OrderInfoView extends GetView<OrderController> {
                                                           fontWeight: FontWeight.w600
                                                       )
                                                   ) : Transform.translate(
-                                                    offset: Offset(-6, -3),
-                                                    child: Html(
+                                                    offset: Offset(-6, -5),
+                                                    child: DefaultTextStyle.merge(
+                                                        style: TextStyle(
+                                                          fontFamily: 'Manrope',
+                                                          fontSize: 17
+                                                        ),
+                                                        child: Html(
                                                         data: e.comment,
+                                                        style: {
+                                                          '*': Style(
+                                                              textDecoration: TextDecoration.none
+                                                          )
+                                                        },
                                                         onLinkTap: (val, map, element) {
                                                           if ((val ?? '').isNotEmpty) {
                                                             Helper.openLink(val!);
                                                           }
                                                         }
-                                                    )
+                                                    ))
                                                   )
                                                 )
                                               )
@@ -396,28 +448,21 @@ class OrderInfoView extends GetView<OrderController> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Статус оплаты:',
+                            'Статус заказа:',
                             style: TextStyle(
                               color: Color(0xFF8A95A8),
                               fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                               letterSpacing: 0.30
                             )
                           ),
-                          Row(
-                              mainAxisSize: MainAxisSize.min,
-                              spacing: 4,
-                              children: [
-                                Image.asset('assets/icon/${order.payD == 1 ? 'check' : 'clo'}.png', width: 12),
-                                Text(
-                                    order.payD == 1 ? 'Оплачено' : 'Не оплачено',
-                                    style: TextStyle(
-                                        color: Color(order.payD == 1 ? 0xFF03A34B : 0xFFDA2E2E),
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600
-                                    )
-                                )
-                              ]
+                          Text(
+                              order.status,
+                              style: TextStyle(
+                                  color: Color(order.payD == 1 ? 0xFF03A34B : 0xFFDA2E2E),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600
+                              )
                           )
                         ]
                       ),
@@ -580,6 +625,153 @@ class OrderInfoView extends GetView<OrderController> {
                     ]
                 )
             )
+        )
+    );
+  }
+
+  Widget _openReview(OrderController controller, CartModel product) {
+    return Padding(
+        padding: EdgeInsets.only(
+            left: 16, right: 16, top: 20, bottom: MediaQuery.of(Get.context!).viewInsets.bottom + 20
+        ),
+        child: Form(
+            key: controller.formKey,
+            child: Obx(() => Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      'Оставьте отзыв',
+                      style: TextStyle(
+                          color: Color(0xFF1E1E1E),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600
+                      )
+                  ),
+                  h(16),
+                  Row(
+                      children: [
+                        ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: CachedNetworkImage(
+                                imageUrl: product.image,
+                                errorWidget: (c, e, i) {
+                                  return Image.asset('assets/image/no_image.png');
+                                },
+                                height: 64,
+                                width: 64,
+                                fit: BoxFit.cover
+                            )
+                        ),
+                        w(12),
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                      product.name,
+                                      style: TextStyle(
+                                          color: Color(0xFF1E1E1E),
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700
+                                      )
+                                  ),
+                                  if (product.color.isNotEmpty) Text(
+                                      'Цвет: ${product.color}',
+                                      style: TextStyle(
+                                          color: Color(0xFF8A95A8),
+                                          fontSize: 12
+                                      )
+                                  )
+                                ]
+                            )
+                        ),
+                        w(12),
+                        Text(
+                            product.price,
+                            style: TextStyle(
+                                color: Color(0xFF1E1E1E),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700
+                            )
+                        )
+                      ]
+                  ),
+                  h(20),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        return IconButton(
+                          icon: Icon(Icons.star, color: index < controller.rating.value ? Colors.amber : Color(0x4CFFCC00), size: 40),
+                          onPressed: () => controller.rating.value = index+1,
+                          padding: EdgeInsets.zero,
+                        );
+                      })
+                  ),
+                  h(20),
+                  TextFormField(
+                      cursorHeight: 15,
+                      controller: controller.fioReviewField,
+                      decoration: decorationInput(hint: 'Имя', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      validator: (val) {
+                        if ((val ?? '').isEmpty) {
+                          return 'Напишите ваше ФИО';
+                        }
+
+                        return null;
+                      }
+                  ),
+                  h(10),
+                  if (controller.navController.user.value == null) TextFormField(
+                      controller: controller.emailReviewField,
+                      cursorHeight: 15,
+                      decoration: decorationInput(error: controller.emailValidate.value ? dangerColor : null, hint: 'E-mail', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      keyboardType: TextInputType.emailAddress,
+                      onChanged: controller.validateEmailX,
+                      validator: (val) {
+                        if ((val ?? '').isEmpty) {
+                          return 'Напишите E-mail';
+                        } else if ((val ?? '').isNotEmpty && !EmailValidator.validate(val!)) {
+                          return 'E-mail заполнен некорректно';
+                        }
+
+                        return null;
+                      }
+                  ),
+                  if (controller.navController.user.value == null && controller.emailValidate.value) Padding(
+                      padding: const EdgeInsets.only(top: 4, left: 16),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text(
+                                'E-mail не существует',
+                                style: TextStyle(color: dangerColor, fontSize: 12)
+                            )
+                          ]
+                      )
+                  ),
+                  if (controller.navController.user.value == null) h(10),
+                  TextFormField(
+                      controller: controller.textReviewField,
+                      decoration: decorationInput(hint: 'Текст', contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4)),
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      maxLines: 3,
+                      cursorHeight: 15,
+                      validator: (val) {
+                        if ((val ?? '').isEmpty) {
+                          return 'Напишите ваш отзыв';
+                        }
+
+                        return null;
+                      }
+                  ),
+                  h(20),
+                  PrimaryButton(text: 'Опубликовать отзыв', loader: true, height: 50, onPressed: () => controller.addReview(product.id)),
+                  h(20)
+                ]
+            ))
         )
     );
   }

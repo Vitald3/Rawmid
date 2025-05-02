@@ -26,7 +26,7 @@ class ReviewModel {
         comments.add(ReviewModel.fromJson(i));
       }
     }
-    if (json['product'] != null) {
+    if (json['product'] != null && (json['product'] ?? []).isNotEmpty) {
       product = ProductModel.fromJson(json['product']);
     }
   }

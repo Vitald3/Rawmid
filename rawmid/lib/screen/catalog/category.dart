@@ -75,7 +75,7 @@ class CategorySectionState extends State<CategorySection> {
                             errorWidget: (c, e, i) {
                               return Image.asset('assets/image/no_image.png', fit: BoxFit.contain);
                             },
-                            fit: BoxFit.contain,
+                            fit: BoxFit.cover,
                             width: double.infinity
                         )
                     )
