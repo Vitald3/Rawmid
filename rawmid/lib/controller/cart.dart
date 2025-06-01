@@ -37,6 +37,22 @@ class CartController extends GetxController {
     }).then((e) {
       cartProducts.value = e;
       navController.cartProducts.value = e;
+
+      if (cartProducts.isEmpty) {
+        CartApi.clear();
+      }
+
+      if ((cart.quantity ?? 0) <= 0) {
+        final kre = Helper.prefs.getStringList('product_kre') ?? [];
+
+        for (var i in e) {
+          if (kre.contains(i.id)) {
+            kre.removeWhere((e) => e == i.id);
+          }
+        }
+
+        Helper.prefs.setStringList('product_kre', kre);
+      }
     });
   }
 

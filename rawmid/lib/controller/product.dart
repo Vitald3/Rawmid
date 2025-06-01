@@ -9,6 +9,7 @@ import 'package:rawmid/model/product/product_item.dart';
 import 'package:rawmid/model/product/question.dart';
 import 'package:rawmid/model/product/review.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../api/cart.dart';
 import '../api/login.dart';
 import '../model/home/news.dart';
 import '../screen/product/zap.dart';
@@ -37,6 +38,7 @@ class ProductController extends GetxController {
   RxDouble saleTransitionEnd = 0.0.obs;
   RxInt activeReviewsIndex = 0.obs;
   RxInt activeQuestionsIndex = 0.obs;
+  var chainAdd = <String>[].obs;
   final pageController = PageController();
   final reviewsController = PageController(viewportFraction: 1.06);
   final questionController = PageController(viewportFraction: 1.06);
@@ -57,6 +59,7 @@ class ProductController extends GetxController {
   RxList<NewsModel> surveys = <NewsModel>[].obs;
   RxList<NewsModel> rec = <NewsModel>[].obs;
   RxList<String> video = <String>[].obs;
+  final serNumField = TextEditingController();
   final questionField = TextEditingController();
   final nameField = TextEditingController();
   final fioField = TextEditingController();
@@ -135,10 +138,23 @@ class ProductController extends GetxController {
     );
   }
 
+  Future getSerNum(String val, String id) async {
+    final api = await ProductApi.getSerNum(val, id);
+
+    if (api) {
+      await navController.addCart(id);
+      navController.update();
+      serNumField.clear();
+      Get.back();
+      Get.back();
+    }
+  }
+
   Future initialize() async {
     isLoading.value = false;
     timer?.cancel();
     timer = null;
+    CartApi.getProducts().then((e) => navController.cartProducts.value = e);
 
     if (!viewed.contains(id)) {
       viewed.add(id);
@@ -153,8 +169,9 @@ class ProductController extends GetxController {
     ProductApi.getReviews(id).then((e) {
       reviews.value = e;
     });
-    fioField.text = navController.user.value?.fio ?? '';
-    fioReviewField.text = navController.user.value?.fio ?? '';
+    fioField.text = navController.user.value?.firstname ?? '';
+    nameField.text = navController.user.value?.firstname ?? '';
+    fioReviewField.text = '${navController.user.value?.firstname ?? ''} ${navController.user.value?.lastname ?? ''}'.trim();
     emailReviewField.text = navController.user.value?.email ?? '';
     emailField.text = navController.user.value?.email ?? '';
 
@@ -169,8 +186,13 @@ class ProductController extends GetxController {
       rec.value = api.rec;
       zap.value = api.zap;
       final now = DateTime.now();
-      phoneField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
-      phonePreField.value = PhoneNumber(isoCode: Helper.isoCodeConversionMap[navController.countryCode.value] ?? IsoCode.KZ, nsn: '');
+
+      try {
+        phoneField.value = PhoneNumber.parse(navController.user.value!.phone);
+        phonePreField.value = PhoneNumber.parse(navController.user.value!.phone);
+      } catch(_) {
+        //
+      }
 
       if (api.text.isNotEmpty) {
         webController = WebViewController()
@@ -260,7 +282,7 @@ class ProductController extends GetxController {
     final api = await navController.addChainCart(body);
 
     if (api) {
-      Helper.snackBar(text: 'Комплект добавлен в корзину');
+      chainAdd.add(id);
     }
   }
 
@@ -362,7 +384,7 @@ class ProductController extends GetxController {
   }
 
   Future addReview() async {
-    if (rating.value == 0) {
+    if (rating.value == 0 && isComment.isEmpty && isQuestionComment.isEmpty) {
       Helper.snackBar(error: true, text: 'Выберите оценку');
       return;
     }

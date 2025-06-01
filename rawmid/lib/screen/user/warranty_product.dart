@@ -72,7 +72,7 @@ class WarrantyProductView extends GetView<MyProductController> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           h(10),
-                                          ModuleTitle(title: 'Гарантия товара', type: true),
+                                          ModuleTitle(title: 'Проверка гарантийного срока', type: true),
                                           if (item != null) Row(
                                               spacing: 16,
                                               children: [

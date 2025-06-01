@@ -57,14 +57,17 @@ class SearchBarViewState extends State<SearchBarView> {
               prefixIcon: Image.asset('assets/image/search.png'),
               suffixIcon: controller.isAvailable.value ? InkWell(
                 onTap: () {
+                  FocusScope.of(context).unfocus();
                   if (controller.isListening.value) {
-                    controller.stopListening();
-                  } else {
-                    controller.startListening().then((_) {
+                    controller.stopListening().then((_) {
                       if (context.mounted) {
-                        FocusScope.of(context).requestFocus(_focusNode);
+                        _controller.text = controller.searchText.value;
                       }
                     });
+                  } else {
+                    _controller.clear();
+                    FocusScope.of(context).requestFocus(_focusNode);
+                    controller.startListening(_controller, _focusNode, context);
                   }
                 },
                 child: Image.asset(controller.isListening.value ? 'assets/icon/microphone_active.png' : 'assets/image/microphone.png')

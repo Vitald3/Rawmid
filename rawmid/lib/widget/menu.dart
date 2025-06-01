@@ -6,6 +6,7 @@ import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/widget/w.dart';
 import '../controller/cart.dart';
 import '../controller/home.dart';
+import '../model/profile/profile.dart';
 import '../screen/home/city.dart';
 import 'h.dart';
 import 'package:get/get.dart';
@@ -17,75 +18,101 @@ class MenuView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = controller.user.value;
-
     return Drawer(
       backgroundColor: Colors.white,
-      child: Obx(() => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                  child: Column(
-                      children: [
-                        h(4),
-                        _buildSection('Покупки', [
-                          if (user != null) _buildDrawerItem('order', 'Мои заказы', () => Get.toNamed('/orders')),
-                          if (user != null) _buildDrawerItem('my_product', 'Мои товары', () => Get.toNamed('/my_products')),
-                          if (user != null) _buildDrawerItem('rev', 'Мои отзывы', () => Get.toNamed('/reviews')),
-                          _buildDrawerItem('shop', 'Магазин', () {
-                            controller.onItemTapped(1);
-                            Scaffold.of(context).closeDrawer();
-                          }),
-                          _buildDrawerItem('rat', 'Сравнение товаров', () {
-                            Get.toNamed('/compare');
-                            Scaffold.of(context).closeDrawer();
-                          }),
-                          _buildDrawerItem('special', 'Акции', () => Get.toNamed('/specials'), divider: false),
-                        ]),
-                        _buildSection('Информация', [
-                          _buildDrawerItem('news', 'Статьи', () => Get.toNamed('/blog')),
-                          _buildDrawerItem('receipe', 'Рецепты', () {
-                            if (user == null) {
-                              Get.toNamed('register');
-                            } else {
-                              Get.toNamed('/blog', arguments: true);
-                            }
-                          }, divider: false),
-                        ]),
-                        _buildSection('Профиль', [
-                          if (user != null) _buildDrawerItem('setting', 'Настройки', () => Get.toNamed('user')),
-                          _buildDrawerItem('support', 'Поддержка', () => Get.toNamed('/support'), divider: false),
-                        ])
-                      ]
+      child: Obx(() {
+        final user = controller.user.value;
+
+        return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(user),
+              Expanded(
+                  child: SingleChildScrollView(
+                      child: Column(
+                          children: [
+                            h(4),
+                            _buildSection('Покупки', [
+                              if (user != null) _buildDrawerItem('order', 'Мои заказы', () {
+                                Scaffold.of(context).closeDrawer();
+                                Get.toNamed('/orders');
+                              }),
+                              if (user != null) _buildDrawerItem('my_product', 'Мои товары', () {
+                                Scaffold.of(context).closeDrawer();
+                                Get.toNamed('/my_products');
+                              }),
+                              if (user != null) _buildDrawerItem('rev', 'Мои отзывы', () {
+                                Scaffold.of(context).closeDrawer();
+                                Get.toNamed('/reviews');
+                              }),
+                              _buildDrawerItem('shop', 'Магазин', () {
+                                controller.onItemTapped(1);
+                                Scaffold.of(context).closeDrawer();
+                              }),
+                              _buildDrawerItem('rat', 'Сравнение товаров', () {
+                                Scaffold.of(context).closeDrawer();
+                                Get.toNamed('/compare');
+                                Scaffold.of(context).closeDrawer();
+                              }),
+                              _buildDrawerItem('special', 'Акции', () {
+                                Scaffold.of(context).closeDrawer();
+                                Get.toNamed('/specials');
+                              }, divider: false),
+                            ]),
+                            _buildSection('Информация', [
+                              _buildDrawerItem('news', 'Статьи', () {
+                                Scaffold.of(context).closeDrawer();
+                                Get.toNamed('/blog');
+                              }),
+                              _buildDrawerItem('receipe', 'Рецепты', () {
+                                Scaffold.of(context).closeDrawer();
+
+                                if (user == null) {
+                                  Get.toNamed('register');
+                                } else {
+                                  Get.toNamed('/blog', arguments: true);
+                                }
+                              }, divider: false),
+                            ]),
+                            _buildSection('Профиль', [
+                              if (user != null) _buildDrawerItem('setting', 'Настройки', () {
+                                Scaffold.of(context).closeDrawer();
+                                Get.toNamed('/user');
+                              }),
+                              _buildDrawerItem('support', 'Поддержка', () {
+                                Scaffold.of(context).closeDrawer();
+                                Get.toNamed('/support');
+                              }, divider: false),
+                            ])
+                          ]
+                      )
+                  )
+              ),
+              Padding(
+                  padding: const EdgeInsets.only(left: 20),
+                  child: _buildDrawerItem(user != null ? 'logout' : 'login', user != null ? 'Выйти' : 'Войти', () {
+                    Scaffold.of(context).closeDrawer();
+
+                    if (user != null) {
+                      controller.logout();
+                    } else {
+                      Get.toNamed('/login', parameters: {'tab': '${controller.activeTab.value}'});
+                    }
+                  }, color: user != null ? dangerColor : primaryColor, divider: false)
+              ),
+              Padding(
+                  padding: const EdgeInsets.only(left: 20, bottom: 20),
+                  child: Text('© Rawmid ${DateTime.now().year}',
+                      style: TextStyle(color: Colors.grey)
                   )
               )
-            ),
-            Padding(
-                padding: const EdgeInsets.only(left: 20),
-                child: _buildDrawerItem(user != null ? 'logout' : 'login', user != null ? 'Выйти' : 'Войти', () {
-                  if (user != null) {
-                    controller.logout();
-                  } else {
-                    Get.toNamed('/login');
-                  }
-                }, color: user != null ? dangerColor : primaryColor, divider: false)
-            ),
-            Padding(
-                padding: const EdgeInsets.only(left: 20, bottom: 20),
-                child: Text('© Rawmid ${DateTime.now().year}',
-                    style: TextStyle(color: Colors.grey)
-                )
-            )
-          ]
-      ))
+            ]
+        );
+      })
     );
   }
 
-  Widget _buildHeader() {
-    final user = controller.user.value;
-    
+  Widget _buildHeader(ProfileModel? user) {
     return DrawerHeader(
       child: Column(
           children: [
@@ -154,8 +181,11 @@ class MenuView extends StatelessWidget {
                 ]
             ),
             if (controller.city.value.isNotEmpty) h(14),
-            if (controller.city.value.isNotEmpty) InkWell(
+            if (controller.city.value.isNotEmpty) GestureDetector(
                 onTap: () {
+                  final nav = Get.find<NavigationController>();
+                  final city = nav.city.value;
+
                   showModalBottomSheet(
                       context: Get.context!,
                       isScrollControlled: true,
@@ -171,6 +201,7 @@ class MenuView extends StatelessWidget {
                   ).then((_) {
                     controller.filteredCities.value = controller.cities;
                     controller.filteredLocation.clear();
+                    if (city == nav.city.value) return;
 
                     if (Get.isRegistered<HomeController>()) {
                       final home = Get.find<HomeController>();

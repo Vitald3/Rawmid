@@ -50,9 +50,15 @@ class BlogController extends GetxController {
 
     isRecipe.value = Get.arguments != null || Get.parameters['my_recipes'] == '1';
 
-    if (Get.arguments != null && (Get.parameters['my_recipes'] == null || Get.parameters['my_survey'] == null)) {
-      final categories = await BlogApi.getCategoriesNews(isRecipe.value);
+    if (Get.parameters['my_survey'] != '1') {
+      final categories = await BlogApi.getCategoriesNews(isRecipe.value, myRecipes: Get.parameters['my_recipes'] == '1');
       this.categories.value = categories;
+
+      final title = Get.parameters['my_recipes'] == '1' ? 'Мои рецепты' : Get.parameters['my_survey'] == '1' ? 'Мои обзоры' : isRecipe.value ? 'Рецепты' : 'Статьи';
+
+      if (title == 'Статьи' && categories.where((e) => e.name == 'Обзоры').isEmpty) {
+        categories.add(CategoryNewsModel(id: '0', name: 'Обзоры', image: ''));
+      }
     }
 
     final api = await BlogApi.blog(Get.arguments != null || Get.parameters['my_recipes'] == '1', mySurvey: Get.parameters['my_survey'] == '1', myRecipes: Get.parameters['my_recipes'] == '1');

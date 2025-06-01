@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:rawmid/model/home/banner.dart';
@@ -40,7 +41,25 @@ class HomeApi {
     return {};
   }
 
-  static Future<String> changeCity(int fId) async {
+  static Future<Map<String, dynamic>> changeCityByCity(String city) async {
+    try {
+      final response = await http.post(Uri.parse(changeRegionUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'city': city});
+      final data = jsonDecode(response.body);
+
+      if (data['code'] != null) {
+        return data;
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return {};
+  }
+
+  static Future<Map<String, dynamic>> changeCity(int fId) async {
     try {
       final response = await http.post(Uri.parse(changeRegionUrl), headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -49,13 +68,13 @@ class HomeApi {
       final data = jsonDecode(response.body);
 
       if (data['code'] != null) {
-        return data['code'];
+        return data;
       }
     } catch (e) {
       debugPrint(e.toString());
     }
 
-    return 'KZ';
+    return {};
   }
 
   static Future<List<String>> searchAddress(String query) async {
@@ -92,11 +111,11 @@ class HomeApi {
     return items;
   }
 
-  static Future<List<Location>> searchCity(String query) async {
+  static Future<List<Location>> searchCity(String query, {String countryId = '', int? level = 0}) async {
     List<Location> items = [];
 
     try {
-      final response = await http.get(Uri.parse('$searchCityUrl$query'), headers: {
+      final response = await http.get(Uri.parse('$searchCityUrl$query&country_id=$countryId${level != null ? '&level=$level' : ''}'), headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       });
 
@@ -165,6 +184,22 @@ class HomeApi {
     }
 
     return MapEntry('', '');
+  }
+
+  static Future<bool> saveToken(String token) async {
+    try {
+      final response = await http.post(Uri.parse(saveTokenUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'token': token, 'app': Platform.isAndroid ? 'android' : 'apple'});
+      final json = jsonDecode(response.body);
+
+      return json['success'] ?? false;
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return false;
   }
 
   static Future<List<RankModel>> getRanks() async {
@@ -255,9 +290,9 @@ class HomeApi {
     return items;
   }
 
-  static Future<ContactMapData?> getContact() async {
+  static Future<ContactMapData?> getContact(String city) async {
     try {
-      final response = await http.get(Uri.parse(contactsUrl), headers: {
+      final response = await http.get(Uri.parse('$contactsUrl&city=$city'), headers: {
         'Content-Type': 'application/json',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });

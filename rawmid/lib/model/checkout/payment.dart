@@ -17,9 +17,9 @@ class PaymentModel {
     return PaymentModel(
       code: json['code'],
       title: json['title'],
-      terms: json['terms'] ?? "",
-      sortOrder: json['sort_order'] ?? "",
-      paymentDiscount: json['payment_discount'] ?? "",
+      terms: json['terms'] ?? '',
+      sortOrder: '${json['sort_order'] ?? ''}',
+      paymentDiscount: json['payment_discount'] ?? ''
     );
   }
 

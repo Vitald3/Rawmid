@@ -2,11 +2,12 @@ import 'dart:async';
 import 'package:email_validator/email_validator.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/api/profile.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/utils/helper.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:yandex_mapkit/yandex_mapkit.dart';
 import '../api/home.dart';
 import '../api/login.dart';
 import '../model/profile/sernum_support.dart';
@@ -15,8 +16,10 @@ import '../model/support/question.dart';
 
 class SupportController extends GetxController {
   RxBool isLoading = false.obs;
+  RxBool absorbing = false.obs;
+  RxBool isAgree = false.obs;
   RxList<QuestionAnswerModel> questions = <QuestionAnswerModel>[].obs;
-  final List<String> types = ['Вопросы по заказам', 'Сервисный центр', 'Оптовикам и дилерам', 'Консультации по товарам', 'Поставщикам', 'Для жалоб и предложений', 'Оплата', 'Партнёрская программа'];
+  final List<String> types = ['Вопрос по заказу', 'Сервисный центр', 'Оптовикам и дилерам', 'Консультации по товарам', 'Поставщикам', 'Для жалоб и предложений', 'Оплата', 'Партнёрская программа'];
   RxList isExpandedList = [].obs;
   Rxn<int> type = Rxn();
   final subjectField = TextEditingController();
@@ -29,10 +32,11 @@ class SupportController extends GetxController {
   Rxn<PlatformFile> file = Rxn();
   Rxn<String> orderId = Rxn();
   Rxn<SernumSupportModel> sernum = Rxn();
-  final mapController = MapController();
   var orderIds = <String>[].obs;
   var sernums = <SernumSupportModel>[].obs;
   var contact = Rxn<ContactMapData>();
+  WebViewController? webPersonalController;
+  var map = Rxn<YandexMapController>();
 
   @override
   void onInit() {
@@ -41,9 +45,11 @@ class SupportController extends GetxController {
   }
 
   Future initialize() async {
-    HomeApi.getContact().then((e) {
-      contact.value = e;
-    });
+    isLoading.value = false;
+    final nav = Get.find<NavigationController>();
+
+    final api = await HomeApi.getContact(nav.city.value);
+    contact.value = api;
 
     questions.value = await ProfileApi.questions();
     isExpandedList.value = List<bool>.filled(questions.length, false);
@@ -96,11 +102,18 @@ class SupportController extends GetxController {
 
   Future send() async {
     if (formKey.currentState?.validate() ?? false) {
+      const maxSize = 50 * 1024 * 1024;
+
+      if (file.value != null && file.value!.size > maxSize) {
+        Helper.snackBar(error: true, text: 'Максимальный вес файла не должен превышать 50МБ');
+        return;
+      }
+
       Map<String, String> body = {
         'email': emailField.text,
         'firstname': nameField.text,
         'subject': subjectField.text,
-        'text': textField.text,
+        'description': textField.text,
         'department_id': '${(type.value ?? 0)}'
       };
 
@@ -111,11 +124,9 @@ class SupportController extends GetxController {
       final api = await ProfileApi.sendForm(file.value, body);
 
       if (api) {
-        emailField.clear();
-        nameField.clear();
+        formKey.currentState?.reset();
         subjectField.clear();
         textField.clear();
-        type.value = null;
         file.value = null;
         Helper.snackBar(text: 'Ваш вопрос принят');
       }

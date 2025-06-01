@@ -28,7 +28,13 @@ class LoginView extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           InkWell(
-                              onTap: Get.back,
+                              onTap: () {
+                                if ((Get.parameters['tab'] ?? '').isNotEmpty) {
+                                  controller.navController.onItemTapped(0);
+                                }
+
+                                Get.back();
+                              },
                               child: Image.asset('assets/icon/left.png')
                           ),
                           Image.asset('assets/image/logo.png', width: 70)
@@ -42,142 +48,150 @@ class LoginView extends StatelessWidget {
                     ),
                     alignment: Alignment.center,
                     padding: const EdgeInsets.all(16),
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Obx(() => Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: ShapeDecoration(
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)
-                                  )
-                              ),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Вход',
-                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                                    ),
-                                    h(10),
-                                    Divider(color: Color(0xFFDDE8EA), thickness: 1, height: 0.1),
-                                    h(20),
-                                    Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text('Адрес электронной почты', style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 14,
-                                              fontFamily: 'Roboto',
-                                              fontWeight: FontWeight.w600,
-                                              letterSpacing: 0.28
-                                          )),
-                                          h(4),
-                                          TextFormField(
-                                              cursorHeight: 15,
-                                              controller: controller.emailField,
-                                              decoration: decorationInput(error: controller.validateEmail.value ? dangerColor : null, hint: 'E-mail', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                              autovalidateMode: AutovalidateMode.onUserInteraction,
-                                              validator: (val) {
-                                                if ((val ?? '').isEmpty) {
-                                                  return 'Заполните E-mail';
-                                                } else if ((val ?? '').isNotEmpty && !EmailValidator.validate(val!)) {
-                                                  return 'E-mail некорректен';
-                                                }
+                    child: SingleChildScrollView(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Obx(() => Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: ShapeDecoration(
+                                    color: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12)
+                                    )
+                                ),
+                                child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Вход',
+                                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                                      ),
+                                      h(10),
+                                      Divider(color: Color(0xFFDDE8EA), thickness: 1, height: 0.1),
+                                      h(20),
+                                      Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Адрес электронной почты', style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 14,
+                                                fontFamily: 'Roboto',
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.28
+                                            )),
+                                            h(4),
+                                            TextFormField(
+                                                cursorHeight: 15,
+                                                controller: controller.emailField,
+                                                decoration: decorationInput(error: controller.validateEmail.value ? dangerColor : null, hint: 'E-mail', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                validator: (val) {
+                                                  if ((val ?? '').isEmpty) {
+                                                    return 'Заполните E-mail';
+                                                  } else if ((val ?? '').isNotEmpty && !EmailValidator.validate(val!)) {
+                                                    return 'E-mail некорректен';
+                                                  }
 
-                                                return null;
-                                              },
-                                              onChanged: (val) {
-                                                controller.validate();
-                                                controller.validateEmailX();
-                                              }
-                                          ),
-                                          if (controller.validateEmail.value) Padding(
-                                              padding: const EdgeInsets.only(top: 4, left: 16),
-                                              child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                        'E-mail не существует',
-                                                        style: TextStyle(color: dangerColor, fontSize: 12)
-                                                    )
-                                                  ]
+                                                  return null;
+                                                },
+                                                onChanged: (val) {
+                                                  controller.validate();
+                                                  controller.validateEmailX();
+                                                }
+                                            ),
+                                            if (controller.validateEmail.value) Padding(
+                                                padding: const EdgeInsets.only(top: 4, left: 16),
+                                                child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                          'E-mail не существует',
+                                                          style: TextStyle(color: dangerColor, fontSize: 12)
+                                                      )
+                                                    ]
+                                                )
+                                            )
+                                          ]
+                                      ),
+                                      h(16),
+                                      Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Пароль', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                                            h(4),
+                                            TextFormField(
+                                                cursorHeight: 15,
+                                                controller: controller.passwordField,
+                                                obscureText: !controller.isPasswordVisible.value,
+                                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                decoration: decorationInput(hint: 'Введите пароль', suffixIcon: IconButton(
+                                                    icon: Icon(!controller.isPasswordVisible.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                                    onPressed: () => controller.isPasswordVisible.value = !controller.isPasswordVisible.value
+                                                )),
+                                                onChanged: (val) => controller.validate(),
+                                                validator: (val) {
+                                                  if ((val ?? '').isEmpty) {
+                                                    return 'Заполните пароль';
+                                                  }
+
+                                                  return null;
+                                                }
+                                            )
+                                          ]
+                                      ),
+                                      h(20),
+                                      PrimaryButton(
+                                          text: 'Войти по коду',
+                                          loader: true,
+                                          height: 40,
+                                          borderRadius: 8,
+                                          background: Colors.white,
+                                          borderColor: primaryColor,
+                                          loaderColor: primaryColor,
+                                          borderWidth: 2,
+                                          textStyle: TextStyle(color: primaryColor),
+                                          onPressed: controller.sendCode
+                                      ),
+                                      h(6),
+                                      PrimaryButton(
+                                          text: 'Войти',
+                                          loader: true,
+                                          disable: !controller.valid.value,
+                                          height: 40,
+                                          borderRadius: 8,
+                                          onPressed: controller.login
+                                      ),
+                                      h(24),
+                                      Center(
+                                          child: Text(
+                                              'Еще нет аккаунта?',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  color: Color(0xFF8A95A8),
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  letterSpacing: 0.24
                                               )
                                           )
-                                        ]
-                                    ),
-                                    h(16),
-                                    Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text('Пароль', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                                          h(4),
-                                          TextFormField(
-                                              cursorHeight: 15,
-                                              controller: controller.passwordField,
-                                              obscureText: !controller.isPasswordVisible.value,
-                                              autovalidateMode: AutovalidateMode.onUserInteraction,
-                                              decoration: decorationInput(hint: 'Введите пароль', suffixIcon: IconButton(
-                                                  icon: Icon(!controller.isPasswordVisible.value ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
-                                                  onPressed: () => controller.isPasswordVisible.value = !controller.isPasswordVisible.value
-                                              )),
-                                              onChanged: (val) => controller.validate(),
-                                              validator: (val) {
-                                                if ((val ?? '').isEmpty) {
-                                                  return 'Заполните пароль';
+                                      ),
+                                      Center(
+                                          child: TextButton(
+                                              onPressed: () {
+                                                if ((Get.parameters['tab'] ?? '').isNotEmpty) {
+                                                  Get.toNamed('register', parameters: {'tab': Get.parameters['tab']!});
+                                                } else {
+                                                  Get.toNamed('register');
                                                 }
-
-                                                return null;
-                                              }
+                                              },
+                                              child: Text('Зарегистрироваться', style: TextStyle(color: Colors.blue))
                                           )
-                                        ]
-                                    ),
-                                    h(20),
-                                    PrimaryButton(
-                                        text: 'Войти по коду',
-                                        loader: true,
-                                        height: 40,
-                                        borderRadius: 8,
-                                        background: Colors.white,
-                                        borderColor: primaryColor,
-                                        loaderColor: primaryColor,
-                                        borderWidth: 2,
-                                        textStyle: TextStyle(color: primaryColor),
-                                        onPressed: controller.sendCode
-                                    ),
-                                    h(6),
-                                    PrimaryButton(
-                                        text: 'Войти',
-                                        loader: true,
-                                        disable: !controller.valid.value,
-                                        height: 40,
-                                        borderRadius: 8,
-                                        onPressed: controller.login
-                                    ),
-                                    h(24),
-                                    Center(
-                                        child: Text(
-                                            'Еще нет аккаунта?',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                                color: Color(0xFF8A95A8),
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 0.24
-                                            )
-                                        )
-                                    ),
-                                    Center(
-                                        child: TextButton(
-                                            onPressed: () => Get.toNamed('register'),
-                                            child: Text('Зарегистрироваться', style: TextStyle(color: Colors.blue))
-                                        )
-                                    )
-                                  ]
-                              )
-                          ))
-                        ]
+                                      )
+                                    ]
+                                )
+                            ))
+                          ]
+                      )
                     )
                 )
             )

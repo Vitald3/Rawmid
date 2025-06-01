@@ -2,12 +2,16 @@ import 'dart:async';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:rawmid/api/home.dart';
 import 'package:rawmid/api/profile.dart';
+import 'package:rawmid/controller/club.dart';
 import 'package:rawmid/controller/home.dart';
 import 'package:rawmid/controller/navigation.dart';
+import 'package:rawmid/screen/main.dart';
 import '../../utils/helper.dart';
 import '../api/login.dart';
 import '../model/profile/profile.dart';
+import '../utils/notifications.dart';
 
 class LoginController extends GetxController {
   RxBool valid = false.obs;
@@ -37,6 +41,12 @@ class LoginController extends GetxController {
       });
 
       if (user != null) {
+        final token = await NotificationsService.getToken();
+
+        if (token.isNotEmpty) {
+          HomeApi.saveToken(token);
+        }
+
         final carts = navController.cartProducts;
         navController.cartProducts.clear();
 
@@ -48,21 +58,32 @@ class LoginController extends GetxController {
         update();
 
         final param = Get.parameters;
+        if (Get.isRegistered<HomeController>()) {
+          Get.delete<HomeController>();
+        }
+
+        Get.put(HomeController());
+        Get.find<HomeController>().initialize();
 
         if ((param['route'] ?? '').isNotEmpty) {
-          if (Get.isRegistered<HomeController>()) {
-            Get.delete<HomeController>();
-          }
-
-          Get.put(HomeController());
-          Get.find<HomeController>().initialize();
+          navController.onItemTapped(0);
 
           Get.toNamed('/home');
           Get.toNamed('/${param['route']}');
           return;
         }
 
-        Get.offNamed('/home');
+        if ((param['tab'] ?? '').isNotEmpty) {
+          if (Get.isRegistered<ClubController>()) {
+            Get.delete<ClubController>();
+          }
+
+          Get.put(ClubController());
+          Get.find<ClubController>().initialize();
+          Get.to(() => MainView(index: int.tryParse('${param['tab']}') ?? 0));
+        } else {
+          Get.offNamed('/home');
+        }
       }
     }
   }
@@ -81,6 +102,12 @@ class LoginController extends GetxController {
       });
 
       if (user != null) {
+        final token = await NotificationsService.getToken();
+
+        if (token.isNotEmpty) {
+          HomeApi.saveToken(token);
+        }
+
         final carts = navController.cartProducts;
         navController.cartProducts.clear();
 
@@ -98,7 +125,20 @@ class LoginController extends GetxController {
           return;
         }
 
-        Get.offAllNamed('home');
+        if (Get.isRegistered<HomeController>()) {
+          Get.delete<HomeController>();
+        }
+
+        Get.put(HomeController());
+        Get.find<HomeController>().initialize();
+
+        if ((param['tab'] ?? '').isNotEmpty) {
+          navController.onItemTapped(int.tryParse('${param['tab']}') ?? 0);
+        } else {
+          navController.onItemTapped(0);
+        }
+
+        Get.offAllNamed('/home');
       }
     }
   }

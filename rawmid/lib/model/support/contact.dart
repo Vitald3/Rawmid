@@ -1,4 +1,4 @@
-import 'package:latlong2/latlong.dart';
+import 'package:yandex_mapkit/yandex_mapkit.dart';
 
 class ContactInfo {
   final String title;
@@ -38,7 +38,7 @@ class MapRoute {
 }
 
 class MapMark {
-  final LatLng coordinates;
+  final Point coordinates;
   final String icon;
   final String iconColor;
   final String text;
@@ -51,11 +51,11 @@ class MapMark {
   });
 
   factory MapMark.fromJson(Map<String, dynamic> json) {
-    var lng = LatLng(0, 0);
+    var lng = Point(longitude: 0, latitude: 0);
 
     if (json['coordinates'] != null) {
       final split = '${json['coordinates']}'.split(',');
-      lng = LatLng(double.tryParse(split.first) ?? 0, double.tryParse(split.last) ?? 0);
+      lng = Point(latitude: double.tryParse(split.first) ?? 0, longitude: double.tryParse(split.last) ?? 0);
     }
 
     return MapMark(
@@ -68,7 +68,7 @@ class MapMark {
 }
 
 class MapData {
-  final LatLng center;
+  final Point center;
   final String color;
   final String zoom;
   final List<String> route;
@@ -85,11 +85,11 @@ class MapData {
   });
 
   factory MapData.fromJson(Map<String, dynamic> json) {
-    var lng = LatLng(0, 0);
+    var lng = Point(latitude: 0, longitude: 0);
 
     if (json['center'] != null) {
       final split = '${json['center']}'.split(',');
-      lng = LatLng(double.tryParse(split.first) ?? 0, double.tryParse(split.last) ?? 0);
+      lng = Point(latitude: double.tryParse(split.first) ?? 0, longitude: double.tryParse(split.last) ?? 0);
     }
 
     return MapData(

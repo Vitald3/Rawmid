@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:yandex_mapkit/yandex_mapkit.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/api/checkout.dart';
 import 'package:rawmid/api/order.dart';
@@ -36,9 +36,12 @@ class CheckoutController extends GetxController {
   RxBool emailValidate = false.obs;
   RxBool addAddress = false.obs;
   RxBool cDek = false.obs;
+  RxString searchC = ''.obs;
   RxBool success = false.obs;
+  RxBool suggestionSelected = false.obs;
   RxBool isLoading2 = false.obs;
   RxBool courier = false.obs;
+  RxInt prepayment = 0.obs;
   final GlobalKey<FormState> formKeyAddress = GlobalKey<FormState>();
   RxList<ProductModel> acc = <ProductModel>[].obs;
   RxList<ShippingModel> shipping = <ShippingModel>[].obs;
@@ -50,10 +53,10 @@ class CheckoutController extends GetxController {
   RxMap<String, int> accAdd = <String, int>{}.obs;
   Rxn<Pvz> selectedPvz = Rxn<Pvz>();
   Rxn<BBItemModel> selectedBBPvz = Rxn<BBItemModel>();
-  Rxn<LatLng> userLocation = Rxn<LatLng>();
+  Rxn<Point> userLocation = Rxn<Point>();
   Rxn<String> region = Rxn<String>('2760');
   Rxn<String> edo = Rxn();
-  RxString country = '176'.obs;
+  var country = Rxn<String>('176');
   RxList<CountryModel> countries = <CountryModel>[].obs;
   RxList<ZoneModel> regions = <ZoneModel>[].obs;
   RxInt addressId = 0.obs;
@@ -64,8 +67,8 @@ class CheckoutController extends GetxController {
     'email': TextEditingController(),
     'telephone': TextEditingController()
   };
-  final phoneField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.RU, nsn: ''));
-  final phoneBuhField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.RU, nsn: ''));
+  final phoneField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.KZ, nsn: ''));
+  final phoneBuhField = PhoneController(initialValue: const PhoneNumber(isoCode: IsoCode.KZ, nsn: ''));
   final Map<String, TextEditingController> controllersAddress = {
     'city': TextEditingController(),
     'postcode': TextEditingController(),
@@ -104,6 +107,7 @@ class CheckoutController extends GetxController {
   RxMap<String, String? Function(String?)> validators = <String, String? Function(String?)>{}.obs;
   RxString selectedShipping = ''.obs;
   RxString selectedPayment = ''.obs;
+  RxBool usePrepayment = false.obs;
   Rxn<OrderModel> order = Rxn<OrderModel>();
   Rxn<OrdersModel> setOrder = Rxn<OrdersModel>();
   RxList<Pvz> pvz = <Pvz>[].obs;
@@ -132,7 +136,10 @@ class CheckoutController extends GetxController {
     if (accAdd[id] == null) {
       accAdd.putIfAbsent(id, () => index);
       await navController.addCart(id);
-      acc.removeWhere((e) => e.id == id);
+
+      if (navController.cartProducts.where((e) => e.id == id).isNotEmpty) {
+        acc.removeWhere((e) => e.id == id);
+      }
     }
   }
 
@@ -185,48 +192,66 @@ class CheckoutController extends GetxController {
       },
       'inn': (value) {
         if (tab.value == 0) return null;
-        if (value == null || value.isEmpty) return 'Заполните ИНН';
+        if (value == null || value.isEmpty) {
+          return 'Введите ИНН';
+        } else if (value.length < 10 || value.length > 12) {
+          return 'ИНН должно быть от 10 до 12 символов!';
+        } else if (!RegExp(r'^\d+$').hasMatch(value)) {
+          return 'ИНН должен содержать только цифры!';
+        }
         return null;
       },
       'company': (value) {
         if (tab.value == 0) return null;
-        if (value == null || value.isEmpty) return 'Заполните название компании';
+        if (value == null || value.isEmpty) return 'Поле Компания должно быть заполнено';
         return null;
       },
       'ogrn': (value) {
         if (tab.value == 0) return null;
-        if (value == null || value.isEmpty) return 'Заполните ОГРН';
+        if (value == null || value.isEmpty) return 'Поле ОГРН должно быть заполнено';
         return null;
       },
       'rs': (value) {
         if (tab.value == 0) return null;
-        if (value == null || value.isEmpty) return 'Заполните рассчетный счет';
+        if (value == null || value.isEmpty) return 'Поле "Номер расчетного счета" должно быть заполнено';
         return null;
       },
       'bank': (value) {
         if (tab.value == 0) return null;
-        if (value == null || value.isEmpty) return 'Заполните банк';
+        if (value == null || value.isEmpty) return 'Поле банк должно быть заполнено';
         return null;
       },
       'bik': (value) {
         if (tab.value == 0) return null;
-        if (value == null || value.isEmpty) return 'Заполните БИК';
+        if (value == null || value.isEmpty) {
+          return 'Поле БИК должно быть заполнено';
+        } else if (value.length != 9) {
+          return 'Поле БИК должно быть 9 символов';
+        }
         return null;
       },
       'kpp': (value) {
         if (tab.value == 0) return null;
-        if (value == null || value.isEmpty) return 'Заполните КПП';
+        if (value == null || value.isEmpty) {
+          return 'Поле КПП должно быть заполнено';
+        } else if (value.length != 9) {
+          return 'Поле КПП должно быть 9 символов. Укажите 000000000 (9 нулей) если нет КПП';
+        }
         return null;
       },
       'uraddress': (value) {
         if (tab.value == 0) return null;
-        if (value == null || value.isEmpty) return 'Заполните адрес';
+        if (value == null || value.isEmpty) return 'Поле Юридический адрес должно быть заполнено';
         return null;
       },
       'email_buh': (value) {
         if (tab.value == 0) return null;
-        if (value == null || value.isEmpty) return 'Заполните E-mail';
-        return null;
+        String? item;
+
+        if (value == null || value.isEmpty) item = 'Введите email';
+        if (value != null && !EmailValidator.validate(value)) item = 'Некорректный email';
+
+        return item;
       },
       'phone_buh': (value) {
         if (tab.value == 0) return null;
@@ -246,6 +271,12 @@ class CheckoutController extends GetxController {
   }
 
   saveField(String key, String val) {
+    if (key == 'city') {
+      searchC.value = val;
+    } else {
+      searchC.value = '';
+    }
+
     final fields = Helper.prefs.getString('checkout_fields') ?? '';
     Map<String, dynamic> items = {};
 
@@ -268,6 +299,12 @@ class CheckoutController extends GetxController {
     if (update) {
       preload.value = true;
     }
+
+    CheckoutApi.getCityCoordinates(navController.city.value).then((c) {
+      if (c != null) {
+        userLocation.value = c;
+      }
+    });
 
     isLoading2.value = false;
     isLoading.value = false;
@@ -300,7 +337,9 @@ class CheckoutController extends GetxController {
     });
 
     urControllers.forEach((e, v) {
-      if (items[e] != null) {
+      if (items[e] != null && e == 'phone_buh') {
+        phoneBuhField.value = PhoneNumber.parse(items[e]!);
+      } else if (items[e] != null) {
         v.text = items[e]!;
       }
     });
@@ -308,7 +347,7 @@ class CheckoutController extends GetxController {
     acc.value = await CheckoutApi.getAccProducts();
     isLoading.value = true;
 
-    CheckoutApi.getCheckout(navController.city.value, update).then((e) {
+    CheckoutApi.getCheckout(navController.city.value, update, countryId: navController.countryId.value).then((e) {
       if (update) {
         preload.value = false;
       }
@@ -326,6 +365,11 @@ class CheckoutController extends GetxController {
         totals.value = e.totals;
         selectedShipping.value = e.shippingMethod;
         selectedPayment.value = e.paymentMethod;
+        usePrepayment.value = e.usePrepayment;
+
+        if (e.zoneId.isNotEmpty) {
+          region.value = e.zoneId;
+        }
 
         for (var s in shipping) {
           for (var i in s.quote) {
@@ -333,7 +377,7 @@ class CheckoutController extends GetxController {
               cDek.value = true;
             }
 
-            if (e.shippingMethod == i.code && (i.title.contains('До дверей') || i.title.contains('Курьерская доставка'))) {
+            if (e.shippingMethod == i.code && (i.title.contains('о дверей') || i.title.contains('Курьерская доставка') || i.title.contains('курьером'))) {
               courier.value = true;
             }
           }
@@ -360,6 +404,10 @@ class CheckoutController extends GetxController {
         }
       } else {
         Helper.snackBar(error: true, text: 'Оформление заказа невозможно, попробуйте позже', callback2: () {
+          navController.cartProducts.clear();
+          final cart = Get.find<CartController>();
+          cart.cartProducts.clear();
+          CartApi.clear();
           Get.back();
         });
       }
@@ -424,6 +472,9 @@ class CheckoutController extends GetxController {
     country.value = id;
     region.value = null;
     regions.value = [];
+    controllersAddress['city']!.text = '';
+    controllersAddress['postcode']!.text = '';
+    controllersAddress['address_1']!.text = '';
 
     for (var e in countries.where((e) => e.countryId == id && (e.zone ?? []).isNotEmpty)) {
       regions.addAll(e.zone!);
@@ -441,7 +492,7 @@ class CheckoutController extends GetxController {
     preload.value = true;
     CartApi.updateCart({
       'key': cart.key,
-      'quantity': cart.quantity
+      'quantity': '${cart.quantity}'
     }).then((e) {
       preload.value = false;
       navController.cartProducts.value = e;
@@ -520,6 +571,11 @@ class CheckoutController extends GetxController {
   newAddress() async {
     if (addAddress.value) {
       if (formKeyAddress.currentState?.validate() ?? false) {
+        if ((controllersAddress['city']?.text ?? '') != searchC.value || searchC.isEmpty) {
+          Helper.snackBar(error: true, text: 'Выберите город из списка');
+          return;
+        }
+
         Map<String, dynamic> body = {};
 
         controllersAddress.forEach((key, controller) {
@@ -546,6 +602,66 @@ class CheckoutController extends GetxController {
       addAddress.value = true;
       controllersAddress.forEach((key, controller) => controller.clear());
     }
+  }
+
+  Future setPrepayment(int val) async {
+    if (prepayment.value == val) {
+      return;
+    }
+
+    preload.value = true;
+    prepayment.value = val;
+
+    CheckoutApi.setCheckout({
+      'payment_method': selectedPayment.value,
+      'prepayment': '${prepayment.value}',
+      'countryId': navController.countryId.value,
+      'shipping_method': selectedShipping.value,
+      'bb_pvz_id': selectedBBPvz.value?.pvzId ?? '',
+      'sdek_city': selectedPvz.value?.city ?? '',
+      'sdek_pvz': selectedPvz.value?.code ?? '',
+      'sdek_pvzinfo': (selectedPvz.value?.address ?? '') + ((selectedPvz.value?.phone ?? '').isNotEmpty ? ' tel:${selectedPvz.value!.phone}' : '')
+    }).then((e) {
+      preload.value = false;
+
+      if (e != null) {
+        shipping.value = e.shipping;
+        payment.value = e.payment;
+        totals.value = e.totals;
+        usePrepayment.value = e.usePrepayment;
+
+        if (e.zoneId.isNotEmpty) {
+          region.value = e.zoneId;
+        }
+
+        for (var s in shipping) {
+          for (var i in s.quote) {
+            if (e.shippingMethod == i.code && i.title.contains('пункта выдачи')) {
+              cDek.value = true;
+            }
+
+            if (e.shippingMethod == i.code && (i.title.contains('о дверей') || i.title.contains('Курьерская доставка') || i.title.contains('курьером'))) {
+              courier.value = true;
+            }
+          }
+        }
+
+        if (!cDek.value) {
+          selectedPvz.value = null;
+          selectedBBPvz.value = null;
+        }
+
+        if (courier.value) {
+          controllersAddress.forEach((e, v) {
+            errors.putIfAbsent(e, () => GlobalKey<FormFieldState>());
+          });
+        }
+      } else {
+        Helper.snackBar(error: true, text: 'Сессия истекла, вам необходимо по новой добавить товары в корзину', callback2: () {
+          Get.back();
+        });
+      }
+    });
   }
 
   Future setShipping({bool address = false}) async {
@@ -594,6 +710,10 @@ class CheckoutController extends GetxController {
         body.putIfAbsent('default', () => '0');
       }
 
+      if (usePrepayment.value) {
+        body.putIfAbsent('prepayment', () => '${prepayment.value}');
+      }
+
       CheckoutApi.setCheckout(body).then((e) {
         preload.value = false;
 
@@ -601,6 +721,11 @@ class CheckoutController extends GetxController {
           shipping.value = e.shipping;
           payment.value = e.payment;
           totals.value = e.totals;
+          usePrepayment.value = e.usePrepayment;
+
+          if (e.zoneId.isNotEmpty) {
+            region.value = e.zoneId;
+          }
 
           for (var s in shipping) {
             for (var i in s.quote) {
@@ -608,7 +733,7 @@ class CheckoutController extends GetxController {
                 cDek.value = true;
               }
 
-              if (e.shippingMethod == i.code && (i.title.contains('До дверей') || i.title.contains('Курьерская доставка'))) {
+              if (e.shippingMethod == i.code && (i.title.contains('о дверей') || i.title.contains('Курьерская доставка') || i.title.contains('курьером'))) {
                 courier.value = true;
               }
             }
@@ -626,7 +751,7 @@ class CheckoutController extends GetxController {
           }
         } else {
           Helper.snackBar(error: true, text: 'Сессия истекла, вам необходимо по новой добавить товары в корзину', callback2: () {
-            //Get.back();
+            Get.back();
           });
         }
       });
@@ -658,20 +783,32 @@ class CheckoutController extends GetxController {
     preload.value = true;
     selectedPayment.value = val.code;
 
-    CheckoutApi.setCheckout({
+    Map<String, dynamic> body = {
       'payment_method': val.code,
       'shipping_method': selectedShipping.value,
       'bb_pvz_id': selectedBBPvz.value?.pvzId ?? '',
+      'countryId': navController.countryId.value,
       'sdek_city': selectedPvz.value?.city ?? '',
       'sdek_pvz': selectedPvz.value?.code ?? '',
       'sdek_pvzinfo': (selectedPvz.value?.address ?? '') + ((selectedPvz.value?.phone ?? '').isNotEmpty ? ' tel:${selectedPvz.value!.phone}' : '')
-    }).then((e) {
+    };
+
+    if (usePrepayment.value) {
+      body.putIfAbsent('prepayment', () => '${prepayment.value}');
+    }
+
+    CheckoutApi.setCheckout(body).then((e) {
       preload.value = false;
 
       if (e != null) {
         shipping.value = e.shipping;
         payment.value = e.payment;
         totals.value = e.totals;
+        usePrepayment.value = e.usePrepayment;
+
+        if (e.zoneId.isNotEmpty) {
+          region.value = e.zoneId;
+        }
 
         for (var s in shipping) {
           for (var i in s.quote) {
@@ -679,7 +816,7 @@ class CheckoutController extends GetxController {
               cDek.value = true;
             }
 
-            if (e.shippingMethod == i.code && (i.title.contains('До дверей') || i.title.contains('Курьерская доставка'))) {
+            if (e.shippingMethod == i.code && (i.title.contains('о дверей') || i.title.contains('Курьерская доставка') || i.title.contains('курьером'))) {
               courier.value = true;
             }
           }
@@ -714,7 +851,7 @@ class CheckoutController extends GetxController {
 
       for (var i in shipping) {
         for (var e in i.quote) {
-          if (selectedShipping.value == e.code && e.title.contains('До дверей')) {
+          if (selectedShipping.value == e.code && (e.title.contains('о дверей') || e.title.contains('урьером'))) {
             courier = true;
             break;
           }
@@ -723,8 +860,8 @@ class CheckoutController extends GetxController {
         if (courier) break;
       }
 
-      if (courier && addressId.value == 0) {
-        Helper.snackBar(error: true, text: 'Выберите или создайте новый адрес');
+      if (courier && ((navController.user.value != null && addressId.value == 0) || (country.value == null && region.value == null && (controllersAddress['city']?.text ?? '').isEmpty) && (controllersAddress['address_1']?.text ?? '').isEmpty)) {
+        Helper.snackBar(error: true, text: navController.user.value == null ? 'Добавьте адрес' : 'Выберите или создайте новый адрес');
         return;
       }
 
@@ -761,6 +898,10 @@ class CheckoutController extends GetxController {
 
       if (addressId.value > 0) {
         body.putIfAbsent('address_id', () => '${addressId.value}');
+      }
+
+      if (usePrepayment.value) {
+        body.putIfAbsent('prepayment', () => '${prepayment.value}');
       }
 
       final api = await CheckoutApi.checkout(body);
@@ -801,12 +942,22 @@ class CheckoutController extends GetxController {
     setOrder.value = await OrderApi.getOrder(order.value!.orderId);
     CartApi.clear();
     navController.cartProducts.clear();
+    final cart = Get.find<CartController>();
+    cart.cartProducts.clear();
     Get.back();
   }
 
   Future<List<Location>> suggestionsCallback(String pattern) async {
-    if (pattern.isEmpty) return [];
-    return await HomeApi.searchCity(pattern);
+    if (pattern.isEmpty || suggestionSelected.value) return [];
+    return await HomeApi.searchCity(pattern, countryId: country.value ?? navController.countryId.value);
+  }
+
+  Future getPayStatus(String id) async {
+    final api = await CheckoutApi.getPayStatus(id);
+
+    if (api) {
+      setSuccess();
+    }
   }
 
   Future<List<String>> suggestionsCallback2(String pattern) async {

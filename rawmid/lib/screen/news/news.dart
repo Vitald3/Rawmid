@@ -4,6 +4,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_html_iframe/flutter_html_iframe.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/utils/helper.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../controller/news.dart';
 import '../../utils/constant.dart';
 import '../../widget/h.dart';
@@ -12,6 +13,7 @@ import '../../widget/search.dart';
 import '../../widget/search_bar.dart';
 import '../../widget/w.dart';
 import '../home/shop.dart';
+import '../product/zap.dart';
 
 class NewsView extends StatelessWidget {
   const NewsView({super.key});
@@ -77,20 +79,57 @@ class NewsView extends StatelessWidget {
                                                 child: Column(
                                                     crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
-                                                      Container(
-                                                          clipBehavior: Clip.antiAlias,
-                                                          decoration: ShapeDecoration(
-                                                              color: Color(0xFF1B1B1B),
-                                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-                                                          ),
-                                                          child: CachedNetworkImage(
-                                                              imageUrl: news.image,
-                                                              errorWidget: (c, e, i) {
-                                                                return Image.asset('assets/image/no_image.png');
+                                                      Stack(
+                                                        children: [
+                                                          GestureDetector(
+                                                              onTap: () {
+                                                                Navigator.push(
+                                                                    Get.context!,
+                                                                    PageRouteBuilder(
+                                                                        opaque: false,
+                                                                        pageBuilder: (context, animation, secondaryAnimation) => ZapView(image: news.image),
+                                                                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                                          return FadeTransition(opacity: animation, child: child);
+                                                                        }
+                                                                    )
+                                                                );
                                                               },
-                                                              width: double.infinity,
-                                                              fit: BoxFit.cover
+                                                              child: Container(
+                                                                  clipBehavior: Clip.antiAlias,
+                                                                  decoration: ShapeDecoration(
+                                                                      color: Color(0xFF1B1B1B),
+                                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+                                                                  ),
+                                                                  child: CachedNetworkImage(
+                                                                      imageUrl: news.image,
+                                                                      errorWidget: (c, e, i) {
+                                                                        return Image.asset('assets/image/no_image.png');
+                                                                      },
+                                                                      width: double.infinity,
+                                                                      fit: BoxFit.cover
+                                                                  )
+                                                              )
+                                                          ),
+                                                          Positioned(
+                                                            right: 20,
+                                                            top: 20,
+                                                            child: InkWell(
+                                                                onTap: () async {
+                                                                  final file = await Helper.downloadFileAsXFile(news.image, 'Share');
+
+                                                                  SharePlus.instance.share(
+                                                                    ShareParams(uri: Uri.parse(news.link), title: news.title, previewThumbnail: file),
+                                                                  );
+                                                                },
+                                                                child: Container(
+                                                                  decoration: BoxDecoration(color: Colors.white, border: Border.all(color: primaryColor), borderRadius: BorderRadius.all(Radius.circular(30))),
+                                                                  width: 30,
+                                                                  height: 30,
+                                                                  child: Icon(Icons.share, size: 18)
+                                                                )
+                                                            )
                                                           )
+                                                        ]
                                                       ),
                                                       h(20),
                                                       Text(
@@ -165,14 +204,63 @@ class NewsView extends StatelessWidget {
                                             if (news.text.isNotEmpty) Padding(
                                                 padding: EdgeInsets.symmetric(horizontal: 10),
                                                 child: Html(
-                                                    data: news.text,
+                                                    data: news.text.replaceAll('•', ''),
                                                     extensions: [
-                                                      IframeHtmlExtension()
+                                                      IframeHtmlExtension(),
+                                                      TagExtension(
+                                                        tagsToExtend: {'img'},
+                                                        builder: (context) {
+                                                          final src = context.attributes['src'] ?? '';
+
+                                                          return GestureDetector(
+                                                            onTap: () {
+                                                              Navigator.push(
+                                                                  Get.context!,
+                                                                  PageRouteBuilder(
+                                                                      opaque: false,
+                                                                      pageBuilder: (context, animation, secondaryAnimation) => ZapView(image: src),
+                                                                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                                        return FadeTransition(opacity: animation, child: child);
+                                                                      }
+                                                                  )
+                                                              );
+                                                            },
+                                                            child: Padding(
+                                                              padding: EdgeInsets.symmetric(vertical: 10),
+                                                              child: Image.network(src)
+                                                            )
+                                                          );
+                                                        }
+                                                      )
                                                     ],
                                                     style: {
                                                       'ul': Style(
-                                                        margin: Margins.all(0),
-                                                        padding: HtmlPaddings.zero
+                                                          margin: Margins.all(0),
+                                                          padding: HtmlPaddings.only(left: 10)
+                                                      ),
+                                                      '*': Style(
+                                                        border: Border(),
+                                                      ),
+                                                      'br, hr': Style(
+                                                          display: Display.none
+                                                      ),
+                                                      'span, p': Style(
+                                                          width: Width.auto(),
+                                                          display: Display.block
+                                                      ),
+                                                      'div': Style(
+                                                          display: Display.block,
+                                                          height: Height.auto(),
+                                                          padding: HtmlPaddings.symmetric(vertical: 10)
+                                                      ),
+                                                      'a': Style(
+                                                          textDecoration: TextDecoration.none,
+                                                          display: Display.block,
+                                                          margin: Margins.symmetric(vertical: 10)
+                                                      ),
+                                                      'span > a': Style(
+                                                          textDecoration: TextDecoration.none,
+                                                          display: Display.inlineBlock
                                                       )
                                                     },
                                                     onLinkTap: (val, map, element) {
@@ -266,21 +354,48 @@ class NewsView extends StatelessWidget {
                                                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                       children: [
                                                                         if ((item.image1 ?? '').isNotEmpty) Expanded(
-                                                                            child: Container(
-                                                                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
-                                                                                clipBehavior: Clip.antiAlias,
-                                                                                child: CachedNetworkImage(
-                                                                                    imageUrl: item.image1!,
-                                                                                    errorWidget: (c, e, i) {
-                                                                                      return Image.asset('assets/image/no_image.png', fit: BoxFit.contain);
-                                                                                    },
-                                                                                    fit: BoxFit.contain,
-                                                                                    width: double.infinity
-                                                                                )
+                                                                            child: GestureDetector(
+                                                                              onTap: () {
+                                                                                Navigator.push(
+                                                                                    Get.context!,
+                                                                                    PageRouteBuilder(
+                                                                                        opaque: false,
+                                                                                        pageBuilder: (context, animation, secondaryAnimation) => ZapView(image: item.image1!),
+                                                                                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                                                          return FadeTransition(opacity: animation, child: child);
+                                                                                        }
+                                                                                    )
+                                                                                );
+                                                                              },
+                                                                              child: Container(
+                                                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+                                                                                  clipBehavior: Clip.antiAlias,
+                                                                                  child: CachedNetworkImage(
+                                                                                      imageUrl: item.image1!,
+                                                                                      errorWidget: (c, e, i) {
+                                                                                        return Image.asset('assets/image/no_image.png', fit: BoxFit.contain);
+                                                                                      },
+                                                                                      fit: BoxFit.contain,
+                                                                                      width: double.infinity
+                                                                                  )
+                                                                              )
                                                                             )
                                                                         ),
                                                                         if ((item.image2 ?? '').isNotEmpty) Expanded(
-                                                                            child: Container(
+                                                                            child: GestureDetector(
+                                                                                onTap: () {
+                                                                                  Navigator.push(
+                                                                                      Get.context!,
+                                                                                      PageRouteBuilder(
+                                                                                          opaque: false,
+                                                                                          pageBuilder: (context, animation, secondaryAnimation) => ZapView(image: item.image2!),
+                                                                                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                                                            return FadeTransition(opacity: animation, child: child);
+                                                                                          }
+                                                                                      )
+                                                                                  );
+                                                                                },
+                                                                                child: Container(
                                                                                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
                                                                                 clipBehavior: Clip.antiAlias,
                                                                                 child: CachedNetworkImage(
@@ -291,7 +406,7 @@ class NewsView extends StatelessWidget {
                                                                                     fit: BoxFit.contain,
                                                                                     width: double.infinity
                                                                                 )
-                                                                            )
+                                                                            ))
                                                                         )
                                                                       ]
                                                                   ),

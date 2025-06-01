@@ -23,39 +23,42 @@ class MainViewState extends State<MainView> with SingleTickerProviderStateMixin 
     super.initState();
     Get.put(NavigationController());
     controller = Get.find<NavigationController>();
-    controller.tabController = TabController(length: 5, vsync: this);
+    controller.tabController = TabController(length: controller.widgetOptions.length, vsync: this, initialIndex: widget.index ?? 0);
   }
 
   @override
   void dispose() {
-    controller.tabController.dispose();
+    controller.tabController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      int act = controller.tabController.index;
+      int act = controller.tabController?.index ?? 0;
 
-      if (!controller.reset.value && widget.index != null) {
+      if (widget.index != null) {
         act = widget.index!;
-        WidgetsBinding.instance.addPostFrameCallback((_) => controller.resetV());
       }
 
       return PopScope(
           canPop: false,
           onPopInvokedWithResult: (type, val) async {
-            if (!type && controller.tabController.index != 0) {
-              controller.tabController.index = 0;
+            if (!type && controller.tabController!.index != 0) {
+              controller.tabController!.index = 0;
               controller.activeTab.value = 0;
               return;
             }
+
+            Future.microtask(() {
+              Get.back();
+            });
           },
           child: GestureDetector(
               onTap: () => FocusScope.of(context).unfocus(),
               behavior: HitTestBehavior.translucent,
               child: DefaultTabController(
-                  length: 5,
+                  length: controller.widgetOptions.length,
                   initialIndex: act,
                   child: Scaffold(
                       appBar: AppBar(

@@ -73,6 +73,7 @@ class OrderView extends StatelessWidget {
                                                           h(20),
                                                           Row(
                                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                              spacing: 10,
                                                               children: [
                                                                 Flexible(
                                                                     child: Text(
@@ -85,6 +86,7 @@ class OrderView extends StatelessWidget {
                                                                     )
                                                                 ),
                                                                 if (controller.orders.isNotEmpty) Flexible(
+                                                                    flex: 2,
                                                                     child: Container(
                                                                         height: 40,
                                                                         padding: const EdgeInsets.all(4),
@@ -162,6 +164,16 @@ class OrderView extends StatelessWidget {
                                                       orders.addAll(controller.orders.where((e) => e.end == 0));
                                                     } else {
                                                       orders.addAll(controller.orders.where((e) => e.end == 1));
+                                                    }
+
+                                                    if (orders.isEmpty) {
+                                                      return Padding(
+                                                        padding: EdgeInsets.symmetric(horizontal: 20),
+                                                        child: Text(
+                                                            controller.tab.value == 0 ? 'У вас нет активных заказов' : 'У вас нет завершенных заказов',
+                                                            style: TextStyle(fontWeight: FontWeight.w700)
+                                                        )
+                                                      );
                                                     }
 
                                                     return Wrap(

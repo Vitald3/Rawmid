@@ -16,11 +16,17 @@ class ProductItemModel {
   late String special;
   late String price;
   late String schema;
+  late String url;
+  late String textKvcproPeriod;
+  late double kvcproPrice;
+  late double sbcreditPrice;
   late List<String> video;
   late int reward;
   late int quantity;
   late String uCen;
   late String hdd;
+  late bool allowCredit;
+  late bool allowCreditKz;
   DateTime? dateEnd;
   late List<String> images;
   late List<ProductModel> childProducts;
@@ -44,11 +50,17 @@ class ProductItemModel {
     required this.special,
     required this.price,
     required this.schema,
+    required this.url,
+    required this.textKvcproPeriod,
+    required this.kvcproPrice,
+    required this.sbcreditPrice,
     required this.video,
     required this.reward,
     required this.quantity,
     required this.uCen,
     required this.hdd,
+    required this.allowCredit,
+    required this.allowCreditKz,
     required this.dateEnd,
     required this.images,
     required this.childProducts,
@@ -73,11 +85,17 @@ class ProductItemModel {
     special = json['special'];
     price = json['price'];
     schema = json['schema'];
+    url = json['url'];
+    textKvcproPeriod = json['text_kvcpro_period'];
+    kvcproPrice = double.tryParse('${json['kvcpro_price']}') ?? 0;
+    sbcreditPrice = double.tryParse('${json['sbcredit_price']}') ?? 0;
     video = json['video'] != null ? json['video'].cast<String>() : [];
     reward = int.tryParse('${json['reward']}') ?? 0;
     quantity = int.tryParse('${json['quantity']}') ?? 0;
     uCen = json['ucen'] ?? '';
     hdd = json['hdd'] ?? '';
+    allowCredit = (int.tryParse('${json['allow_credit']}') ?? 0) == 1;
+    allowCreditKz = (int.tryParse('${json['allow_credit_kz']}') ?? 0) == 1;
 
     dateEnd = DateTime.tryParse('${json['date_end']}');
 
@@ -162,12 +180,18 @@ class ProductItemModel {
     data['special'] = special;
     data['price'] = price;
     data['schema'] = schema;
+    data['url'] = url;
+    data['text_kvcpro_period'] = textKvcproPeriod;
+    data['kvcpro_price'] = kvcproPrice;
+    data['sbcredit_price'] = sbcreditPrice;
     data['video'] = video;
     data['category'] = category;
     data['reward'] = reward;
     data['quantity'] = quantity;
     data['ucen'] = uCen;
     data['hdd'] = hdd;
+    data['allow_credit'] = allowCredit;
+    data['allow_credit_kz'] = allowCreditKz;
     data['date_end'] = dateEnd;
     data['images'] = images;
     data['child_products'] = childProducts;

@@ -291,6 +291,29 @@ class ProfileApi {
     return null;
   }
 
+  static Future<ProfileModel?> deleteAddress(String id) async {
+    try {
+      final response = await http.post(Uri.parse(deleteAddressUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'id': id});
+      final json = jsonDecode(response.body);
+
+      if (json['message'] != null) {
+        Helper.snackBar(error: true, text: json['message']);
+        return null;
+      }
+
+      if (json['user'] != null) {
+        return ProfileModel.fromJson(json['user']);
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return null;
+  }
+
   static Future<ProfileModel?> setAddress(int id) async {
     try {
       final response = await http.post(Uri.parse(setAddressUrl), headers: {
@@ -396,11 +419,11 @@ class ProfileApi {
 
       if (file != null) {
         request.files.add(
-            await http.MultipartFile.fromPath(
-                'file',
-                file.path!,
-                filename: file.name
-            )
+          http.MultipartFile.fromBytes(
+            'file',
+            await File(file.path!).readAsBytes(),
+            filename: file.name
+          )
         );
       }
 

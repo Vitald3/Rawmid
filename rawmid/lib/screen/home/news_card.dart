@@ -9,30 +9,42 @@ import '../news/news.dart';
 import 'package:get/get.dart';
 
 class NewsCard extends StatelessWidget {
-  const NewsCard({super.key, required this.news, this.button, this.recipe, this.my, this.callback});
+  const NewsCard({super.key, required this.news, this.button, this.recipe, this.survey, this.my, this.callback});
 
   final NewsModel news;
   final bool? button;
   final bool? recipe;
+  final bool? survey;
   final int? my;
   final Function()? callback;
 
   @override
   Widget build(BuildContext context) {
+    final moderate = (news.status ?? 0);
+
     return GestureDetector(
       onTap: () {
-        final t = (my ?? 0);
+        if (moderate == 0 || moderate == 3) {
+          final params = Get.parameters;
+          final t = '${(my ?? params['my'] ?? -1)}';
 
-        if (t == 0) {
-          Get.toNamed('/add_recipe', parameters: {'id': news.id})?.then((_) => callback != null ? callback!() : null);
-          return;
-        } else if (t == 1) {
-          Get.toNamed('/add_news', parameters: {'id': news.id})?.then((_) => callback != null ? callback!() : null);
-          return;
+          if (t == '0') {
+            Get.toNamed('/add_recipe', parameters: {'id': news.id})?.then((_) {
+              Get.parameters = params;
+              callback != null ? callback!() : null;
+            });
+            return;
+          } else if (t == '1') {
+            Get.toNamed('/add_news', parameters: {'id': news.id})?.then((_) {
+              Get.parameters = params;
+              callback != null ? callback!() : null;
+            });
+            return;
+          }
         }
 
         Get.delete<NewsController>();
-        Get.put(NewsController(news.id, recipe ?? false));
+        Get.put(NewsController(news.id, recipe ?? false, survey ?? false));
         Get.to(() => NewsView(), preventDuplicates: false)?.then((_) => callback != null ? callback!() : null);
       },
       child: Container(
@@ -104,18 +116,27 @@ class NewsCard extends StatelessWidget {
                         minimumSize: Size(double.infinity, 40)
                     ),
                     onPressed: () {
-                      final t = (my ?? 0);
+                      if (moderate == 0 || moderate == 3) {
+                        final params = Get.parameters;
+                        final t = '${(my ?? params['my'] ?? -1)}';
 
-                      if (t == 0) {
-                        Get.toNamed('/add_recipe', parameters: {'id': news.id})?.then((_) => callback != null ? callback!() : null);
-                        return;
-                      } else if (t == 1) {
-                        Get.toNamed('/add_news', parameters: {'id': news.id})?.then((_) => callback != null ? callback!() : null);
-                        return;
+                        if (t == '0') {
+                          Get.toNamed('/add_recipe', parameters: {'id': news.id})?.then((_) {
+                            Get.parameters = params;
+                            callback != null ? callback!() : null;
+                          });
+                          return;
+                        } else if (t == '1') {
+                          Get.toNamed('/add_news', parameters: {'id': news.id})?.then((_) {
+                            Get.parameters = params;
+                            callback != null ? callback!() : null;
+                          });
+                          return;
+                        }
                       }
 
                       Get.delete<NewsController>();
-                      Get.put(NewsController(news.id, recipe ?? false));
+                      Get.put(NewsController(news.id, recipe ?? false, survey ?? false));
                       Get.to(() => NewsView())?.then((_) => callback != null ? callback!() : null);
                     },
                     child: Text('Читать', style: TextStyle(fontSize: 14, color: Colors.white))

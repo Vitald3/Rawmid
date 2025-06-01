@@ -82,7 +82,10 @@ class WishlistView extends StatelessWidget {
                                                     child: ProductCard(
                                                         product: controller.products[index],
                                                         addWishlist: () => controller.removeWishlist(controller.products[index].id),
-                                                        buy: () => controller.navController.addCart(controller.products[index].id),
+                                                        buy: () async {
+                                                          await controller.navController.addCart(controller.products[index].id);
+                                                          controller.update();
+                                                        },
                                                         margin: false
                                                     )
                                                 );

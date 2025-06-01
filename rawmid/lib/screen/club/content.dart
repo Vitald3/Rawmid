@@ -137,7 +137,7 @@ class ClubContentView extends GetView<ClubController> {
                                   )
                                 ),
                                 if (controller.recipes.isNotEmpty) RecipesSection(recipes: controller.recipes, my: 0, padding: EdgeInsets.symmetric(horizontal: 12), button: false, title: 'Мои рецепты', callback: () {
-                                  Get.toNamed('/blog', arguments: true, parameters: {'my_recipes': '1'});
+                                  Get.toNamed('/blog', arguments: true, parameters: {'my_recipes': '1', 'my': '0'});
                                 }, callback2: () => controller.initialize()),
                                 h(16),
                                 Padding(
@@ -147,8 +147,8 @@ class ClubContentView extends GetView<ClubController> {
                                 if (controller.news.isNotEmpty) h(16),
                                 if (controller.news.isNotEmpty) Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 20),
-                                  child: NewsSection(news: controller.news, my: 1, title: 'Мои статьи', callback: () {
-                                    Get.toNamed('/blog', parameters: {'my_survey': '1'});
+                                  child: NewsSection(news: controller.news, survey: true, my: 1, title: 'Мои обзоры', callback: () {
+                                    Get.toNamed('/blog', parameters: {'my_survey': '1', 'my': '1'});
                                   }, callback2: () => controller.initialize())
                                 ),
                                 if (controller.news.isNotEmpty) h(16),

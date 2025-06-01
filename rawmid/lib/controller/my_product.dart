@@ -106,6 +106,14 @@ class MyProductController extends GetxController {
     nameField.text = main.user.value?.firstname ?? '';
     emailField.text = main.user.value?.email ?? '';
     phoneField.value = PhoneNumber.parse(main.user.value?.phone ?? '');
+
+    if (Get.arguments ?? false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.toNamed('/add_product')?.then((_) {
+          Get.back();
+        });
+      });
+    }
   }
 
   Future getOrderIds() async {
@@ -177,7 +185,7 @@ class MyProductController extends GetxController {
       final api = await HomeApi.registerProduct(body);
 
       if (api) {
-        Helper.snackBar(text: 'Вы успешно зарегистрировали товар', callback: () {
+        Helper.snackBar(text: 'Вы успешно зарегистрировали товар', callback2: () {
           Get.back();
         });
       }
@@ -204,7 +212,7 @@ class MyProductController extends GetxController {
       final api = await HomeApi.warrantyProduct(body);
 
       if (api.isNotEmpty) {
-        Helper.snackBar(text: api, callback: () {
+        Helper.snackBar(text: api, callback2: () {
           Get.back();
         });
       }

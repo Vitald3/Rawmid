@@ -13,10 +13,11 @@ class ProductModel {
   int? rating;
   int? sortOrder;
   String? price;
+  String? hdd;
   String? special;
   List<String>? images;
 
-  ProductModel({required this.id, required this.title, required this.image, required this.category, required this.color, required this.model, this.colors, this.reviews, this.rating, this.sortOrder, this.price, this.special, this.images});
+  ProductModel({required this.id, required this.title, required this.image, required this.category, required this.color, required this.model, this.colors, this.reviews, this.rating, this.hdd, this.sortOrder, this.price, this.special, this.images});
 
   ProductModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -27,6 +28,7 @@ class ProductModel {
     model = json['model'] ?? '';
     rating = json['rating'];
     sortOrder = json['sort_order'];
+    hdd = json['hdd'];
     price = '${json['price'] != 0 ? json['price'] : ''}';
     special = '${json['special'] != 0 ? json['special'] : ''}';
     images = <String>[];
@@ -62,6 +64,7 @@ class ProductModel {
     data['model'] = model;
     data['rating'] = rating;
     data['sort_order'] = sortOrder;
+    data['hdd'] = hdd;
     data['price'] = price;
     data['special'] = special;
     data['images'] = images;

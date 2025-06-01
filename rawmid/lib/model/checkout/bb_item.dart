@@ -33,13 +33,12 @@ class BBItemModel {
     required this.period,
   });
 
-  // Фабричный метод для создания модели из JSON
   factory BBItemModel.fromJson(Map<String, dynamic> json) {
     return BBItemModel(
       type: json['type'] ?? '',
       id: json['id'] ?? '',
-      latitude: double.parse(json['geometry']['coordinates'][1]),
-      longitude: double.parse(json['geometry']['coordinates'][0]),
+      latitude: double.parse(json['geometry']['coordinates'][0]),
+      longitude: double.parse(json['geometry']['coordinates'][1]),
       pvzId: json['properties']['pvz_id'] ?? '',
       pvzName: json['properties']['pvz_name'] ?? '',
       pvzAddr: json['properties']['pvz_addr'] ?? '',

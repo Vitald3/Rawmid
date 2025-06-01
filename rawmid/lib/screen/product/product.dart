@@ -14,6 +14,7 @@ import 'package:rawmid/widget/module_title.dart';
 import 'package:rawmid/widget/primary_button.dart';
 import 'package:rawmid/widget/product_card.dart';
 import 'package:rawmid/widget/tooltip.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../controller/product.dart';
 import '../../model/product/review.dart';
@@ -54,8 +55,10 @@ class ProductView extends StatelessWidget {
                         ),
                         if (controller.navController.city.value.isNotEmpty) w(10),
                         if (controller.navController.city.value.isNotEmpty) Expanded(
-                            child: InkWell(
+                            child: GestureDetector(
                                 onTap: () {
+                                  final city = controller.navController.city.value;
+
                                   showModalBottomSheet(
                                       context: Get.context!,
                                       isScrollControlled: true,
@@ -71,6 +74,7 @@ class ProductView extends StatelessWidget {
                                   ).then((_) {
                                     controller.navController.filteredCities.value = controller.navController.cities;
                                     controller.navController.filteredLocation.clear();
+                                    if (city == controller.navController.city.value) return;
                                     controller.initialize();
                                     controller.update();
                                   });
@@ -176,7 +180,7 @@ class ProductView extends StatelessWidget {
                                         child: Row(
                                           spacing: 4,
                                           children: [
-                                            Icon(Icons.info, color: dangerColor, size: 30,),
+                                            Icon(Icons.info, color: dangerColor, size: 30),
                                             Expanded(
                                               child: Html(
                                                   data: controller.product.value!.hdd,
@@ -436,60 +440,178 @@ class ProductView extends StatelessWidget {
                             bottom: BorderSide(color: Color(0xFFDDE8EA))
                           )
                         ),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Row(
+                                children: [
+                                  Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                            controller.product.value!.special.isNotEmpty ? controller.product.value!.special : controller.product.value!.price,
+                                            style: TextStyle(
+                                                color: Color(0xFF1E1E1E),
+                                                fontSize: 20,
+                                                fontFamily: 'Roboto',
+                                                height: 1,
+                                                fontWeight: FontWeight.w700
+                                            )
+                                        ),
+                                        if (controller.product.value!.special.isNotEmpty) Text(
+                                            'Вместо ${controller.product.value!.price}',
+                                            style: TextStyle(
+                                                color: Color(0xFF0D80D9),
+                                                fontSize: 11,
+                                                fontFamily: 'Roboto'
+                                            )
+                                        )
+                                      ]
+                                  ),
+                                  w(15),
+                                  Expanded(
+                                      child: Row(
+                                          children: [
+                                            Expanded(
+                                                child: PrimaryButton(text: controller.navController.isCart(controller.selectChild.isNotEmpty ? controller.selectChild.value : id, k: true) ? 'В корзине' : 'В рассрочку', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () async {
+                                                  String idNew = id;
+
+                                                  if (controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) {
+                                                    idNew = controller.selectChild.value;
+                                                  }
+
+                                                  await controller.navController.addCart(idNew, k: true);
+                                                })
+                                            ),
+                                            w(10),
+                                            Expanded(
+                                                child: PrimaryButton(text: controller.navController.isCart(controller.selectChild.isNotEmpty ? controller.selectChild.value : id, k: false) ? 'В корзине' : controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? 'Предзаказ' : 'Купить', height: 40, onPressed: () async {
+                                                  String idNew = id;
+
+                                                  if (controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) {
+                                                    idNew = controller.selectChild.value;
+                                                  }
+
+                                                  await controller.navController.addCart(idNew);
+                                                })
+                                            )
+                                          ]
+                                      )
+                                  )
+                                ]
+                            ),
+                            if ((controller.product.value?.allowCredit ?? false) || (controller.product.value?.allowCreditKz ?? false)) h(6),
+                            if (controller.product.value?.allowCredit ?? false) Row(
                               children: [
-                                Text(
-                                  controller.product.value!.special.isNotEmpty ? controller.product.value!.special : controller.product.value!.price,
-                                  style: TextStyle(
-                                    color: Color(0xFF1E1E1E),
-                                    fontSize: 20,
-                                    fontFamily: 'Roboto',
-                                    height: 1,
-                                    fontWeight: FontWeight.w700
-                                  )
+                                Expanded(
+                                    child: Row(
+                                        spacing: 8,
+                                        children: [
+                                          Image.asset('assets/icon/tb.png', width: 24),
+                                          Text(
+                                              controller.product.value?.textKvcproPeriod ?? '',
+                                              style: TextStyle(
+                                                  color: const Color(0xFF1E1E1E),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Roboto',
+                                                  fontWeight: FontWeight.w500
+                                              )
+                                          ),
+                                          Text(
+                                              '${(controller.product.value?.kvcproPrice ?? 0).ceil()} ₽/мес ',
+                                              style: TextStyle(
+                                                  color: const Color(0xFF0D80D9),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Roboto',
+                                                  fontWeight: FontWeight.w500
+                                              )
+                                          )
+                                        ]
+                                    )
                                 ),
-                                if (controller.product.value!.special.isNotEmpty) Text(
-                                  'Вместо ${controller.product.value!.price}',
-                                  style: TextStyle(
-                                    color: Color(0xFF0D80D9),
-                                    fontSize: 11,
-                                    fontFamily: 'Roboto'
-                                  )
+                                Expanded(
+                                    child: Row(
+                                        spacing: 8,
+                                        children: [
+                                          Image.asset('assets/icon/sb.png', width: 24),
+                                          Text(
+                                              '9 мес.',
+                                              style: TextStyle(
+                                                  color: const Color(0xFF1E1E1E),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Roboto',
+                                                  fontWeight: FontWeight.w500
+                                              )
+                                          ),
+                                          Text(
+                                              '${(controller.product.value?.sbcreditPrice ?? 0).ceil()} ₽/мес ',
+                                              style: TextStyle(
+                                                  color: const Color(0xFF0D80D9),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Roboto',
+                                                  fontWeight: FontWeight.w500
+                                              )
+                                          ),
+                                        ]
+                                    )
                                 )
                               ]
                             ),
-                            w(15),
-                            Expanded(
-                              child: Row(
-                                  children: [
-                                    Expanded(
-                                        child: PrimaryButton(text: 'В рассрочку', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () async {
-                                          String idNew = id;
-
-                                          if (controller.selectChild.isNotEmpty) {
-                                            idNew = controller.selectChild.value;
-                                          }
-
-                                          await controller.navController.addCart(idNew);
-                                        })
-                                    ),
-                                    w(10),
-                                    Expanded(
-                                        child: PrimaryButton(text: controller.navController.isCart(id) ? 'В корзине' : controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? 'Предзаказ' : 'Купить', height: 40, onPressed: () async {
-                                          String idNew = id;
-
-                                          if (controller.selectChild.isNotEmpty) {
-                                            idNew = controller.selectChild.value;
-                                          }
-
-                                          await controller.navController.addCart(idNew);
-                                        })
+                            if (controller.product.value?.allowCreditKz ?? false) Row(
+                              children: [
+                                Expanded(
+                                    child: Row(
+                                        spacing: 8,
+                                        children: [
+                                          Image.asset('assets/icon/k1.png', width: 24),
+                                          Text(
+                                              '4 мес.',
+                                              style: TextStyle(
+                                                  color: const Color(0xFF1E1E1E),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Roboto',
+                                                  fontWeight: FontWeight.w500
+                                              )
+                                          ),
+                                          Text(
+                                              '${((double.tryParse('${controller.product.value?.price.replaceAll(RegExp(r'\D'), '').replaceAll('.0', '') ?? 0}') ?? 0) / 4).ceil()} ₸/мес',
+                                              style: TextStyle(
+                                                  color: const Color(0xFF0D80D9),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Roboto',
+                                                  fontWeight: FontWeight.w500
+                                              )
+                                          ),
+                                        ]
                                     )
-                                  ]
-                              )
+                                ),
+                                Expanded(
+                                    child: Row(
+                                        spacing: 8,
+                                        children: [
+                                          Image.asset('assets/icon/k2.png', width: 24),
+                                          Text(
+                                              '24 мес.',
+                                              style: TextStyle(
+                                                  color: const Color(0xFF1E1E1E),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Roboto',
+                                                  fontWeight: FontWeight.w500
+                                              )
+                                          ),
+                                          Text(
+                                              '${((double.tryParse('${controller.product.value?.price.replaceAll(RegExp(r'\D'), '').replaceAll('.0', '') ?? 0}') ?? 0) / 24).ceil()} ₸/мес',
+                                              style: TextStyle(
+                                                  color: const Color(0xFF0D80D9),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Roboto',
+                                                  fontWeight: FontWeight.w500
+                                              )
+                                          ),
+                                        ]
+                                    )
+                                )
+                              ]
                             )
                           ]
                         )
@@ -1039,8 +1161,8 @@ class ProductView extends StatelessWidget {
                         )
                       ]
                   ),
-                  if (controller.isQuestionComment.isEmpty) h(20),
-                  if (controller.isQuestionComment.isEmpty) Row(
+                  if (controller.isComment.isEmpty) h(20),
+                  if (controller.isComment.isEmpty) Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(5, (index) {
                         return IconButton(
@@ -1109,6 +1231,160 @@ class ProductView extends StatelessWidget {
                         return null;
                       }
                   ),
+                  h(12),
+                  Row(
+                      children: [
+                        Checkbox(
+                            value: controller.isAgree.value,
+                            overlayColor: WidgetStatePropertyAll(primaryColor),
+                            side: BorderSide(color: primaryColor, width: 2),
+                            checkColor: Colors.white,
+                            activeColor: primaryColor,
+                            visualDensity: VisualDensity.compact,
+                            onChanged: (bool? value) {
+                              controller.isAgree.value = value ?? false;
+                            }
+                        ),
+                        Expanded(
+                            child: Text.rich(
+                                TextSpan(
+                                    children: [
+                                      TextSpan(
+                                          text: 'Я прочитал ',
+                                          style: TextStyle(
+                                              color: const Color(0xFF8A95A8),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          recognizer: TapGestureRecognizer()..onTap = () {
+                                            showAdaptiveDialog(
+                                                context: Get.context!,
+                                                useRootNavigator: true,
+                                                useSafeArea: true,
+                                                builder: (c) {
+                                                  controller.webPersonalController ??= WebViewController()
+                                                    ..setJavaScriptMode(
+                                                        JavaScriptMode.unrestricted)
+                                                    ..loadRequest(Uri.parse('https://madeindream.com/informatsija/usloviya-rashirennoj-garantii.html?ajax=1'));
+
+                                                  return Scaffold(
+                                                      backgroundColor: Colors.black45,
+                                                      body: Align(
+                                                          alignment: Alignment.center,
+                                                          child: Container(
+                                                              padding: EdgeInsets.all(20),
+                                                              height: Get.height * 0.7,
+                                                              child: Container(
+                                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                  clipBehavior: Clip.antiAlias,
+                                                                  child: Stack(
+                                                                      children: [
+                                                                        Padding(
+                                                                            padding: EdgeInsets.all(20),
+                                                                            child: Column(
+                                                                                children: [
+                                                                                  Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                ]
+                                                                            )
+                                                                        ),
+                                                                        Positioned(
+                                                                            right: 0,
+                                                                            top: 0,
+                                                                            child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                        )
+                                                                      ]
+                                                                  )
+                                                              )
+                                                          )
+                                                      )
+                                                  );
+                                                }
+                                            );
+                                          },
+                                          text: 'Условия предоставления расширенной гарантии',
+                                          style: TextStyle(
+                                              color: const Color(0xFF14BFFF),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          text: ' и ',
+                                          style: TextStyle(
+                                              color: const Color(0xFF8A95A8),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          recognizer: TapGestureRecognizer()..onTap = () {
+                                            showAdaptiveDialog(
+                                                context: Get.context!,
+                                                useRootNavigator: true,
+                                                useSafeArea: true,
+                                                builder: (c) {
+                                                  controller.webPersonalController ??= WebViewController()
+                                                    ..setJavaScriptMode(
+                                                        JavaScriptMode.unrestricted)
+                                                    ..loadRequest(Uri.parse('https://madeindream.com/informatsija/politika-obrabotki.html?ajax=1'));
+
+                                                  return Scaffold(
+                                                      backgroundColor: Colors.black45,
+                                                      body: Align(
+                                                          alignment: Alignment.center,
+                                                          child: Container(
+                                                              padding: EdgeInsets.all(20),
+                                                              height: Get.height * 0.7,
+                                                              child: Container(
+                                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                  clipBehavior: Clip.antiAlias,
+                                                                  child: Stack(
+                                                                      children: [
+                                                                        Padding(
+                                                                            padding: EdgeInsets.all(20),
+                                                                            child: Column(
+                                                                                children: [
+                                                                                  Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                ]
+                                                                            )
+                                                                        ),
+                                                                        Positioned(
+                                                                            right: 0,
+                                                                            top: 0,
+                                                                            child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                        )
+                                                                      ]
+                                                                  )
+                                                              )
+                                                          )
+                                                      )
+                                                  );
+                                                }
+                                            );
+                                          },
+                                          text: 'Политику обработки персональных даных',
+                                          style: TextStyle(
+                                              color: const Color(0xFF14BFFF),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          text: ' и согласен с условиями.',
+                                          style: TextStyle(
+                                              color: const Color(0xFF8A95A8),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      )
+                                    ]
+                                )
+                            )
+                        )
+                      ]
+                  ),
                   h(20),
                   PrimaryButton(text: controller.isComment.isNotEmpty || controller.isQuestionComment.isNotEmpty ? 'Отправить комментарий' : 'Опубликовать отзыв', loader: true, height: 50, onPressed: controller.addReview),
                   h(20)
@@ -1149,7 +1425,7 @@ class ProductView extends StatelessWidget {
                   TextFormField(
                       controller: controller.fioField,
                       cursorHeight: 15,
-                      decoration: decorationInput(hint: 'ФИО*', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                      decoration: decorationInput(hint: 'Ваше имя*', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       validator: (val) {
                         if ((val ?? '').isEmpty) {
@@ -1238,6 +1514,160 @@ class ProductView extends StatelessWidget {
                         return null;
                       }
                   ),
+                  h(12),
+                  Row(
+                      children: [
+                        Checkbox(
+                            value: controller.isAgree.value,
+                            overlayColor: WidgetStatePropertyAll(primaryColor),
+                            side: BorderSide(color: primaryColor, width: 2),
+                            checkColor: Colors.white,
+                            activeColor: primaryColor,
+                            visualDensity: VisualDensity.compact,
+                            onChanged: (bool? value) {
+                              controller.isAgree.value = value ?? false;
+                            }
+                        ),
+                        Expanded(
+                            child: Text.rich(
+                                TextSpan(
+                                    children: [
+                                      TextSpan(
+                                          text: 'Я прочитал ',
+                                          style: TextStyle(
+                                              color: const Color(0xFF8A95A8),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          recognizer: TapGestureRecognizer()..onTap = () {
+                                            showAdaptiveDialog(
+                                                context: Get.context!,
+                                                useRootNavigator: true,
+                                                useSafeArea: true,
+                                                builder: (c) {
+                                                  controller.webPersonalController ??= WebViewController()
+                                                    ..setJavaScriptMode(
+                                                        JavaScriptMode.unrestricted)
+                                                    ..loadRequest(Uri.parse('https://madeindream.com/informatsija/usloviya-rashirennoj-garantii.html?ajax=1'));
+
+                                                  return Scaffold(
+                                                      backgroundColor: Colors.black45,
+                                                      body: Align(
+                                                          alignment: Alignment.center,
+                                                          child: Container(
+                                                              padding: EdgeInsets.all(20),
+                                                              height: Get.height * 0.7,
+                                                              child: Container(
+                                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                  clipBehavior: Clip.antiAlias,
+                                                                  child: Stack(
+                                                                      children: [
+                                                                        Padding(
+                                                                            padding: EdgeInsets.all(20),
+                                                                            child: Column(
+                                                                                children: [
+                                                                                  Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                ]
+                                                                            )
+                                                                        ),
+                                                                        Positioned(
+                                                                            right: 0,
+                                                                            top: 0,
+                                                                            child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                        )
+                                                                      ]
+                                                                  )
+                                                              )
+                                                          )
+                                                      )
+                                                  );
+                                                }
+                                            );
+                                          },
+                                          text: 'Условия предоставления расширенной гарантии',
+                                          style: TextStyle(
+                                              color: const Color(0xFF14BFFF),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          text: ' и ',
+                                          style: TextStyle(
+                                              color: const Color(0xFF8A95A8),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          recognizer: TapGestureRecognizer()..onTap = () {
+                                            showAdaptiveDialog(
+                                                context: Get.context!,
+                                                useRootNavigator: true,
+                                                useSafeArea: true,
+                                                builder: (c) {
+                                                  controller.webPersonalController ??= WebViewController()
+                                                    ..setJavaScriptMode(
+                                                        JavaScriptMode.unrestricted)
+                                                    ..loadRequest(Uri.parse('https://madeindream.com/informatsija/politika-obrabotki.html?ajax=1'));
+
+                                                  return Scaffold(
+                                                      backgroundColor: Colors.black45,
+                                                      body: Align(
+                                                          alignment: Alignment.center,
+                                                          child: Container(
+                                                              padding: EdgeInsets.all(20),
+                                                              height: Get.height * 0.7,
+                                                              child: Container(
+                                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                  clipBehavior: Clip.antiAlias,
+                                                                  child: Stack(
+                                                                      children: [
+                                                                        Padding(
+                                                                            padding: EdgeInsets.all(20),
+                                                                            child: Column(
+                                                                                children: [
+                                                                                  Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                ]
+                                                                            )
+                                                                        ),
+                                                                        Positioned(
+                                                                            right: 0,
+                                                                            top: 0,
+                                                                            child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                        )
+                                                                      ]
+                                                                  )
+                                                              )
+                                                          )
+                                                      )
+                                                  );
+                                                }
+                                            );
+                                          },
+                                          text: 'Политику обработки персональных даных',
+                                          style: TextStyle(
+                                              color: const Color(0xFF14BFFF),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          text: ' и согласен с условиями.',
+                                          style: TextStyle(
+                                              color: const Color(0xFF8A95A8),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      )
+                                    ]
+                                )
+                            )
+                        )
+                      ]
+                  ),
                   h(20),
                   PrimaryButton(text: 'Отправить заявку', loader: true, height: 50, onPressed: controller.addQuestionOther),
                   h(12),
@@ -1255,13 +1685,140 @@ class ProductView extends StatelessWidget {
                             }
                         ),
                         Expanded(
-                            child: Text(
-                                'Я прочитал политику обработки персональных данных и согласен с условиями',
-                                style: TextStyle(
-                                    color: Color(0xFF8A95A8),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.30
+                            child: Text.rich(
+                                TextSpan(
+                                    children: [
+                                      TextSpan(
+                                          text: 'Я прочитал ',
+                                          style: TextStyle(
+                                              color: const Color(0xFF8A95A8),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          recognizer: TapGestureRecognizer()..onTap = () {
+                                            showAdaptiveDialog(
+                                                context: Get.context!,
+                                                useRootNavigator: true,
+                                                useSafeArea: true,
+                                                builder: (c) {
+                                                  controller.webPersonalController ??= WebViewController()
+                                                    ..setJavaScriptMode(
+                                                        JavaScriptMode.unrestricted)
+                                                    ..loadRequest(Uri.parse('https://madeindream.com/informatsija/usloviya-rashirennoj-garantii.html?ajax=1'));
+
+                                                  return Scaffold(
+                                                      backgroundColor: Colors.black45,
+                                                      body: Align(
+                                                          alignment: Alignment.center,
+                                                          child: Container(
+                                                              padding: EdgeInsets.all(20),
+                                                              height: Get.height * 0.7,
+                                                              child: Container(
+                                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                  clipBehavior: Clip.antiAlias,
+                                                                  child: Stack(
+                                                                      children: [
+                                                                        Padding(
+                                                                            padding: EdgeInsets.all(20),
+                                                                            child: Column(
+                                                                                children: [
+                                                                                  Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                ]
+                                                                            )
+                                                                        ),
+                                                                        Positioned(
+                                                                            right: 0,
+                                                                            top: 0,
+                                                                            child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                        )
+                                                                      ]
+                                                                  )
+                                                              )
+                                                          )
+                                                      )
+                                                  );
+                                                }
+                                            );
+                                          },
+                                          text: 'Условия предоставления расширенной гарантии',
+                                          style: TextStyle(
+                                              color: const Color(0xFF14BFFF),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          text: ' и ',
+                                          style: TextStyle(
+                                              color: const Color(0xFF8A95A8),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          recognizer: TapGestureRecognizer()..onTap = () {
+                                            showAdaptiveDialog(
+                                                context: Get.context!,
+                                                useRootNavigator: true,
+                                                useSafeArea: true,
+                                                builder: (c) {
+                                                  controller.webPersonalController ??= WebViewController()
+                                                    ..setJavaScriptMode(
+                                                        JavaScriptMode.unrestricted)
+                                                    ..loadRequest(Uri.parse('https://madeindream.com/informatsija/politika-obrabotki.html?ajax=1'));
+
+                                                  return Scaffold(
+                                                      backgroundColor: Colors.black45,
+                                                      body: Align(
+                                                          alignment: Alignment.center,
+                                                          child: Container(
+                                                              padding: EdgeInsets.all(20),
+                                                              height: Get.height * 0.7,
+                                                              child: Container(
+                                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                  clipBehavior: Clip.antiAlias,
+                                                                  child: Stack(
+                                                                      children: [
+                                                                        Padding(
+                                                                            padding: EdgeInsets.all(20),
+                                                                            child: Column(
+                                                                                children: [
+                                                                                  Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                ]
+                                                                            )
+                                                                        ),
+                                                                        Positioned(
+                                                                            right: 0,
+                                                                            top: 0,
+                                                                            child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                        )
+                                                                      ]
+                                                                  )
+                                                              )
+                                                          )
+                                                      )
+                                                  );
+                                                }
+                                            );
+                                          },
+                                          text: 'Политику обработки персональных даных',
+                                          style: TextStyle(
+                                              color: const Color(0xFF14BFFF),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      ),
+                                      TextSpan(
+                                          text: ' и согласен с условиями.',
+                                          style: TextStyle(
+                                              color: const Color(0xFF8A95A8),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700
+                                          )
+                                      )
+                                    ]
                                 )
                             )
                         )
@@ -1460,6 +2017,160 @@ class ProductView extends StatelessWidget {
                     return null;
                   }
               ),
+              h(12),
+              Row(
+                  children: [
+                    Checkbox(
+                        value: controller.isAgree.value,
+                        overlayColor: WidgetStatePropertyAll(primaryColor),
+                        side: BorderSide(color: primaryColor, width: 2),
+                        checkColor: Colors.white,
+                        activeColor: primaryColor,
+                        visualDensity: VisualDensity.compact,
+                        onChanged: (bool? value) {
+                          controller.isAgree.value = value ?? false;
+                        }
+                    ),
+                    Expanded(
+                        child: Text.rich(
+                            TextSpan(
+                                children: [
+                                  TextSpan(
+                                      text: 'Я прочитал ',
+                                      style: TextStyle(
+                                          color: const Color(0xFF8A95A8),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700
+                                      )
+                                  ),
+                                  TextSpan(
+                                      recognizer: TapGestureRecognizer()..onTap = () {
+                                        showAdaptiveDialog(
+                                            context: Get.context!,
+                                            useRootNavigator: true,
+                                            useSafeArea: true,
+                                            builder: (c) {
+                                              controller.webPersonalController ??= WebViewController()
+                                                ..setJavaScriptMode(
+                                                    JavaScriptMode.unrestricted)
+                                                ..loadRequest(Uri.parse('https://madeindream.com/informatsija/usloviya-rashirennoj-garantii.html?ajax=1'));
+
+                                              return Scaffold(
+                                                  backgroundColor: Colors.black45,
+                                                  body: Align(
+                                                      alignment: Alignment.center,
+                                                      child: Container(
+                                                          padding: EdgeInsets.all(20),
+                                                          height: Get.height * 0.7,
+                                                          child: Container(
+                                                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                              clipBehavior: Clip.antiAlias,
+                                                              child: Stack(
+                                                                  children: [
+                                                                    Padding(
+                                                                        padding: EdgeInsets.all(20),
+                                                                        child: Column(
+                                                                            children: [
+                                                                              Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                            ]
+                                                                        )
+                                                                    ),
+                                                                    Positioned(
+                                                                        right: 0,
+                                                                        top: 0,
+                                                                        child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                    )
+                                                                  ]
+                                                              )
+                                                          )
+                                                      )
+                                                  )
+                                              );
+                                            }
+                                        );
+                                      },
+                                      text: 'Условия предоставления расширенной гарантии',
+                                      style: TextStyle(
+                                          color: const Color(0xFF14BFFF),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700
+                                      )
+                                  ),
+                                  TextSpan(
+                                      text: ' и ',
+                                      style: TextStyle(
+                                          color: const Color(0xFF8A95A8),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700
+                                      )
+                                  ),
+                                  TextSpan(
+                                      recognizer: TapGestureRecognizer()..onTap = () {
+                                        showAdaptiveDialog(
+                                            context: Get.context!,
+                                            useRootNavigator: true,
+                                            useSafeArea: true,
+                                            builder: (c) {
+                                              controller.webPersonalController ??= WebViewController()
+                                                ..setJavaScriptMode(
+                                                    JavaScriptMode.unrestricted)
+                                                ..loadRequest(Uri.parse('https://madeindream.com/informatsija/politika-obrabotki.html?ajax=1'));
+
+                                              return Scaffold(
+                                                  backgroundColor: Colors.black45,
+                                                  body: Align(
+                                                      alignment: Alignment.center,
+                                                      child: Container(
+                                                          padding: EdgeInsets.all(20),
+                                                          height: Get.height * 0.7,
+                                                          child: Container(
+                                                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                              clipBehavior: Clip.antiAlias,
+                                                              child: Stack(
+                                                                  children: [
+                                                                    Padding(
+                                                                        padding: EdgeInsets.all(20),
+                                                                        child: Column(
+                                                                            children: [
+                                                                              Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                            ]
+                                                                        )
+                                                                    ),
+                                                                    Positioned(
+                                                                        right: 0,
+                                                                        top: 0,
+                                                                        child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                    )
+                                                                  ]
+                                                              )
+                                                          )
+                                                      )
+                                                  )
+                                              );
+                                            }
+                                        );
+                                      },
+                                      text: 'Политику обработки персональных даных',
+                                      style: TextStyle(
+                                          color: const Color(0xFF14BFFF),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700
+                                      )
+                                  ),
+                                  TextSpan(
+                                      text: ' и согласен с условиями.',
+                                      style: TextStyle(
+                                          color: const Color(0xFF8A95A8),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700
+                                      )
+                                  )
+                                ]
+                            )
+                        )
+                    )
+                  ]
+              ),
               h(20),
               PrimaryButton(text: 'Задать вопрос', loader: true, height: 50, onPressed: controller.addQuestion),
               h(20)
@@ -1532,20 +2243,23 @@ class ProductView extends StatelessWidget {
           h(30),
           ModuleTitle(title: 'Уцененные товары', type: true),
           SizedBox(
-              height: 356,
-              child: PageView.builder(
-                  controller: controller.childController,
-                  itemCount: controller.childProducts.length,
-                  padEnds: false,
-                  clipBehavior: Clip.none,
-                  itemBuilder: (context, index) {
-                    return Obx(() => Padding(
-                        padding: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
-                        child: ProductCard(product: controller.childProducts[index], addWishlist: () => controller.addWishlist(controller.childProducts[index].id), buy: () async {
-                          await controller.navController.addCart(controller.childProducts[index].id);
-                        }, margin: false)
-                    ));
-                  }
+              height: 428,
+              child: ValueListenableBuilder<int>(
+                  valueListenable: Helper.trigger,
+                  builder: (context, items, child) => PageView.builder(
+                      controller: controller.childController,
+                      itemCount: controller.childProducts.length,
+                      padEnds: false,
+                      clipBehavior: Clip.none,
+                      itemBuilder: (context, index) {
+                        return Obx(() => Padding(
+                            padding: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
+                            child: ProductCard(product: controller.childProducts[index], addWishlist: () => controller.addWishlist(controller.childProducts[index].id), buy: () async {
+                              await controller.navController.addCart(controller.childProducts[index].id);
+                            }, margin: false)
+                        ));
+                      }
+                  )
               )
           )
         ]
@@ -1636,7 +2350,7 @@ class ProductView extends StatelessWidget {
                           ]
                         ),
                         Spacer(),
-                        PrimaryButton(text: 'Купить', loader: true, onPressed: () => controller.addChainCart(key), height: 40)
+                        PrimaryButton(text: controller.chainAdd.contains(key) ? 'В корзине' : 'Купить', loader: true, onPressed: () => controller.addChainCart(key), height: 40)
                       ]
                     )
                   );
@@ -1688,6 +2402,9 @@ class ProductView extends StatelessWidget {
         ),
         h(10),
         PrimaryButton(text: 'Оставить отзыв', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () {
+          controller.isComment.value = '';
+          controller.isQuestionComment.value = '';
+
           showModalBottomSheet(
               context: Get.context!,
               isScrollControlled: true,
@@ -2210,9 +2927,84 @@ class ProductView extends StatelessWidget {
                                               )
                                           ),
                                           w(8),
-                                          PrimaryButton(text: controller.navController.isCart(zap[productIndex].id) ? 'В корзине' : 'Купить', loader: true, width: 97, height: 44, onPressed: () async {
-                                            await controller.navController.addCart(zap[productIndex].id);
-                                            controller.navController.update();
+                                          PrimaryButton(text: controller.navController.isCart(zap[productIndex].id) ? 'В корзине' : 'Купить', width: 97, height: 44, onPressed: () async {
+                                            showDialog(
+                                                context: Get.context!,
+                                                barrierDismissible: false,
+                                                builder: (context) => Dialog(
+                                                    insetPadding: EdgeInsets.zero,
+                                                    backgroundColor: Colors.white,
+                                                    child: Container(
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius: BorderRadius.circular(12)
+                                                        ),
+                                                        height: Get.height * 0.8,
+                                                        clipBehavior: Clip.antiAlias,
+                                                        child: Stack(
+                                                            children: [
+                                                              Column(
+                                                                  children: [
+                                                                    Padding(
+                                                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                                                        child: Row(
+                                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                            children: [
+                                                                              const Text(
+                                                                                  'Серийный номер',
+                                                                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                                                                              ),
+                                                                              IconButton(
+                                                                                  icon: const Icon(Icons.close),
+                                                                                  onPressed: Get.back
+                                                                              )
+                                                                            ]
+                                                                        )
+                                                                    ),
+                                                                    const Divider(height: 1),
+                                                                    h(16),
+                                                                    Padding(
+                                                                      padding: EdgeInsets.symmetric(horizontal: 20),
+                                                                      child: Column(
+                                                                          spacing: 15,
+                                                                          children: [
+                                                                            TextFormField(
+                                                                                controller: controller.serNumField,
+                                                                                cursorHeight: 15,
+                                                                                validator: (value) {
+                                                                                  if ((value ?? '').isEmpty) {
+                                                                                    return 'Заполните серийный номер';
+                                                                                  }
+
+                                                                                  return null;
+                                                                                },
+                                                                                decoration: decorationInput(hint: 'Серийный номер *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                                                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                                                textInputAction: TextInputAction.next,
+                                                                                onChanged: (val) {
+
+                                                                                }
+                                                                            ),
+                                                                            PrimaryButton(text: 'Купить', height: 44, loader: true, onPressed: () async {
+                                                                              final serNum = controller.serNumField.text.trim();
+
+                                                                              if (serNum.isEmpty) {
+                                                                                Helper.snackBar(error: true, text: 'Укажите серийный номер товара для которого покупаете запчасть');
+                                                                                return;
+                                                                              }
+
+                                                                              await controller.getSerNum(serNum, zap[productIndex].id);
+                                                                            })
+                                                                          ]
+                                                                      )
+                                                                    )
+                                                                  ]
+                                                              )
+                                                            ]
+                                                        )
+                                                    )
+                                                )
+                                            );
                                           })
                                         ]
                                     );
@@ -2384,6 +3176,17 @@ class ProductView extends StatelessWidget {
                             InkWell(
                                 onTap: () => Helper.addCompare(controller.product.value!.id),
                                 child: Image.asset('assets/icon/rat${Helper.compares.value.contains(controller.product.value!.id) ? '2' : ''}.png', width: 24, fit: BoxFit.cover)
+                            ),
+                            h(8),
+                            InkWell(
+                                onTap: () async {
+                                  final file = await Helper.downloadFileAsXFile(controller.product.value!.image, 'Share');
+
+                                  SharePlus.instance.share(
+                                    ShareParams(uri: Uri.parse(controller.product.value!.url), title: controller.product.value!.name, previewThumbnail: file),
+                                  );
+                                },
+                                child: Icon(Icons.share)
                             )
                           ]
                       )

@@ -28,7 +28,13 @@ class RegisterView extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           InkWell(
-                              onTap: Get.back,
+                              onTap: () {
+                                if ((Get.parameters['tab'] ?? '').isNotEmpty) {
+                                  controller.navController.onItemTapped(0);
+                                }
+
+                                Get.back();
+                              },
                               child: Image.asset('assets/icon/left.png')
                           ),
                           Image.asset('assets/image/logo.png', width: 70)
@@ -140,7 +146,13 @@ class RegisterView extends StatelessWidget {
                                     ),
                                     Center(
                                         child: TextButton(
-                                            onPressed: () => Get.offNamed('login'),
+                                            onPressed: () {
+                                              if ((Get.parameters['tab'] ?? '').isNotEmpty) {
+                                                Get.offNamed('login', parameters: {'tab': Get.parameters['tab']!});
+                                              } else {
+                                                Get.offNamed('login');
+                                              }
+                                            },
                                             child: Text('Вход', style: TextStyle(color: Colors.blue))
                                         )
                                     )

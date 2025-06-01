@@ -3,7 +3,9 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import '../../utils/helper.dart';
+import '../api/home.dart';
 import '../api/login.dart';
+import '../utils/notifications.dart';
 import 'navigation.dart';
 
 class RegisterController extends GetxController {
@@ -29,6 +31,12 @@ class RegisterController extends GetxController {
       });
 
       if (user != null) {
+        final token = await NotificationsService.getToken();
+
+        if (token.isNotEmpty) {
+          HomeApi.saveToken(token);
+        }
+
         final carts = navController.cartProducts;
         navController.cartProducts.clear();
 
@@ -44,6 +52,12 @@ class RegisterController extends GetxController {
         if ((param['route'] ?? '').isNotEmpty) {
           Get.toNamed('/${param['route']}');
           return;
+        }
+
+        if ((param['tab'] ?? '').isNotEmpty) {
+          navController.onItemTapped(int.tryParse('${param['tab']}') ?? 0);
+        } else {
+          navController.onItemTapped(0);
         }
 
         Get.offAllNamed('home');

@@ -48,7 +48,7 @@ class CompareView extends StatelessWidget {
                               children: [
                                 h(16),
                                 ModuleTitle(title: 'Сравнение товаров', type: true),
-                                if (controller.compares.isNotEmpty) Transform.translate(
+                                if (controller.search.isNotEmpty) Transform.translate(
                                   offset: Offset(-10, 0),
                                   child: GestureDetector(
                                     onTap: controller.setCompares,
@@ -61,7 +61,9 @@ class CompareView extends StatelessWidget {
                                               activeColor: primaryColor,
                                               visualDensity: VisualDensity.compact,
                                               value: controller.isC.value,
-                                              onChanged: (val) {}
+                                              onChanged: (val) {
+                                                controller.setCompares();
+                                              }
                                           ),
                                           Text(
                                               'Показать различия',

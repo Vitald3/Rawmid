@@ -1,19 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/api/home.dart';
 import 'package:rawmid/screen/catalog/item.dart';
 import 'package:rawmid/screen/news/news.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../controller/news.dart';
 import '../model/catalog/category.dart';
 import '../screen/product/product.dart';
+import '../widget/open_web.dart';
 import 'constant.dart';
 import 'package:get/get.dart';
 import 'dart:ui' as ui;
@@ -94,8 +97,16 @@ class Helper {
     return before ? "$number $three" : three;
   }
 
-  static Future launchInBrowser(String url) async {
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  static Future launchInBrowser(String url, {String title = ''}) async {
+    showDialog(
+        context: Get.context!,
+        barrierDismissible: false,
+        builder: (context) => Dialog(
+            insetPadding: EdgeInsets.zero,
+            backgroundColor: Colors.white,
+            child: OpenWebView(url: url, title: title)
+        )
+    );
   }
 
   static Future openLink(String link) async {
@@ -112,11 +123,11 @@ class Helper {
           Get.to(() => ProductView(id: api.value));
         } else if (api.key == 'record') {
           Get.delete<NewsController>();
-          Get.put(NewsController(api.value, false));
+          Get.put(NewsController(api.value, false, false));
           Get.to(() => NewsView());
         } else if (api.key == 'recipe') {
           Get.delete<NewsController>();
-          Get.put(NewsController(api.value, true));
+          Get.put(NewsController(api.value, true, false));
           Get.to(() => NewsView());
         } else if (api.key == 'category') {
           try {
@@ -133,6 +144,21 @@ class Helper {
     } else {
       Helper.launchInBrowser(link);
     }
+  }
+
+  static Future<XFile?> downloadFileAsXFile(String url, String fileName) async {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+
+      await file.writeAsBytes(response.bodyBytes);
+
+      return XFile(file.path);
+    }
+
+    return null;
   }
 
   static String formatPrice(double val, {String symbol = '₽'}) {

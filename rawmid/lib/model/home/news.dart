@@ -9,6 +9,7 @@ class NewsModel {
   late String date;
   late String link;
   String? youtubeLink;
+  int? status;
   List<Steps>? steps;
   List<Energy>? energy;
   List<Ingredients>? ingredients;
@@ -17,7 +18,7 @@ class NewsModel {
   bool? recipe;
   bool? survey;
 
-  NewsModel({required this.id, this.steps, this.energy, this.ingredients, required this.title, required this.image, required this.text, required this.date, required this.time, required this.link, this.moderate, this.youtubeLink, this.products, this.recipe, this.survey});
+  NewsModel({required this.id, this.steps, this.energy, this.ingredients, required this.title, required this.image, required this.text, required this.date, required this.time, required this.link, this.moderate, this.youtubeLink, this.status, this.products, this.recipe, this.survey});
 
   NewsModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -27,6 +28,7 @@ class NewsModel {
     date = json['date_added'];
     link = json['link'];
     youtubeLink = json['youtube_link'];
+    status = json['status'];
     moderate = json['moderate'];
     recipe = json['recipe'] ?? false;
     survey = json['survey'] ?? false;
@@ -63,10 +65,15 @@ class NewsModel {
         ingredients!.add(Ingredients.fromJson(v));
       });
     }
-    time = getReadingTime('${json['text2'] ?? json['text']}${json['ingredients_one'] ?? ''}${json['ingredients_two'] ?? ''}${json['energy'] ?? ''}');
+
+    if (json['prep_time'] != null) {
+      time = json['prep_time'];
+    } else {
+      time = getReadingTime('${json['text2'] ?? json['text']}${json['ingredients_one'] ?? ''}${json['ingredients_two'] ?? ''}${json['energy'] ?? ''}');
+    }
   }
 
-  String getReadingTime(String text, {int wpm = 480}) {
+  String getReadingTime(String text, {int wpm = 180}) {
     String cleanText = text.replaceAll(RegExp(r'<[^>]*>'), '');
 
     Map<String, String> htmlEntities = {
@@ -116,6 +123,7 @@ class NewsModel {
     data['time'] = time;
     data['link'] = link;
     data['youtube_link'] = youtubeLink;
+    data['status'] = status;
     data['moderate'] = moderate;
     data['recipe'] = recipe;
     data['survey'] = survey;

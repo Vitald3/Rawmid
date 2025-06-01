@@ -34,6 +34,28 @@ class ProductApi {
     return null;
   }
 
+  static Future<bool> getSerNum(String num, String id) async {
+    try {
+      final response = await http.post(Uri.parse(getSerNumUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'num': num, 'id': id});
+
+      final json = jsonDecode(response.body);
+
+      if ((json['error'] ?? '').isNotEmpty) {
+        Helper.snackBar(error: true, text: json['error'], callback: Get.back);
+        return false;
+      } else {
+        return true;
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return false;
+  }
+
   static Future<List<ProductModel>> getAccessories(String id) async {
     List<ProductModel> items = [];
 

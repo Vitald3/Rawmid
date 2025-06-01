@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/api/profile.dart';
 import 'package:rawmid/controller/navigation.dart';
+import 'package:rawmid/model/profile/address.dart';
 import '../api/home.dart';
 import '../api/login.dart';
 import '../model/country.dart';
@@ -44,6 +45,10 @@ class UserController extends GetxController {
     'postcode': TextEditingController(),
     'address_1': TextEditingController()
   };
+  var controllersAddress2 = <String, Map<String, TextEditingController>>{}.obs;
+  var focusNodeAddress2 = <String, Map<String, FocusNode>>{}.obs;
+  var editAddress = <String, bool>{}.obs;
+  var delAddress = <String, bool>{}.obs;
   final Map<String, TextEditingController> controllerUr = {
     'inn': TextEditingController(),
     'company': TextEditingController(),
@@ -96,6 +101,9 @@ class UserController extends GetxController {
   RxString activeField = ''.obs;
   Rxn<String> region = Rxn<String>('2760');
   RxString country = '176'.obs;
+  var address = <String, AddressModel>{}.obs;
+  var addressFormKey = <String, GlobalKey<FormState>>{}.obs;
+  var addressRegions = <String, List<ZoneModel>>{}.obs;
   RxList<CountryModel> countries = <CountryModel>[].obs;
   RxList<ZoneModel> regions = <ZoneModel>[].obs;
   Rxn<File> imageFile = Rxn<File>();
@@ -136,6 +144,10 @@ class UserController extends GetxController {
     focusNodes.forEach((key, focusNode) => focusNode.dispose());
     focusNodeAddress.forEach((key, focusNode) => focusNode.dispose());
     focusNodeUrAddress.forEach((key, focusNode) => focusNode.dispose());
+    address.clear();
+    addressRegions.clear();
+    controllersAddress2.forEach((key, map) => map.forEach((k, v) => v.dispose()));
+    focusNodeAddress2.forEach((key, map) => map.forEach((k, v) => v.dispose()));
     super.dispose();
   }
 
@@ -193,40 +205,58 @@ class UserController extends GetxController {
         return null;
       },
       'inn': (value) {
-        if (value == null || value.isEmpty) return 'Заполните ИНН';
+        if (value == null || value.isEmpty) {
+          return 'Введите ИНН';
+        } else if (value.length < 10 || value.length > 12) {
+          return 'ИНН должно быть от 10 до 12 символов!';
+        } else if (!RegExp(r'^\d+$').hasMatch(value)) {
+          return 'ИНН должен содержать только цифры!';
+        }
         return null;
       },
       'company': (value) {
-        if (value == null || value.isEmpty) return 'Заполните название компании';
+        if (value == null || value.isEmpty) return 'Поле Компания должно быть заполнено';
         return null;
       },
       'ogrn': (value) {
-        if (value == null || value.isEmpty) return 'Заполните ОГРН';
+        if (value == null || value.isEmpty) return 'Поле ОГРН должно быть заполнено';
         return null;
       },
       'rs': (value) {
-        if (value == null || value.isEmpty) return 'Заполните рассчетный счет';
+        if (value == null || value.isEmpty) return 'Поле "Номер расчетного счета" должно быть заполнено';
         return null;
       },
       'bank': (value) {
-        if (value == null || value.isEmpty) return 'Заполните банк';
+        if (value == null || value.isEmpty) return 'Поле банк должно быть заполнено';
         return null;
       },
       'bik': (value) {
-        if (value == null || value.isEmpty) return 'Заполните БИК';
+        if (value == null || value.isEmpty) {
+          return 'Поле БИК должно быть заполнено';
+        } else if (value.length != 9) {
+          return 'Поле БИК должно быть 9 символов';
+        }
         return null;
       },
       'kpp': (value) {
-        if (value == null || value.isEmpty) return 'Заполните КПП';
+        if (value == null || value.isEmpty) {
+          return 'Поле КПП должно быть заполнено';
+        } else if (value.length != 9) {
+          return 'Поле КПП должно быть 9 символов. Укажите 000000000 (9 нулей) если нет КПП';
+        }
         return null;
       },
       'uraddress': (value) {
-        if (value == null || value.isEmpty) return 'Заполните адрес';
+        if (value == null || value.isEmpty) return 'Поле Юридический адрес должно быть заполнено';
         return null;
       },
       'email_buh': (value) {
-        if (value == null || value.isEmpty) return 'Заполните E-mail';
-        return null;
+        String? item;
+
+        if (value == null || value.isEmpty) item = 'Введите email';
+        if (value != null && !EmailValidator.validate(value)) item = 'Некорректный email';
+
+        return item;
       },
       'phone_buh': (value) {
         if (value == null || value.isEmpty) {
@@ -288,6 +318,39 @@ class UserController extends GetxController {
     ProfileApi.countries().then((val) {
       countries.value = val;
       regions.value = countries.firstWhereOrNull((e) => e.countryId == country.value)?.zone ?? <ZoneModel>[];
+
+      address.clear();
+      addressRegions.clear();
+      controllersAddress2.clear();
+      focusNodeAddress2.clear();
+
+      if (user.value != null) {
+        for (var i in user.value!.address) {
+          editAddress.putIfAbsent('${i.id}', () => false);
+
+          controllersAddress2.putIfAbsent('${i.id}', () => {
+            'city': TextEditingController(),
+            'postcode': TextEditingController(),
+            'address_1': TextEditingController()
+          });
+
+          focusNodeAddress2.putIfAbsent('${i.id}', () => {
+            'city': FocusNode(),
+            'postcode': FocusNode(),
+            'address_1': FocusNode()
+          });
+
+          address.putIfAbsent('${i.id}', () => i);
+          addressFormKey.putIfAbsent('${i.id}', () => GlobalKey<FormState>());
+          var zones = <ZoneModel>[];
+
+          for (var e in countries.where((e) => e.countryId == i.countryId && (e.zone ?? []).isNotEmpty)) {
+            zones.addAll(e.zone!);
+          }
+
+          addressRegions.putIfAbsent('${i.id}', () => zones);
+        }
+      }
     });
 
     isLoading.value = true;
@@ -305,6 +368,21 @@ class UserController extends GetxController {
   Future setCountry(String? id) async {
     if (id == null) return;
     country.value = id;
+    region.value = null;
+    regions.value = [];
+
+    for (var e in countries.where((e) => e.countryId == id && (e.zone ?? []).isNotEmpty)) {
+      regions.addAll(e.zone!);
+    }
+
+    if (regions.isNotEmpty) {
+      region.value = regions.first.zoneId;
+    }
+  }
+
+  Future setCountry2(String? id, String addressId) async {
+    if (id == null) return;
+    address[addressId]!.countryId = id;
     region.value = null;
     regions.value = [];
 
@@ -363,6 +441,39 @@ class UserController extends GetxController {
 
       Helper.snackBar(error: true, text: 'Произошла ошибка, попробуйте позже');
     }
+  }
+
+  editAddr(String id) async {
+    if (addressFormKey[id]?.currentState?.validate() ?? false) {
+      Map<String, dynamic> body = {};
+
+      controllersAddress2[id]?.forEach((key, controller) {
+        if (controller.text.isNotEmpty) {
+          body.putIfAbsent(key, () => controller.text);
+        }
+      });
+
+      body.putIfAbsent('firstname', () => controllers['firstname']!.text);
+      body.putIfAbsent('lastname', () => controllers['lastname']!.text);
+      body.putIfAbsent('country_id', () => address[id]?.countryId);
+      body.putIfAbsent('zone_id', () => address[id]?.zoneId);
+      body.putIfAbsent('address_id', () => id);
+      body.putIfAbsent('default', () => '${addressDef.value ? 1 : 0}');
+
+      final api = await ProfileApi.saveAddress(body);
+
+      if (api != null) {
+        user.value = api;
+        editAddress[id] = false;
+      }
+    }
+  }
+
+  deleteAddress(String id) async {
+    delAddress.putIfAbsent(id, () => true);
+    final api = await ProfileApi.deleteAddress(id);
+    user.value = api;
+    delAddress.putIfAbsent(id, () => false);
   }
 
   newAddress() async {
@@ -471,6 +582,14 @@ class UserController extends GetxController {
   Future<List<String>> suggestionsCallback2(String pattern) async {
     if (controllersAddress['city'] != null && controllersAddress['city']!.text.isNotEmpty) {
       pattern = '${controllersAddress['city']!.text} $pattern'.trim();
+    }
+
+    return await HomeApi.searchAddress(pattern);
+  }
+
+  Future<List<String>> suggestionsCallback3(String pattern, String id) async {
+    if (controllersAddress2[id]?['city'] != null && controllersAddress2[id]!['city']!.text.isNotEmpty) {
+      pattern = '${controllersAddress2[id]!['city']!.text} $pattern'.trim();
     }
 
     return await HomeApi.searchAddress(pattern);

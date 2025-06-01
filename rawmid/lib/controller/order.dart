@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -8,6 +7,7 @@ import '../api/login.dart';
 import '../api/order.dart';
 import '../api/product.dart';
 import '../model/order_history.dart';
+import '../screen/order/info.dart';
 import '../screen/user/payment.dart';
 import '../utils/helper.dart';
 import 'navigation.dart';
@@ -41,6 +41,16 @@ class OrderController extends GetxController {
 
     fioReviewField.text = navController.user.value?.fio ?? '';
     emailReviewField.text = navController.user.value?.email ?? '';
+
+    if (Get.parameters['order_id'] != null) {
+      final order = orders.firstWhereOrNull((e) => e.id == Get.parameters['order_id']);
+
+      if (order != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.to(() => OrderInfoView(order: order));
+        });
+      }
+    }
   }
 
   Future validateEmailX(String val) async {

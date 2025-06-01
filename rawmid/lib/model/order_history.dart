@@ -48,8 +48,8 @@ class OrdersModel {
     comment = json['comment'];
     avatar = json['avatar'];
     address = json['address'];
-    payLink = json['pay_link'];
-    payText = json['pay_text'];
+    payLink = json['pay_link'] ?? '';
+    payText = json['pay_text'] ?? '';
     payD = json['payd'];
     end = json['end'];
     cancel = (int.tryParse('${json['can_cancel']}') ?? 0) == 1;

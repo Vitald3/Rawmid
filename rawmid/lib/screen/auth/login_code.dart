@@ -41,7 +41,13 @@ class LoginCodeView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       InkWell(
-                          onTap: Get.back,
+                          onTap: () {
+                            if ((Get.parameters['tab'] ?? '').isNotEmpty) {
+                              controller.navController.onItemTapped(0);
+                            }
+
+                            Get.back();
+                          },
                           child: Image.asset('assets/icon/left.png')
                       ),
                       Image.asset('assets/image/logo.png', width: 70)
@@ -180,7 +186,13 @@ class LoginCodeView extends StatelessWidget {
                                 ),
                                 Center(
                                     child: TextButton(
-                                        onPressed: () => Get.toNamed('register'),
+                                        onPressed: () {
+                                          if ((Get.parameters['tab'] ?? '').isNotEmpty) {
+                                            Get.toNamed('register', parameters: {'tab': Get.parameters['tab']!});
+                                          } else {
+                                            Get.toNamed('register');
+                                          }
+                                        },
                                         child: Text('Зарегистрироваться', style: TextStyle(color: Colors.blue))
                                     )
                                 )

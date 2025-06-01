@@ -65,7 +65,7 @@ class MyProductView extends StatelessWidget {
                                         h(10),
                                         ModuleTitle(title: 'Регистрация товара', type: true),
                                         GestureDetector(
-                                          onTap: () => Helper.launchInBrowser('https://madeindream.com/informatsija/product-registration.html'),
+                                          onTap: () => Helper.openLink('https://madeindream.com/informatsija/product-registration.html?record_id=701'),
                                           child: Text(
                                               'Инструкция по регистрации',
                                               style: TextStyle(
@@ -80,7 +80,7 @@ class MyProductView extends StatelessWidget {
                                           'При наступлении гарантийного случая обязательно наличие гарантийного талона и оригиналов чеков!',
                                           style: TextStyle(
                                             color: Colors.black,
-                                            fontSize: 10,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w600
                                           )
                                         ),
@@ -89,7 +89,7 @@ class MyProductView extends StatelessWidget {
                                           'Данные в чеках и талоне должны совпадать!',
                                           style: TextStyle(
                                             color: Colors.black,
-                                            fontSize: 10,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w600
                                           )
                                         ),

@@ -137,7 +137,7 @@ class ProductCardList extends GetView<NavigationController> {
                                       onTap: () => Get.to(() => ReviewsView(product: product)),
                                       child: Text('Отзывы', style: TextStyle(
                                           color: Color(0xFF8A95A8),
-                                          fontSize: 10,
+                                          fontSize: 13,
                                           fontFamily: 'Manrope',
                                           fontWeight: FontWeight.w500,
                                           decoration: TextDecoration.underline

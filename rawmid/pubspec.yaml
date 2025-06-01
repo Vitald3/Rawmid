@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   cupertino_icons: ^1.0.8
   flutter_launcher_icons: ^0.14.3
@@ -24,8 +26,6 @@ dependencies:
   webview_flutter: ^4.10.0
   webview_flutter_wkwebview: ^3.18.5
   intl: ^0.19.0
-  flutter_map: ^8.0.0
-  latlong2: ^0.9.1
   geolocator: ^13.0.2
   phone_form_field: ^10.0.4
   flutter_html: ^3.0.0-beta.2
@@ -36,6 +36,13 @@ dependencies:
   flutter_typeahead: ^5.2.0
   flutter_localization: ^0.3.2
   flutter_html_iframe: ^3.0.0
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.2.4
+  flutter_local_notifications: ^19.0.0
+  flutter_inner_shadow: ^0.0.1
+  yandex_mapkit: ^4.1.0
+  share_plus: ^11.0.0
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

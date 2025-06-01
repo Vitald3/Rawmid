@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -25,9 +25,15 @@ import 'package:rawmid/screen/user/warranty_product.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/utils/helper.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:rawmid/utils/notifications.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  Future.delayed(Duration(seconds: 4), () {
+    NotificationsService.start();
+  });
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp
   ]);
@@ -73,6 +79,40 @@ class App extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate
         ],
+        builder: (context, child) {
+          final size = MediaQuery.of(context).size;
+          final width = size.width;
+          final height = size.height;
+
+          final tabBarHeight = 56.0;
+          final bottomPadding = MediaQuery.of(context).padding.bottom;
+          final tabBarTotalHeight = tabBarHeight + bottomPadding;
+
+          final mobileWidth = 380.0;
+          final mobileHeight = 640.0;
+          final availableHeight = height - tabBarTotalHeight;
+
+          final scaleWidth = width / mobileWidth;
+          final scaleHeight = availableHeight / mobileHeight;
+          final scale = scaleWidth < scaleHeight ? scaleWidth : scaleHeight;
+
+          final isTablet = width >= 600;
+
+          if (!isTablet) {
+            return child!;
+          }
+
+          return Center(
+            child: Transform.scale(
+              scale: scale,
+              child: SizedBox(
+                width: mobileWidth,
+                height: mobileHeight,
+                child: child
+              )
+            )
+          );
+        },
         theme: theme,
         debugShowCheckedModeBanner: false,
         title: appName

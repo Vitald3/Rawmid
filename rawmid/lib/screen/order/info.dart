@@ -212,64 +212,7 @@ class OrderInfoView extends GetView<OrderController> {
                               )
                             )
                           ),
-                          child: Builder(
-                            builder: (c) {
-                              List<HistoryOrder> items = [];
-
-                              if (order.history.length > 3) {
-                                items.add(order.history[0]);
-                                items.add(order.history[(order.history.length/2).ceil()]);
-                                items.add(order.history.last);
-                              } else {
-                                items = order.history;
-                              }
-
-                              var icon = 's2';
-
-                              return Row(
-                                  spacing: 12,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: List.generate(items.length, (index) {
-                                    final history = items[index];
-
-                                    if (history.status.trim() == 'Ожидает оплату' || history.status.trim() == 'В процессе отгрузки') {
-                                      icon = 's1';
-                                    } else if (history.status.trim() == 'Доставляется' || history.status.trim() == 'Отправляем') {
-                                      icon = 's3';
-                                    } else if (history.status.trim() == 'Завершён' || history.status.trim() == 'Укомплектован' || history.status.trim() == 'Завершен' || history.status.trim() == 'Возврат' || history.status.trim() == 'Отменен') {
-                                      icon = 's2';
-                                    } else {
-                                      icon = '';
-                                    }
-
-                                    return Flexible(
-                                        child: Container(
-                                            alignment: Alignment.center,
-                                            width: double.infinity,
-                                            child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.start,
-                                                spacing: 4,
-                                                children: [
-                                                  icon =='pay' ? Icon(Icons.payment, color: Colors.white) : icon.isNotEmpty ? Image.asset('assets/icon/$icon.png', width: 24, height: 24) : Icon(Icons.close_rounded, color: Colors.white),
-                                                  Text(
-                                                      history.status,
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.w700,
-                                                          height: 1,
-                                                          letterSpacing: 0.22
-                                                      )
-                                                  )
-                                                ]
-                                            )
-                                        )
-                                    );
-                                  }).toList()
-                              );
-                            }
-                          )
+                          child: OrderStatusWidget(currentStatus: order.history.last.id, history: order.history)
                       ),
                       Container(
                           width: double.infinity,
@@ -300,7 +243,7 @@ class OrderInfoView extends GetView<OrderController> {
                                             width: 12,
                                             height: 12,
                                             decoration: BoxDecoration(
-                                                color: isActive ? Colors.black : Color(0xFF8A95A8),
+                                                color: Colors.black,
                                                 shape: BoxShape.circle
                                             )
                                         )
@@ -309,7 +252,7 @@ class OrderInfoView extends GetView<OrderController> {
                                           margin: EdgeInsets.only(left: 5),
                                           width: 2,
                                           height: 28,
-                                          color: Color(0xFF8A95A8)
+                                          color: Colors.black
                                       )
                                     ]
                                   ),
@@ -322,7 +265,7 @@ class OrderInfoView extends GetView<OrderController> {
                                         Text(
                                           history.status,
                                           style: TextStyle(
-                                            color: isActive ? Colors.black : Color(0xFF8A95A8),
+                                            color: Colors.black,
                                             fontSize: 15,
                                             fontWeight: isActive ? FontWeight.bold : FontWeight.normal
                                           )
@@ -330,7 +273,7 @@ class OrderInfoView extends GetView<OrderController> {
                                         if (history.date != null) Text(
                                           controller.formatDateCustom(history.date!),
                                           style: TextStyle(
-                                            color: isActive ? Colors.black : Color(0xFF8A95A8),
+                                            color: Colors.black,
                                             fontSize: 11
                                           )
                                         )
@@ -425,7 +368,9 @@ class OrderInfoView extends GetView<OrderController> {
                                                         },
                                                         onLinkTap: (val, map, element) {
                                                           if ((val ?? '').isNotEmpty) {
-                                                            Helper.openLink(val!);
+                                                            final RegExp exp = RegExp(r'<[^>]*>', multiLine: true, caseSensitive: true);
+                                                            String clean = e.comment.replaceAll(exp, '');
+                                                            Helper.launchInBrowser(val!, title: clean.replaceAll(RegExp(r'\s+'), ' ').trim());
                                                           }
                                                         }
                                                     ))
@@ -773,6 +718,162 @@ class OrderInfoView extends GetView<OrderController> {
                 ]
             ))
         )
+    );
+  }
+}
+
+class OrderStatusStep {
+  final String title;
+  final String icon;
+  final String iconComplete;
+  final bool isFinal;
+  final List<String> subStatuses;
+
+  OrderStatusStep({
+    required this.title,
+    required this.icon,
+    required this.iconComplete,
+    this.isFinal = false,
+    this.subStatuses = const [],
+  });
+}
+
+class OrderStatusWidget extends StatelessWidget {
+  final String currentStatus;
+  final List<HistoryOrder> history;
+
+  const OrderStatusWidget({
+    super.key,
+    required this.currentStatus,
+    required this.history,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final statusSteps = [
+      OrderStatusStep(
+        title: 'Ожидает оплату',
+        icon: 's1',
+        iconComplete: 's2',
+        subStatuses: [
+          'Оплата получена'
+        ]
+      ),
+      OrderStatusStep(
+        title: 'В процессе отгрузки',
+        icon: 's3',
+        iconComplete: 's4',
+        subStatuses: [
+          'Отправляем',
+          'Отправлен',
+          'Создана заявка в ТК',
+          'Готовится к отправке',
+          'Укомплектован'
+        ]
+      ),
+      OrderStatusStep(
+        title: 'Передан курьеру',
+        icon: 's5',
+        iconComplete: 's6',
+        subStatuses: [
+          'Доставляется',
+          'Ожидает получения'
+        ]
+      ),
+      OrderStatusStep(
+        title: 'Завершен',
+        icon: 's7',
+        iconComplete: 's8',
+        isFinal: true,
+        subStatuses: [
+          'Завершен'
+        ]
+      )
+    ];
+
+    final completedStatuses = history.map((h) => h.status).toSet();
+    List<Widget> widgets = [];
+
+    for (int i = 0; i < statusSteps.length; i++) {
+      final step = statusSteps[i];
+      final isCompleted = completedStatuses.contains(step.title);
+      final isCurrent = step.title == currentStatus;
+      final iconFile = isCompleted || isCurrent ? step.iconComplete : step.icon;
+
+      Widget iconWidget = Image.asset(
+        'assets/icon/$iconFile.png',
+        width: 24,
+        height: 24
+      );
+
+      final matchedSubStatuses = step.subStatuses.where((sub) => completedStatuses.contains(sub)).length;
+      final progress = step.subStatuses.isEmpty ? 0.0 : matchedSubStatuses / step.subStatuses.length;
+
+      final progressBar = Container(
+        width: 22,
+        height: 6,
+        decoration: BoxDecoration(
+          color: Colors.blue[100],
+          borderRadius: BorderRadius.circular(3),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: FractionallySizedBox(
+          alignment: Alignment.centerLeft,
+          widthFactor: progress,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(3)
+            )
+          )
+        )
+      );
+
+      widgets.add(
+        Flexible(
+          child: Container(
+            alignment: Alignment.center,
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                iconWidget,
+                h(4),
+                Text(
+                  step.title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                    letterSpacing: 0.22
+                  )
+                )
+              ]
+            )
+          )
+        )
+      );
+
+      if (i < statusSteps.length - 1) {
+        widgets.add(
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              progressBar
+            ]
+          )
+        );
+      }
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: widgets
+      )
     );
   }
 }

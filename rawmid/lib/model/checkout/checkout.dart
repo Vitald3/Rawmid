@@ -8,6 +8,8 @@ class CheckoutModel {
   late List<TotalModel> totals;
   late String shippingMethod;
   late String paymentMethod;
+  late String zoneId;
+  late bool usePrepayment;
 
   CheckoutModel({
     required this.shipping,
@@ -15,6 +17,8 @@ class CheckoutModel {
     required this.totals,
     required this.shippingMethod,
     required this.paymentMethod,
+    required this.zoneId,
+    required this.usePrepayment,
   });
 
   CheckoutModel.fromJson(Map<String, dynamic> json) {
@@ -44,5 +48,7 @@ class CheckoutModel {
 
     shippingMethod = json['shipping_method'];
     paymentMethod = json['payment_method'];
+    zoneId = json['zone_id'];
+    usePrepayment = json['use_prepayment'];
   }
 }

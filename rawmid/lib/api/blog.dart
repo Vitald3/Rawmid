@@ -9,7 +9,7 @@ import '../utils/helper.dart';
 class BlogApi {
   static Future<Map<String, dynamic>> blog(bool recipe, {bool mySurvey = false, bool myRecipes = false, String id = ''}) async {
     try {
-      final response = await http.get(Uri.parse('$getBlogUrl&recipe=${recipe ? 1 : 0}${mySurvey ? '&mySurvey=1' : ''}${myRecipes ? '&myRecipes=1' : ''}${id.isNotEmpty ? '&id=$id' : ''}'), headers: {
+      final response = await http.get(Uri.parse('$getBlogUrl&recipe=${recipe ? 1 : 0}${id == '0' ? '&survey=1' : ''}${mySurvey ? '&mySurvey=1' : ''}${myRecipes ? '&myRecipes=1' : ''}${id.isNotEmpty ? '&id=$id' : ''}'), headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
@@ -25,12 +25,12 @@ class BlogApi {
     return {};
   }
 
-  static Future<NewsModel?> getNew(String id, bool recipe) async {
+  static Future<NewsModel?> getNew(String id, bool recipe, bool survey) async {
     try {
       final response = await http.post(Uri.parse(getNewUrl), headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
-      }, body: {'id': id, 'recipe': '${recipe ? 1 : 0}'});
+      }, body: {'id': id, 'recipe': '${recipe ? 1 : 0}', 'survey': '${survey ? 1 : 0}'});
       final json = jsonDecode(response.body);
 
       if (json['record'] != null) {
@@ -43,11 +43,11 @@ class BlogApi {
     return null;
   }
 
-  static Future<List<CategoryNewsModel>> getCategoriesNews(bool recipe) async {
+  static Future<List<CategoryNewsModel>> getCategoriesNews(bool recipe, {bool myRecipes = false}) async {
     var items = <CategoryNewsModel>[];
 
     try {
-      final response = await http.get(Uri.parse('$getCategoriesRecipeUrl&recipe=${recipe ? 1 : 0}'), headers: {
+      final response = await http.get(Uri.parse('$getCategoriesRecipeUrl&recipe=${recipe ? 1 : 0}${myRecipes ? '&myRecipes=1' : ''}'), headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });

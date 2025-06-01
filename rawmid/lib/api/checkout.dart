@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:yandex_mapkit/yandex_mapkit.dart';
 import 'package:rawmid/model/checkout/bb_location.dart';
 import 'package:rawmid/model/checkout/checkout.dart';
 import 'package:rawmid/model/home/product.dart';
@@ -32,9 +33,9 @@ class CheckoutApi {
     return items;
   }
 
-  static Future<CheckoutModel?> getCheckout(String city, bool update) async {
+  static Future<CheckoutModel?> getCheckout(String city, bool update, {String countryId = ''}) async {
     try {
-      final response = await http.get(Uri.parse('$getCheckoutUrl&city=$city&update=${update ? '1' : '0'}'), headers: {
+      final response = await http.get(Uri.parse('$getCheckoutUrl&city=$city&update=${update ? '1' : '0'}&country_id=$countryId'), headers: {
         'Content-Type': 'application/json',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
@@ -54,6 +55,37 @@ class CheckoutApi {
     }
 
     return null;
+  }
+
+  static Future<Point?> getCityCoordinates(String cityName) async {
+    final url = Uri.parse('https://nominatim.openstreetmap.org/search?q=$cityName&format=json&limit=1');
+    final response = await http.get(url, headers: {'User-Agent': 'FlutterApp'});
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data != null && data.isNotEmpty) {
+        final lat = double.parse(data[0]['lat']);
+        final lon = double.parse(data[0]['lon']);
+        return Point(latitude: lat, longitude: lon);
+      }
+    }
+    return null;
+  }
+
+  static Future<bool> getPayStatus(String id) async {
+    try {
+      final response = await http.get(Uri.parse('$getPayStatusUrl&order_id=$id'), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+
+      final json = jsonDecode(response.body);
+      return json ?? false;
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return false;
   }
 
   static Future<List<BBItemModel>> getBBPvz() async {

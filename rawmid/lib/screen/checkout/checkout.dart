@@ -2,27 +2,26 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/controller/checkout.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/utils/extension.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:yandex_mapkit/yandex_mapkit.dart';
 import '../../controller/cart.dart';
 import '../../controller/home.dart';
 import '../../model/cart.dart';
 import '../../model/checkout/shipping.dart';
 import '../../model/location.dart';
+import '../../model/profile/address.dart';
 import '../../utils/helper.dart';
 import '../../utils/utils.dart';
 import '../../widget/h.dart';
 import '../../widget/primary_button.dart';
 import '../../widget/w.dart';
 import '../home/city.dart';
-import '../order/info.dart';
 import '../product/product.dart';
 
 class CheckoutView extends StatelessWidget {
@@ -49,8 +48,10 @@ class CheckoutView extends StatelessWidget {
                           ),
                           if (controller.navController.city.value.isNotEmpty) w(10),
                           if (controller.navController.city.value.isNotEmpty) Expanded(
-                              child: InkWell(
+                              child: GestureDetector(
                                   onTap: () {
+                                    final city = controller.navController.city.value;
+
                                     showModalBottomSheet(
                                         context: Get.context!,
                                         isScrollControlled: true,
@@ -64,9 +65,17 @@ class CheckoutView extends StatelessWidget {
                                           return CitySearch();
                                         }
                                     ).then((_) {
+                                      controller.controllersAddress['city']?.clear();
+                                      controller.controllersAddress['postcode']?.clear();
+                                      controller.controllersAddress['address_1']?.clear();
                                       controller.navController.filteredCities.value = controller.navController.cities;
                                       controller.navController.filteredLocation.clear();
+                                      if (city == controller.navController.city.value) return;
                                       controller.initialize(update: true);
+                                      controller.country.value = controller.navController.countryId.value;
+                                      controller.setCountry(controller.country.value).then((_) {
+                                        controller.region.value = controller.navController.zoneId.value;
+                                      });
 
                                       if (Get.isRegistered<HomeController>()) {
                                         final home = Get.find<HomeController>();
@@ -153,8 +162,18 @@ class CheckoutView extends StatelessWidget {
                             fontWeight: FontWeight.w700
                           )
                         ),
-                        if (controller.setOrder.value != null) h(20),
-                        if (controller.setOrder.value != null) PrimaryButton(text: 'Посмотреть заказ', onPressed: () => Get.off(() => OrderInfoView(order: controller.setOrder.value!)))
+                        h(20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: () => Helper.launchInBrowser('https://t.me/RAWMIDchatbot?start=phone_77774538722'),
+                              child: Image.asset('assets/image/telegramlink.png', width: Get.width-40)
+                            )
+                          ]
+                        ),
+                        if (controller.setOrder.value != null && controller.navController.user.value != null) h(20),
+                        if (controller.setOrder.value != null && controller.navController.user.value != null) PrimaryButton(text: 'Посмотреть заказ', onPressed: () => Get.offNamed('/orders', parameters: {'order_id': controller.setOrder.value!.id}))
                       ]
                     ) : Form(
                       key: controller.formKey,
@@ -309,23 +328,22 @@ class CheckoutView extends StatelessWidget {
                                 children: controller.fizControllers.entries.map((item) => Column(
                                     children: [
                                         item.key == 'telephone' ? PhoneFormField(
-                                        controller: controller.phoneField,
-                                        validator: PhoneValidator.compose([PhoneValidator.required(Get.context!, errorText: 'Номер телефона обязателен'), PhoneValidator.validMobile(Get.context!, errorText: 'Номер телефона некорректен')]),
-                                        countrySelectorNavigator: const CountrySelectorNavigator.draggableBottomSheet(),
-                                        isCountrySelectionEnabled: true,
-                                        isCountryButtonPersistent: true,
-                                        autofillHints: const [AutofillHints.telephoneNumber],
-                                        countryButtonStyle: const CountryButtonStyle(
-                                            showDialCode: true,
-                                            showIsoCode: false,
-                                            showFlag: true,
-                                            showDropdownIcon: false,
-                                            flagSize: 20
-                                        ),
-                                        onChanged: (val) => controller.saveField(item.key, '+${val.countryCode}${val.nsn}'),
-                                        decoration: decorationInput(contentPadding: const EdgeInsets.symmetric(horizontal: 8)),
-                                      ) :
-                                      TextFormField(
+                                          controller: controller.phoneField,
+                                          validator: PhoneValidator.compose([PhoneValidator.required(Get.context!, errorText: 'Номер телефона обязателен'), PhoneValidator.validMobile(Get.context!, errorText: 'Номер телефона некорректен')]),
+                                          countrySelectorNavigator: const CountrySelectorNavigator.draggableBottomSheet(),
+                                          isCountrySelectionEnabled: true,
+                                          isCountryButtonPersistent: true,
+                                          autofillHints: const [AutofillHints.telephoneNumber],
+                                          countryButtonStyle: const CountryButtonStyle(
+                                              showDialCode: true,
+                                              padding: EdgeInsets.only(left: 15),
+                                              showIsoCode: false,
+                                              showFlag: true,
+                                              showDropdownIcon: false
+                                          ),
+                                          onChanged: (val) => controller.saveField(item.key, '+${val.countryCode}${val.nsn}'),
+                                          decoration: decorationInput(contentPadding: const EdgeInsets.all(8)),
+                                        ) : TextFormField(
                                           cursorHeight: 15,
                                           key: controller.errors[item.key],
                                           controller: item.value,
@@ -373,12 +391,12 @@ class CheckoutView extends StatelessWidget {
                                                 showDialCode: true,
                                                 showIsoCode: false,
                                                 showFlag: true,
+                                                padding: EdgeInsets.only(left: 15),
                                                 showDropdownIcon: false,
                                                 flagSize: 20
                                             ),
-                                            decoration: decorationInput(contentPadding: const EdgeInsets.symmetric(horizontal: 8)),
-                                          ) :
-                                          TextFormField(
+                                            decoration: decorationInput(contentPadding: const EdgeInsets.all(8), hint: 'Номер бухгалтерии'),
+                                          ) : TextFormField(
                                               cursorHeight: 15,
                                               key: controller.errors[item.key],
                                               controller: item.value,
@@ -450,195 +468,240 @@ class CheckoutView extends StatelessWidget {
                                             )).toList()
                                         ) : Builder(
                                           builder: (c) {
-                                            if (!controller.isLoading2.value) {
-                                              return Center(child: CircularProgressIndicator(color: primaryColor));
-                                            }
+                                            return Obx(() {
+                                              if (!controller.isLoading2.value) {
+                                                return Center(child: CircularProgressIndicator(color: primaryColor));
+                                              }
 
-                                            final addresses = controller.navController.user.value?.address.where((e) => e.address.toLowerCase().contains(controller.navController.city.value.toLowerCase())) ?? [];
+                                              final addresses = controller.navController.user.value?.address.where((e) => e.address.toLowerCase().contains(controller.navController.city.value.toLowerCase())) ?? [];
 
-                                            return Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  if (addresses.isEmpty) Text('Заполните адрес, чтобы увидеть способы доставки', style: TextStyle(fontSize: 12)),
-                                                  if (addresses.isNotEmpty) h(15),
-                                                  ...addresses.map((e) => GestureDetector(
-                                                      onTap: () => controller.setAddress(e.id),
-                                                      child: Padding(
-                                                          padding: const EdgeInsets.only(bottom: 10),
-                                                          child: Row(
-                                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                                              children: [
-                                                                SizedBox(
-                                                                    width: 20,
-                                                                    height: 24,
-                                                                    child: Radio(
-                                                                        value: e.def || controller.addressId.value == e.id,
-                                                                        groupValue: true,
-                                                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                                        activeColor: primaryColor,
-                                                                        onChanged: (value) {
-                                                                          if (value ?? false) {
-                                                                            controller.addressId.value = e.id;
+                                              return Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    if (addresses.isEmpty) Text('Заполните адрес, чтобы увидеть способы доставки', style: TextStyle(fontSize: 12)),
+                                                    if (addresses.isNotEmpty) h(15),
+                                                    ...addresses.map((e) => GestureDetector(
+                                                        onTap: () => controller.setAddress(e.id),
+                                                        child: Padding(
+                                                            padding: const EdgeInsets.only(bottom: 10),
+                                                            child: Row(
+                                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                                children: [
+                                                                  SizedBox(
+                                                                      width: 20,
+                                                                      height: 24,
+                                                                      child: Radio(
+                                                                          value: e.id,
+                                                                          groupValue: (controller.addressId.value == 0 && e.def) ? e.id : controller.addressId.value,
+                                                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                                          activeColor: primaryColor,
+                                                                          onChanged: (value) {
+                                                                            controller.addressId.value = int.tryParse('${value ?? 0}') ?? 0;
                                                                           }
-                                                                        }
-                                                                    )
-                                                                ),
-                                                                w(8),
-                                                                Expanded(
-                                                                    child: Column(
-                                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                                        children: [
-                                                                          Text(
-                                                                              e.address,
-                                                                              style: TextStyle(
-                                                                                  color: Color(0xFF1E1E1E),
-                                                                                  fontSize: 14,
-                                                                                  height: 1.40,
-                                                                                  letterSpacing: 0.14
-                                                                              )
-                                                                          ),
-                                                                          if (e.def) h(4),
-                                                                          if (e.def) Text('Основной', style: TextStyle(color: Colors.grey))
-                                                                        ]
-                                                                    )
-                                                                )
-                                                              ]
-                                                          )
-                                                      )
-                                                  )),
-                                                  h(20),
-                                                  if ((controller.navController.user.value?.address ?? []).isEmpty) Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        DropdownButtonFormField<String>(
-                                                            value: controller.country.value,
-                                                            isExpanded: true,
-                                                            decoration: decorationInput(hint: 'Страна', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
-                                                            items: controller.countries.map((item) {
-                                                              return DropdownMenuItem<String>(
-                                                                  value: item.countryId!,
-                                                                  child: Text(item.name!, style: TextStyle(fontSize: 14))
-                                                              );
-                                                            }).toList(),
-                                                            onChanged: (val) => controller.setCountry(val),
-                                                            validator: (value) => value == null ? 'Выберите страну' : null
-                                                        ),
-                                                        if (controller.regions.isNotEmpty) h(16),
-                                                        if (controller.regions.isNotEmpty) DropdownButtonFormField<String?>(
-                                                            value: controller.region.value,
-                                                            isExpanded: true,
-                                                            decoration: decorationInput(hint: 'Регион', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
-                                                            items: controller.regions.map((item) {
-                                                              return DropdownMenuItem<String?>(
-                                                                  value: item.zoneId,
-                                                                  child: Text(item.name!, style: TextStyle(fontSize: 14))
-                                                              );
-                                                            }).toList(),
-                                                            onChanged: (newValue) {
-                                                              controller.region.value = newValue ?? '';
-                                                              controller.saveField('zone_id', newValue ?? '');
-                                                            },
-                                                            validator: (value) => value == null ? 'Выберите регион' : null
-                                                        ),
-                                                        if (controller.regions.isNotEmpty) h(16),
-                                                        if (controller.regions.isNotEmpty) TypeAheadField<Location>(
-                                                            suggestionsCallback: controller.suggestionsCallback,
-                                                            controller: controller.controllersAddress['city'],
-                                                            itemBuilder: (context, e) => ListTile(title: Text(e.label)),
-                                                            onSelected: (e) {
-                                                              controller.controllersAddress['city']!.text = e.label;
-                                                            },
-                                                            builder: (context, textController, focusNode) {
-                                                              return TextFormField(
-                                                                controller: textController,
-                                                                focusNode: focusNode,
-                                                                key: controller.errors['city'],
-                                                                cursorHeight: 15,
-                                                                validator: (value) => controller.validators['city']!(value),
-                                                                decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                                                autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                                textInputAction: TextInputAction.next,
-                                                                onChanged: (val) => controller.saveField('city', val)
-                                                              );
-                                                            }
-                                                        ),
-                                                        if (controller.regions.isNotEmpty) h(16),
-                                                        if (controller.regions.isNotEmpty) TextFormField(
-                                                            key: controller.errors['postcode'],
-                                                            cursorHeight: 15,
-                                                            onChanged: (val) => controller.saveField('postcode', val),
-                                                            controller: controller.controllersAddress['postcode'],
-                                                            keyboardType: TextInputType.number,
-                                                            inputFormatters: [
-                                                              FilteringTextInputFormatter.digitsOnly,
-                                                              LengthLimitingTextInputFormatter(6)
-                                                            ],
-                                                            decoration: decorationInput(hint: 'Индекс ', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                            textInputAction: TextInputAction.next
-                                                        ),
-                                                        if (controller.regions.isNotEmpty) h(16),
-                                                        if (controller.regions.isNotEmpty) TypeAheadField<String>(
-                                                            suggestionsCallback: controller.suggestionsCallback2,
-                                                            controller: controller.controllersAddress['address_1'],
-                                                            itemBuilder: (context, e) => ListTile(title: Text(e)),
-                                                            onSelected: (e) {
-                                                              controller.controllersAddress['address_1']!.text = e;
-                                                            },
-                                                            builder: (context, textController, focusNode) {
-                                                              return TextFormField(
-                                                                  controller: textController,
-                                                                  focusNode: focusNode,
-                                                                  key: controller.errors['address_1'],
-                                                                  cursorHeight: 15,
-                                                                  onChanged: (val) => controller.saveField('address_1', val),
-                                                                  validator: (value) => controller.validators['address_1']!(value),
-                                                                  decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                                  textInputAction: TextInputAction.done
-                                                              );
-                                                            }
-                                                        ),
-                                                        h(20)
-                                                      ]
-                                                  ),
-                                                  controller.navController.user.value != null ? controller.addAddress.value ? PrimaryButton(
-                                                      text: 'Добавить адрес',
-                                                      height: 40,
-                                                      loader: true,
-                                                      onPressed: controller.newAddress
-                                                  ) : GestureDetector(
-                                                      onTap: controller.newAddress,
-                                                      child:  Container(
-                                                          height: 44,
-                                                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                                                          decoration: ShapeDecoration(
-                                                              color: Colors.white,
-                                                              image: DecorationImage(image: AssetImage('assets/image/border.png'), fit: BoxFit.fill),
-                                                              shape: RoundedRectangleBorder(
-                                                                  borderRadius: BorderRadius.circular(8)
-                                                              )
+                                                                      )
+                                                                  ),
+                                                                  w(8),
+                                                                  Expanded(
+                                                                      child: Column(
+                                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                                          children: [
+                                                                            Text(
+                                                                                e.address,
+                                                                                style: TextStyle(
+                                                                                    color: Color(0xFF1E1E1E),
+                                                                                    fontSize: 14,
+                                                                                    height: 1.40,
+                                                                                    letterSpacing: 0.14
+                                                                                )
+                                                                            ),
+                                                                            if (e.def) h(4),
+                                                                            if (e.def) Text('Основной', style: TextStyle(color: Colors.grey))
+                                                                          ]
+                                                                      )
+                                                                  )
+                                                                ]
+                                                            )
+                                                        )
+                                                    )),
+                                                    h(20),
+                                                    if ((controller.navController.user.value?.address ?? []).isEmpty) Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          DropdownButtonFormField<String>(
+                                                              value: controller.country.value,
+                                                              isExpanded: true,
+                                                              decoration: decorationInput(hint: 'Страна', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
+                                                              items: controller.countries.map((item) {
+                                                                return DropdownMenuItem<String>(
+                                                                    value: item.countryId!,
+                                                                    child: Text(item.name!, style: TextStyle(fontSize: 14))
+                                                                );
+                                                              }).toList(),
+                                                              onChanged: (val) => controller.setCountry(val),
+                                                              validator: (value) => value == null ? 'Выберите страну' : null
                                                           ),
-                                                          child: Row(
-                                                              mainAxisAlignment: MainAxisAlignment.start,
-                                                              children: [
-                                                                Image.asset('assets/icon/plus.png'),
-                                                                w(8),
-                                                                Text(
-                                                                    'Добавить адрес',
-                                                                    style: TextStyle(
-                                                                        color: Color(0xFF8A95A8),
-                                                                        fontSize: 14,
-                                                                        fontWeight: FontWeight.w500
-                                                                    )
-                                                                )
-                                                              ]
+                                                          if (controller.regions.isNotEmpty) h(16),
+                                                          if (controller.regions.isNotEmpty) DropdownButtonFormField<String?>(
+                                                              value: controller.region.value,
+                                                              isExpanded: true,
+                                                              decoration: decorationInput(hint: 'Регион', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
+                                                              items: controller.regions.map((item) {
+                                                                return DropdownMenuItem<String?>(
+                                                                    value: item.zoneId,
+                                                                    child: Text(item.name!, style: TextStyle(fontSize: 14))
+                                                                );
+                                                              }).toList(),
+                                                              onChanged: (newValue) {
+                                                                controller.region.value = newValue ?? '';
+                                                                controller.controllersAddress['city']!.clear();
+                                                                controller.controllersAddress['postcode']!.clear();
+                                                                controller.controllersAddress['address_1']!.clear();
+                                                                controller.saveField('zone_id', newValue ?? '');
+                                                              },
+                                                              validator: (value) => value == null ? 'Выберите регион' : null
+                                                          ),
+                                                          if (controller.regions.isNotEmpty) h(16),
+                                                          if (controller.regions.isNotEmpty) TypeAheadField<Location>(
+                                                              suggestionsCallback: controller.suggestionsCallback,
+                                                              controller: controller.controllersAddress['city'],
+                                                              itemBuilder: (context, e) => ListTile(title: Text(e.label), onTap: () {
+                                                                controller.controllersAddress['city']!.text = e.label;
+                                                                controller.searchC.value = e.label;
+
+                                                                Future.delayed(Duration(milliseconds: 100), () {
+                                                                  controller.controllersAddress['city']!.clear();
+                                                                  controller.controllersAddress['city']!.text = e.label;
+                                                                });
+
+                                                                FocusScope.of(context).unfocus();
+                                                                controller.suggestionSelected.value = true;
+                                                              }),
+                                                              onSelected: (e) {
+                                                                controller.controllersAddress['city']!.text = e.label;
+                                                                controller.searchC.value = e.label;
+
+                                                                Future.delayed(Duration(milliseconds: 100), () {
+                                                                  controller.controllersAddress['city']!.clear();
+                                                                  controller.controllersAddress['city']!.text = e.label;
+                                                                });
+
+                                                                FocusScope.of(Get.context!).unfocus();
+                                                                controller.suggestionSelected.value = true;
+                                                              },
+                                                              hideOnEmpty: true,
+                                                              hideOnSelect: true,
+                                                              hideOnUnfocus: true,
+                                                              hideOnError: true,
+                                                              builder: (context, textController, focusNode) {
+                                                                return TextFormField(
+                                                                    controller: textController,
+                                                                    focusNode: focusNode,
+                                                                    key: controller.errors['city'],
+                                                                    cursorHeight: 15,
+                                                                    validator: (value) => controller.validators['city']!(value),
+                                                                    decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                                    textInputAction: TextInputAction.next,
+                                                                    onChanged: (val) {
+                                                                      controller.suggestionSelected.value = false;
+                                                                      controller.saveField('city', val);
+                                                                    }
+                                                                );
+                                                              }
+                                                          ),
+                                                          if (controller.regions.isNotEmpty) h(16),
+                                                          if (controller.regions.isNotEmpty) TextFormField(
+                                                              key: controller.errors['postcode'],
+                                                              cursorHeight: 15,
+                                                              onChanged: (val) => controller.saveField('postcode', val),
+                                                              controller: controller.controllersAddress['postcode'],
+                                                              keyboardType: TextInputType.number,
+                                                              inputFormatters: [
+                                                                FilteringTextInputFormatter.digitsOnly,
+                                                                LengthLimitingTextInputFormatter(6)
+                                                              ],
+                                                              decoration: decorationInput(hint: 'Индекс ', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                                              autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                              textInputAction: TextInputAction.next
+                                                          ),
+                                                          if (controller.regions.isNotEmpty) h(16),
+                                                          if (controller.regions.isNotEmpty) TypeAheadField<String>(
+                                                              suggestionsCallback: controller.suggestionsCallback2,
+                                                              controller: controller.controllersAddress['address_1'],
+                                                              itemBuilder: (context, e) => ListTile(title: Text(e)),
+                                                              onSelected: (e) {
+                                                                if (!e.contains(', д ')) {
+                                                                  Helper.snackBar(error: true, text: 'Необходимо указать полный адрес');
+                                                                  return;
+                                                                }
+
+                                                                controller.controllersAddress['address_1']!.text = e;
+                                                              },
+                                                              builder: (context, textController, focusNode) {
+                                                                return TextFormField(
+                                                                    controller: textController,
+                                                                    focusNode: focusNode,
+                                                                    key: controller.errors['address_1'],
+                                                                    cursorHeight: 15,
+                                                                    onChanged: (val) => controller.saveField('address_1', val),
+                                                                    validator: (value) => controller.validators['address_1']!(value),
+                                                                    decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                                    textInputAction: TextInputAction.done
+                                                                );
+                                                              }
+                                                          ),
+                                                          h(20)
+                                                        ]
+                                                    ),
+                                                    controller.navController.user.value != null ? controller.addAddress.value ? Column(
+                                                        children: [
+                                                          PrimaryButton(
+                                                              text: 'Добавить адрес',
+                                                              height: 40,
+                                                              loader: true,
+                                                              onPressed: controller.newAddress
+                                                          ),
+                                                          PrimaryButton(
+                                                              text: 'Отмена',
+                                                              height: 40,
+                                                              background: Colors.grey,
+                                                              onPressed: () => controller.addAddress.value = false
                                                           )
-                                                      )
-                                                  ) : PrimaryButton(text: 'Применить', height: 40, loader: true, onPressed: () => controller.setShipping(address: true)),
-                                                  h(20)
-                                                ]
-                                            );
+                                                        ]
+                                                    ) : GestureDetector(
+                                                        onTap: controller.newAddress,
+                                                        child:  Container(
+                                                            height: 44,
+                                                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                                                            decoration: ShapeDecoration(
+                                                                color: Colors.white,
+                                                                image: DecorationImage(image: AssetImage('assets/image/border.png'), fit: BoxFit.fill),
+                                                                shape: RoundedRectangleBorder(
+                                                                    borderRadius: BorderRadius.circular(8)
+                                                                )
+                                                            ),
+                                                            child: Row(
+                                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                                children: [
+                                                                  Image.asset('assets/icon/plus.png'),
+                                                                  w(8),
+                                                                  Text(
+                                                                      'Добавить адрес',
+                                                                      style: TextStyle(
+                                                                          color: Color(0xFF8A95A8),
+                                                                          fontSize: 14,
+                                                                          fontWeight: FontWeight.w500
+                                                                      )
+                                                                  )
+                                                                ]
+                                                            )
+                                                        )
+                                                    ) : PrimaryButton(text: 'Применить', height: 40, loader: true, onPressed: () => controller.setShipping(address: true)),
+                                                    h(20)
+                                                  ]
+                                              );
+                                            });
                                           }
                                         ),
                                         h(20),
@@ -706,6 +769,82 @@ class CheckoutView extends StatelessWidget {
                                             textInputAction: TextInputAction.done
                                         ),
                                         h(20),
+                                        if (controller.usePrepayment.value) Column(
+                                          children: [
+                                            GestureDetector(
+                                                onTap: () => controller.setPrepayment(0),
+                                                child: Padding(
+                                                    padding: const EdgeInsets.only(bottom: 10),
+                                                    child: Row(
+                                                        children: [
+                                                          SizedBox(
+                                                              width: 20,
+                                                              height: 24,
+                                                              child: Radio(
+                                                                  value: 0,
+                                                                  groupValue: controller.prepayment.value,
+                                                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                                  activeColor: primaryColor,
+                                                                  onChanged: (value) {
+                                                                    controller.prepayment.value = value ?? 0;
+                                                                  }
+                                                              )
+                                                          ),
+                                                          w(8),
+                                                          Expanded(
+                                                              child: Text(
+                                                                  'Полная предоплата (без переплат)',
+                                                                  style: TextStyle(
+                                                                      color: Color(0xFF1E1E1E),
+                                                                      fontSize: 14,
+                                                                      height: 1.40,
+                                                                      letterSpacing: 0.14
+                                                                  )
+                                                              )
+                                                          )
+                                                        ]
+                                                    )
+                                                )
+                                            ),
+                                            GestureDetector(
+                                                onTap: () => controller.setPrepayment(1),
+                                                child: Padding(
+                                                    padding: const EdgeInsets.only(bottom: 10),
+                                                    child: Row(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          SizedBox(
+                                                              width: 20,
+                                                              height: 24,
+                                                              child: Radio(
+                                                                  value: 1,
+                                                                  groupValue: controller.prepayment.value,
+                                                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                                  activeColor: primaryColor,
+                                                                  onChanged: (value) {
+                                                                    controller.prepayment.value = value ?? 1;
+                                                                  }
+                                                              )
+                                                          ),
+                                                          w(8),
+                                                          Expanded(
+                                                              child: Text(
+                                                                  'Частичная предоплата:  1000 руб.\nОстаток суммы +3% (комиссия курьерской службы) оплачивается курьеру при получении.\nВнимание! Внесенная предоплата не может быть возвращена!',
+                                                                  style: TextStyle(
+                                                                      color: Color(0xFF1E1E1E),
+                                                                      fontSize: 14,
+                                                                      height: 1.40,
+                                                                      letterSpacing: 0.14
+                                                                  )
+                                                              )
+                                                          )
+                                                        ]
+                                                    )
+                                                )
+                                            ),
+                                            h(20)
+                                          ]
+                                        ),
                                         Column(
                                             children: controller.totals.map((total) => _buildRow(total.title, total.text, isTotal: total.code == 'total')).toList()
                                         ),
@@ -907,8 +1046,17 @@ class CheckoutView extends StatelessWidget {
   Widget _buildRadioTile({required ShippingModel item, required CheckoutController controller}) {
     final addresses = controller.navController.user.value?.address;
 
-    if ((addresses ?? []).where((e) => e.address.toLowerCase().contains(controller.navController.city.value.toLowerCase())).isEmpty) {
+    if ((addresses ?? []).where((e) => e.countryId == controller.navController.countryId.value).isEmpty) {
       controller.addressId.value = 0;
+    }
+
+    if (controller.addressId.value == 0) {
+      for (var i in (addresses ?? <AddressModel>[])) {
+        if (i.def) {
+          controller.addressId.value = i.id;
+          break;
+        }
+      }
     }
 
     return Column(
@@ -977,16 +1125,29 @@ class CheckoutView extends StatelessWidget {
                                             controller.selectedShipping.value = e.code;
 
                                             showModalBottomSheet(
-                                                context: Get.context!,
-                                                isScrollControlled: true,
-                                                useSafeArea: true,
-                                                useRootNavigator: true,
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.vertical(top: Radius.circular(20))
-                                                ),
-                                                builder: (context) {
-                                                  return e.code.contains('bb') ? _buildMapBB(controller) : _buildMap(controller);
-                                                }
+                                              context: Get.context!,
+                                              isScrollControlled: true,
+                                              useSafeArea: true,
+                                              useRootNavigator: true,
+                                              enableDrag: false,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                              ),
+                                              builder: (context) {
+                                                return Stack(
+                                                  children: [
+                                                    e.code.contains('bb') ? _buildMapBB(controller) : _buildMap(controller),
+                                                    Positioned(
+                                                      top: 0,
+                                                      right: 0,
+                                                      child: IconButton(
+                                                        icon: Icon(Icons.close),
+                                                        onPressed: Get.back
+                                                      )
+                                                    )
+                                                  ]
+                                                );
+                                              }
                                             );
                                           },
                                           child: Text(
@@ -1021,20 +1182,32 @@ class CheckoutView extends StatelessWidget {
                                     ]
                                 )
                             ),
-                            if (e.cost > 0) Text(
-                                Helper.formatPrice(e.cost.toDouble()),
-                                style: TextStyle(
-                                    color: Color(0xFF141414),
-                                    fontSize: 14,
-                                    height: 1.40,
-                                    letterSpacing: 0.14
-                                )
+                            if (e.cost > 0) Builder(
+                              builder: (c) {
+                                final regex = RegExp(r'[^\d\s]+');
+                                final match = regex.firstMatch(controller.totals.firstWhere((total) => total.code == 'total').text);
+                                var currencySymbol = '₽';
+
+                                if (match != null) {
+                                  currencySymbol = match.group(0) ?? '₽';
+                                }
+
+                                return Text(
+                                    Helper.formatPrice(e.cost.toDouble(), symbol: currencySymbol),
+                                    style: TextStyle(
+                                        color: Color(0xFF141414),
+                                        fontSize: 14,
+                                        height: 1.40,
+                                        letterSpacing: 0.14
+                                    )
+                                );
+                              },
                             )
                           ]
                       )
                   )
               ),
-              if (controller.selectedShipping.value == e.code && (e.title.contains('До дверей') || e.title.contains('урьерская доставка'))) Column(
+              if (controller.selectedShipping.value == e.code && (e.title.contains('о дверей') || e.title.contains('урьерская доставка') || e.title.contains('курьером'))) Column(
                 children: [
                   Padding(
                     padding: EdgeInsets.only(left: 32, top: 10),
@@ -1044,7 +1217,7 @@ class CheckoutView extends StatelessWidget {
                         Text((addresses ?? []).isNotEmpty ? 'Выберите адрес' : 'Добавление адреса'),
                         h(10),
                         ...(addresses ?? []).map((e) => GestureDetector(
-                            onTap: () => !e.address.toLowerCase().contains(controller.navController.city.value.toLowerCase()) ? null : controller.setAddress(e.id),
+                            onTap: () => e.countryId != controller.navController.countryId.value ? null : controller.setAddress(e.id),
                             child: Stack(
                               children: [
                                 Padding(
@@ -1056,13 +1229,13 @@ class CheckoutView extends StatelessWidget {
                                               width: 20,
                                               height: 24,
                                               child: Radio(
-                                                  value: (controller.addressId.value > 0 && e.def) || controller.addressId.value == e.id,
-                                                  groupValue: true,
+                                                  value: e.id,
+                                                  groupValue: (controller.addressId.value == 0 && e.def) ? e.id : controller.addressId.value,
                                                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                                   activeColor: primaryColor,
                                                   onChanged: (value) {
-                                                    if (e.address.toLowerCase().contains(controller.navController.city.value.toLowerCase())) {
-                                                      controller.setAddress(e.id);
+                                                    if (e.countryId != controller.navController.countryId.value) {
+                                                      controller.setAddress(int.tryParse('$value') ?? 0);
                                                     }
                                                   }
                                               )
@@ -1089,7 +1262,7 @@ class CheckoutView extends StatelessWidget {
                                         ]
                                     )
                                 ),
-                                if (!e.address.toLowerCase().contains(controller.navController.city.value.toLowerCase())) Positioned(
+                                if (e.countryId != controller.navController.countryId.value) Positioned(
                                   left: 0,
                                   right: 0,
                                   top: 0,
@@ -1100,106 +1273,154 @@ class CheckoutView extends StatelessWidget {
                             )
                         )),
                         if (controller.addAddress.value || (addresses ?? []).isNotEmpty) h(20),
-                        if (controller.addAddress.value || (addresses ?? []).isEmpty) Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              DropdownButtonFormField<String>(
-                                  value: controller.country.value,
-                                  isExpanded: true,
-                                  decoration: decorationInput(hint: 'Страна', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
-                                  items: controller.countries.map((item) {
-                                    return DropdownMenuItem<String>(
-                                        value: item.countryId!,
-                                        child: Text(item.name!, style: TextStyle(fontSize: 14))
-                                    );
-                                  }).toList(),
-                                  onChanged: (val) => controller.setCountry(val),
-                                  validator: (value) => value == null ? 'Выберите страну' : null
-                              ),
-                              if (controller.regions.isNotEmpty) h(16),
-                              if (controller.regions.isNotEmpty) DropdownButtonFormField<String?>(
-                                  value: controller.region.value,
-                                  isExpanded: true,
-                                  decoration: decorationInput(hint: 'Регион', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
-                                  items: controller.regions.map((item) {
-                                    return DropdownMenuItem<String?>(
-                                        value: item.zoneId,
-                                        child: Text(item.name!, style: TextStyle(fontSize: 14))
-                                    );
-                                  }).toList(),
-                                  onChanged: (newValue) {
-                                    controller.region.value = newValue ?? '';
-                                    controller.saveField('zone_id', newValue ?? '');
-                                  },
-                                  validator: (value) => value == null ? 'Выберите регион' : null
-                              ),
-                              if (controller.regions.isNotEmpty) h(16),
-                              if (controller.regions.isNotEmpty) TypeAheadField<Location>(
-                                  suggestionsCallback: controller.suggestionsCallback,
-                                  controller: controller.controllersAddress['city'],
-                                  itemBuilder: (context, e) => ListTile(title: Text(e.label)),
-                                  onSelected: (e) {
-                                    controller.controllersAddress['city']!.text = e.label;
-                                  },
-                                  builder: (context, textController, focusNode) {
-                                    return TextFormField(
-                                        controller: textController,
-                                        focusNode: focusNode,
-                                        key: controller.errors['city'],
-                                        cursorHeight: 15,
-                                        validator: (value) => controller.validators['city']!(value),
-                                        decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                                        textInputAction: TextInputAction.next,
-                                        onChanged: (val) => controller.saveField('city', val)
-                                    );
-                                  }
-                              ),
-                              if (controller.regions.isNotEmpty) h(16),
-                              if (controller.regions.isNotEmpty) TextFormField(
-                                  key: controller.errors['postcode'],
-                                  cursorHeight: 15,
-                                  onChanged: (val) => controller.saveField('postcode', val),
-                                  controller: controller.controllersAddress['postcode'],
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                    LengthLimitingTextInputFormatter(6)
-                                  ],
-                                  decoration: decorationInput(hint: 'Индекс ', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                                  textInputAction: TextInputAction.next
-                              ),
-                              if (controller.regions.isNotEmpty) h(16),
-                              if (controller.regions.isNotEmpty) TypeAheadField<String>(
-                                  suggestionsCallback: controller.suggestionsCallback2,
-                                  controller: controller.controllersAddress['address_1'],
-                                  itemBuilder: (context, e) => ListTile(title: Text(e)),
-                                  onSelected: (e) {
-                                    controller.controllersAddress['address_1']!.text = e;
-                                  },
-                                  builder: (context, textController, focusNode) {
-                                    return TextFormField(
-                                        controller: textController,
-                                        focusNode: focusNode,
-                                        key: controller.errors['address_1'],
-                                        cursorHeight: 15,
-                                        onChanged: (val) => controller.saveField('address_1', val),
-                                        validator: (value) => controller.validators['address_1']!(value),
-                                        decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                                        textInputAction: TextInputAction.done
-                                    );
-                                  }
-                              ),
-                              h(20)
-                            ]
+                        if (controller.addAddress.value || (addresses ?? []).isEmpty) Form(
+                          key: controller.formKeyAddress,
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                DropdownButtonFormField<String?>(
+                                    value: controller.country.value,
+                                    isExpanded: true,
+                                    decoration: decorationInput(hint: 'Страна', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
+                                    items: controller.countries.map((item) {
+                                      return DropdownMenuItem<String?>(
+                                          value: item.countryId,
+                                          child: Text(item.name ?? '', style: TextStyle(fontSize: 14))
+                                      );
+                                    }).toList(),
+                                    onChanged: (val) => controller.setCountry(val),
+                                    validator: (value) => value == null ? 'Выберите страну' : null
+                                ),
+                                if (controller.regions.isNotEmpty) h(16),
+                                if (controller.regions.isNotEmpty) DropdownButtonFormField<String?>(
+                                    value: controller.region.value,
+                                    isExpanded: true,
+                                    decoration: decorationInput(hint: 'Регион', contentPadding: EdgeInsets.symmetric(horizontal: 16)),
+                                    items: controller.regions.map((item) {
+                                      return DropdownMenuItem<String?>(
+                                          value: item.zoneId,
+                                          child: Text(item.name ?? '', style: TextStyle(fontSize: 14))
+                                      );
+                                    }).toList(),
+                                    onChanged: (newValue) {
+                                      controller.region.value = newValue ?? '';
+                                      controller.controllersAddress['city']!.clear();
+                                      controller.controllersAddress['postcode']!.clear();
+                                      controller.controllersAddress['address_1']!.clear();
+                                      controller.saveField('zone_id', newValue ?? '');
+                                    },
+                                    validator: (value) => value == null ? 'Выберите регион' : null
+                                ),
+                                if (controller.regions.isNotEmpty) h(16),
+                                if (controller.regions.isNotEmpty) TypeAheadField<Location>(
+                                    suggestionsCallback: controller.suggestionsCallback,
+                                    controller: controller.controllersAddress['city'],
+                                    itemBuilder: (context, e) => ListTile(title: Text(e.label), onTap: () {
+                                      controller.controllersAddress['city']!.text = e.label;
+                                      controller.searchC.value = e.label;
+
+                                      Future.delayed(Duration(milliseconds: 100), () {
+                                        controller.controllersAddress['city']!.clear();
+                                        controller.controllersAddress['city']!.text = e.label;
+                                      });
+
+                                      FocusScope.of(context).unfocus();
+                                      controller.suggestionSelected.value = true;
+                                    }),
+                                    onSelected: (e) {
+                                      controller.controllersAddress['city']!.text = e.label;
+                                      controller.searchC.value = e.label;
+
+                                      Future.delayed(Duration(milliseconds: 100), () {
+                                        controller.controllersAddress['city']!.clear();
+                                        controller.controllersAddress['city']!.text = e.label;
+                                      });
+
+                                      FocusScope.of(Get.context!).unfocus();
+                                      controller.suggestionSelected.value = true;
+                                    },
+                                    hideOnEmpty: true,
+                                    hideOnSelect: true,
+                                    hideOnUnfocus: true,
+                                    hideOnError: true,
+                                    builder: (context, textController, focusNode) {
+                                      return TextFormField(
+                                          controller: textController,
+                                          focusNode: focusNode,
+                                          key: controller.errors['city'],
+                                          cursorHeight: 15,
+                                          validator: (value) => controller.validators['city']!(value),
+                                          decoration: decorationInput(hint: 'Город *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          textInputAction: TextInputAction.next,
+                                          onChanged: (val) {
+                                            controller.suggestionSelected.value = false;
+                                            controller.saveField('city', val);
+                                          }
+                                      );
+                                    }
+                                ),
+                                if (controller.regions.isNotEmpty) h(16),
+                                if (controller.regions.isNotEmpty) TextFormField(
+                                    key: controller.errors['postcode'],
+                                    cursorHeight: 15,
+                                    onChanged: (val) => controller.saveField('postcode', val),
+                                    controller: controller.controllersAddress['postcode'],
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(6)
+                                    ],
+                                    decoration: decorationInput(hint: 'Индекс ', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                    textInputAction: TextInputAction.next
+                                ),
+                                if (controller.regions.isNotEmpty) h(16),
+                                if (controller.regions.isNotEmpty) TypeAheadField<String>(
+                                    suggestionsCallback: controller.suggestionsCallback2,
+                                    controller: controller.controllersAddress['address_1'],
+                                    itemBuilder: (context, e) => ListTile(title: Text(e)),
+                                    onSelected: (e) {
+                                      if (!e.contains(', д ')) {
+                                        Helper.snackBar(error: true, text: 'Необходимо указать полный адрес');
+                                        return;
+                                      }
+
+                                      controller.controllersAddress['address_1']!.text = e;
+                                    },
+                                    builder: (context, textController, focusNode) {
+                                      return TextFormField(
+                                          controller: textController,
+                                          focusNode: focusNode,
+                                          key: controller.errors['address_1'],
+                                          cursorHeight: 15,
+                                          onChanged: (val) => controller.saveField('address_1', val),
+                                          validator: (value) => controller.validators['address_1']!(value),
+                                          decoration: decorationInput(hint: 'Адрес *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          textInputAction: TextInputAction.done
+                                      );
+                                    }
+                                ),
+                                h(20)
+                              ]
+                          )
                         ),
-                        if (controller.navController.user.value != null) controller.addAddress.value ? PrimaryButton(
-                            text: 'Добавить адрес',
-                            height: 40,
-                            loader: true,
-                            onPressed: controller.newAddress
+                        if (controller.navController.user.value != null) controller.addAddress.value ? Column(
+                          children: [
+                            PrimaryButton(
+                                text: 'Добавить адрес',
+                                height: 40,
+                                loader: true,
+                                onPressed: controller.newAddress
+                            ),
+                            PrimaryButton(
+                                text: 'Отмена',
+                                height: 40,
+                                background: Colors.grey,
+                                onPressed: () => controller.addAddress.value = false
+                            )
+                          ]
                         ) : GestureDetector(
                             onTap: controller.newAddress,
                             child: Container(
@@ -1247,218 +1468,150 @@ class CheckoutView extends StatelessWidget {
     return Obx(() => Container(
         height: Get.height * 0.8,
         padding: EdgeInsets.only(top: 20),
-        child: FlutterMap(
-            options: MapOptions(
-                initialCenter: LatLng(55.853593, 37.501265),
-                initialZoom: 6.0
-            ),
-            children: [
-              TileLayer(
-                  urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  subdomains: ['a', 'b', 'c']
-              ),
-              MarkerLayer(
-                  markers: controller.pvz.map((pvz) {
-                    return Marker(
-                        point: LatLng(pvz.coordY, pvz.coordX),
-                        width: 40,
-                        height: 40,
-                        child: GestureDetector(
-                            onTap: () {
-                              showAdaptiveDialog(
-                                  context: Get.context!,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                        title: Text(pvz.name, textAlign: TextAlign.center),
-                                        content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                                  child: Row(
-                                                      children: [
-                                                        Icon(Icons.location_on, color: Colors.blue, size: 20),
-                                                        w(8),
-                                                        Expanded(
-                                                            child: Text(
-                                                                'Адрес: ${pvz.address}',
-                                                                style: TextStyle(fontSize: 14)
-                                                            )
-                                                        )
-                                                      ]
-                                                  )
-                                              ),
-                                              Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                                  child: Row(
-                                                      children: [
-                                                        Icon(Icons.location_on, color: Colors.blue, size: 20),
-                                                        w(8),
-                                                        Expanded(
-                                                            child: Text(
-                                                                'Часы работы: ${pvz.workTime}',
-                                                                style: TextStyle(fontSize: 14)
-                                                            )
-                                                        )
-                                                      ]
-                                                  )
-                                              ),
-                                              Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                                  child: Row(
-                                                      children: [
-                                                        Icon(Icons.location_on, color: Colors.blue, size: 20),
-                                                        w(8),
-                                                        Expanded(
-                                                            child: Text(
-                                                                'Телефон: ${pvz.phone}',
-                                                                style: TextStyle(fontSize: 14)
-                                                            )
-                                                        )
-                                                      ]
-                                                  )
-                                              ),
-                                              if (pvz.note.isNotEmpty)
-                                                Padding(
-                                                    padding: const EdgeInsets.only(top: 10),
-                                                    child: Text(
-                                                        "📌 ${pvz.note}",
-                                                        style: TextStyle(fontSize: 14, color: Colors.grey[700])
-                                                    )
-                                                )
-                                            ]
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                              onPressed: Get.back,
-                                              child: Text('Закрыть')
-                                          ),
-                                          TextButton(
-                                              onPressed: () => controller.setPvz(pvz),
-                                              child: Text('Выбрать')
-                                          )
-                                        ]
-                                    );
-                                  }
-                              );
-                            },
-                            child: Icon(
-                                Icons.location_on,
-                                color: controller.selectedPvz.value == pvz ? Colors.red : Colors.blue,
-                                size: 30
-                            )
-                        )
+        child: YandexMap(
+            onMapCreated: (c) {
+              if (controller.pvz.isNotEmpty) {
+                controller.userLocation.value = Point(latitude: controller.pvz.first.coordY, longitude: controller.pvz.first.coordX);
+              }
+
+              c.moveCamera(
+                  CameraUpdate.newCameraPosition(
+                      CameraPosition(
+                          target: controller.userLocation.value ?? const Point(latitude: 55.853593, longitude: 37.501265),
+                          zoom: 12
+                      )
+                  )
+              );
+            },
+            mapObjects: controller.pvz.map((pvz) {
+              return PlacemarkMapObject(
+                  mapId: MapObjectId('pvz_${pvz.phone.replaceAll(RegExp(r'[^0-9]'), '')}'),
+                  point: Point(latitude: pvz.coordY, longitude: pvz.coordX),
+                  icon: PlacemarkIcon.single(
+                      PlacemarkIconStyle(
+                          image: BitmapDescriptor.fromAssetImage('assets/icon/map.png')
+                      )
+                  ),
+                  onTap: (_, __) {
+                    showAdaptiveDialog(
+                        context: Get.context!,
+                        builder: (context) {
+                          return AlertDialog(
+                              title: Text(pvz.name, textAlign: TextAlign.center),
+                              content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _infoRow(Icons.location_on, 'Адрес: ${pvz.address}'),
+                                    _infoRow(Icons.access_time, 'Часы работы: ${pvz.workTime}'),
+                                    _infoRow(Icons.phone, 'Телефон: ${pvz.phone}'),
+                                    if (pvz.note.isNotEmpty) Padding(
+                                        padding: const EdgeInsets.only(top: 10),
+                                        child: Text(
+                                            "📌 ${pvz.note}",
+                                            style: TextStyle(
+                                                fontSize: 14, color: Colors.grey[700])
+                                        )
+                                    )
+                                  ]
+                              ),
+                              actions: [
+                                TextButton(
+                                    onPressed: Get.back,
+                                    child: Text('Закрыть')
+                                ),
+                                TextButton(
+                                    onPressed: () => controller.setPvz(pvz),
+                                    child: Text('Выбрать')
+                                )
+                              ]
+                          );
+                        }
                     );
-                  }).toList()
-              )
-            ]
+                  }
+              );
+            }).toList()
         )
     ));
+  }
+
+  Widget _infoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blue, size: 20),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildMapBB(CheckoutController controller) {
     return Obx(() => Container(
         height: Get.height * 0.8,
         padding: EdgeInsets.only(top: 20),
-        child: FlutterMap(
-            options: MapOptions(
-                initialCenter: LatLng(55.853593, 37.501265),
-                initialZoom: 6.0
-            ),
-            children: [
-              TileLayer(
-                  urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  subdomains: ['a', 'b', 'c']
-              ),
-              MarkerLayer(
-                  markers: controller.bbItems.map((pvz) {
-                    return Marker(
-                        point: LatLng(pvz.latitude, pvz.longitude),
-                        width: 40,
-                        height: 40,
-                        child: GestureDetector(
-                            onTap: () {
-                              showAdaptiveDialog(
-                                  context: Get.context!,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                        title: Text(pvz.pvzName, textAlign: TextAlign.center),
-                                        content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                                  child: Row(
-                                                      children: [
-                                                        Icon(Icons.location_on, color: Colors.blue, size: 20),
-                                                        w(8),
-                                                        Expanded(
-                                                            child: Text(
-                                                                'Адрес: ${pvz.pvzAddr}',
-                                                                style: TextStyle(fontSize: 14)
-                                                            )
-                                                        )
-                                                      ]
-                                                  )
-                                              ),
-                                              Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                                  child: Row(
-                                                      children: [
-                                                        Icon(Icons.location_on, color: Colors.blue, size: 20),
-                                                        w(8),
-                                                        Expanded(
-                                                            child: Text(
-                                                                'Часы работы: ${pvz.work}',
-                                                                style: TextStyle(fontSize: 14)
-                                                            )
-                                                        )
-                                                      ]
-                                                  )
-                                              ),
-                                              Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                                  child: Row(
-                                                      children: [
-                                                        Icon(Icons.location_on, color: Colors.blue, size: 20),
-                                                        w(8),
-                                                        Expanded(
-                                                            child: Text(
-                                                                'Телефон: ${pvz.phone}',
-                                                                style: TextStyle(fontSize: 14)
-                                                            )
-                                                        )
-                                                      ]
-                                                  )
-                                              )
-                                            ]
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                              onPressed: Get.back,
-                                              child: Text('Закрыть')
-                                          ),
-                                          TextButton(
-                                              onPressed: () => controller.bbCallback(pvz),
-                                              child: Text('Выбрать')
-                                          )
-                                        ]
-                                    );
-                                  }
-                              );
-                            },
-                            child: Icon(
-                                Icons.location_on,
-                                color: controller.selectedBBPvz.value == pvz ? Colors.red : Colors.blue,
-                                size: 30
-                            )
-                        )
+        child: YandexMap(
+            onMapCreated: (c) {
+              if (controller.pvz.isNotEmpty) {
+                controller.userLocation.value = Point(latitude: controller.pvz.first.coordY, longitude: controller.pvz.first.coordX);
+              }
+
+              c.moveCamera(
+                  CameraUpdate.newCameraPosition(
+                      CameraPosition(
+                          target: controller.userLocation.value ?? const Point(latitude: 55.853593, longitude: 37.501265),
+                          zoom: 12
+                      )
+                  )
+              );
+            },
+            mapObjects: controller.bbItems.map((pvz) {
+              return PlacemarkMapObject(
+                  mapId: MapObjectId('pvz_${pvz.id}'),
+                  point: Point(latitude: pvz.latitude, longitude: pvz.longitude),
+                  icon: PlacemarkIcon.single(
+                      PlacemarkIconStyle(
+                          image: BitmapDescriptor.fromAssetImage('assets/icon/map.png')
+                      )
+                  ),
+                  onTap: (_, __) {
+                    showAdaptiveDialog(
+                        context: Get.context!,
+                        builder: (context) {
+                          return AlertDialog(
+                              title: Text(pvz.pvzName, textAlign: TextAlign.center),
+                              content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _infoRow(Icons.location_on, 'Адрес: ${pvz.pvzAddr}'),
+                                    _infoRow(Icons.location_on, 'Часы работы: ${pvz.work}'),
+                                    _infoRow(Icons.location_on, 'Телефон: ${pvz.phone}'),
+                                  ]
+                              ),
+                              actions: [
+                                TextButton(
+                                    onPressed: Get.back,
+                                    child: Text('Закрыть')
+                                ),
+                                TextButton(
+                                    onPressed: () => controller.bbCallback(pvz),
+                                    child: Text('Выбрать')
+                                )
+                              ]
+                          );
+                        }
                     );
-                  }).toList()
-              )
-            ]
+                  }
+              );
+            }).toList()
         )
     ));
   }

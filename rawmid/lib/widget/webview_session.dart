@@ -38,6 +38,17 @@ class WebViewWithSessionState extends State<WebViewWithSession> {
   void _loadWebPage() async {
     final link = Uri.parse(widget.link);
 
+    final cookieManager = WebViewCookieManager();
+
+    await cookieManager.setCookie(
+        WebViewCookie(
+            name: 'PHPSESSID',
+            value: Helper.prefs.getString('PHPSESSID') ?? '',
+            domain: link.host,
+            path: '/'
+        )
+    );
+
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
@@ -45,17 +56,6 @@ class WebViewWithSessionState extends State<WebViewWithSession> {
             _injectCookies();
           }
       ));
-
-    final cookieManager = WebViewCookieManager();
-
-    await cookieManager.setCookie(
-      WebViewCookie(
-        name: 'PHPSESSID',
-        value: Helper.prefs.getString('PHPSESSID') ?? '',
-        domain: link.host,
-        path: '/'
-      )
-    );
 
     await _controller.loadRequest(Uri.parse(widget.link), headers: {'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'});
   }

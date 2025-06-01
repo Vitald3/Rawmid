@@ -190,6 +190,8 @@ class MyReviewsView extends StatelessWidget {
                                                                                       } else {
                                                                                         controller.isChecked.value = -1;
                                                                                       }
+
+                                                                                      controller.products.refresh();
                                                                                     },
                                                                                     child: Container(
                                                                                         padding: const EdgeInsets.only(left: 3),

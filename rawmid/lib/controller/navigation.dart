@@ -30,7 +30,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'catalog.dart';
 
 class NavigationController extends GetxController {
-  late TabController tabController;
+  TabController? tabController;
   RxInt activeTab = 0.obs;
   final List<Widget> widgetOptions = <Widget>[
     const HomeView(),
@@ -51,6 +51,8 @@ class NavigationController extends GetxController {
   RxInt fId = (Helper.prefs.getInt('fias_id') ?? 0).obs;
   RxString city = (Helper.prefs.getString('city') ?? '').obs;
   RxString countryCode = (Helper.prefs.getString('countryCode') ?? '').obs;
+  RxString countryId = (Helper.prefs.getString('countryId') ?? '').obs;
+  RxString zoneId = (Helper.prefs.getString('zoneId') ?? '').obs;
   RxString searchCity = ''.obs;
   RxList<CityModel> filteredCities = <CityModel>[].obs;
   RxList<Location> filteredLocation = <Location>[].obs;
@@ -74,6 +76,12 @@ class NavigationController extends GetxController {
     searchNews.clear();
     searchCategories.clear();
     activeTab.value = index;
+
+    if (tabController != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        tabController?.animateTo(index);
+      });
+    }
   }
 
   void resetV() {
@@ -87,10 +95,24 @@ class NavigationController extends GetxController {
     }
 
     final code = await HomeApi.changeCity(val.id);
-    countryCode.value = code;
+
+    if (code['code'] != null) {
+      countryCode.value = code['code'];
+      Helper.prefs.setString('countryCode', code['code']);
+    }
+
+    if (code['zone_id'] != null) {
+      zoneId.value = code['zone_id'];
+      Helper.prefs.setString('zoneId', code['zone_id']);
+    }
+
+    if (code['country_id'] != null) {
+      countryId.value = code['country_id'];
+      Helper.prefs.setString('countryId', code['country_id']);
+    }
+
     Helper.prefs.setString('city', val.name);
     Helper.prefs.setInt('fias_id', val.id);
-    Helper.prefs.setString('countryCode', code);
     fId.value = val.id;
 
     if (Get.isRegistered<HomeController>()) {
@@ -121,7 +143,7 @@ class NavigationController extends GetxController {
 
     if (val.isNotEmpty) {
       final query = val.toLowerCase();
-      final api = await HomeApi.searchCity(query);
+      final api = await HomeApi.searchCity(query, countryId: countryId.value, level: 1);
       filteredLocation.value = api;
       filteredCities.value = [];
     } else {
@@ -137,6 +159,11 @@ class NavigationController extends GetxController {
   }
 
   Future initialize() async {
+    if (Get.parameters['tab'] != null) {
+      onItemTapped(int.tryParse('${Get.parameters['tab']}') ?? 0);
+      return;
+    }
+
     CartApi.getProducts().then((e) => cartProducts.value = e);
 
     if (city.isEmpty) {
@@ -151,8 +178,42 @@ class NavigationController extends GetxController {
           countryCode.value = api['countryCode'] ?? 'KZ';
         }
       }
+
+      if (countryId.isEmpty && city.isNotEmpty) {
+        final code = await HomeApi.changeCityByCity(city.value);
+
+        if (code['code'] != null) {
+          countryCode.value = code['code'];
+          Helper.prefs.setString('countryCode', code['code']);
+        }
+
+        if (code['zone_id'] != null) {
+          zoneId.value = code['zone_id'];
+          Helper.prefs.setString('zoneId', code['zone_id']);
+        }
+
+        if (code['country_id'] != null) {
+          countryId.value = code['country_id'];
+          Helper.prefs.setString('countryId', code['country_id']);
+        }
+      }
     } else if (fId.value > 0) {
-      await HomeApi.changeCity(fId.value);
+      final code = await HomeApi.changeCity(fId.value);
+
+      if (code['code'] != null) {
+        countryCode.value = code['code'];
+        Helper.prefs.setString('countryCode', code['code']);
+      }
+
+      if (code['zone_id'] != null) {
+        zoneId.value = code['zone_id'];
+        Helper.prefs.setString('zoneId', code['zone_id']);
+      }
+
+      if (code['country_id'] != null) {
+        countryId.value = code['country_id'];
+        Helper.prefs.setString('countryId', code['country_id']);
+      }
     }
 
     user.value = await ProfileApi.user();
@@ -186,7 +247,7 @@ class NavigationController extends GetxController {
     }
   }
 
-  Future addCart(String id) async {
+  Future addCart(String id, {bool k = false}) async {
     if (Get.currentRoute != '/ProductView') {
       final colors = await CartApi.getColors(id);
 
@@ -202,6 +263,12 @@ class NavigationController extends GetxController {
     });
     cartProducts.value = api;
 
+    if (k) {
+      final kre = Helper.prefs.getStringList('product_kre') ?? [];
+      kre.add(id);
+      Helper.prefs.setStringList('product_kre', kre);
+    }
+
     if (Get.isRegistered<CartController>()) {
       final cart = Get.find<CartController>();
       cart.cartProducts.value = api;
@@ -209,7 +276,17 @@ class NavigationController extends GetxController {
     }
   }
 
-  bool isCart(String id) {
+  bool isCart(String id, {bool? k}) {
+    if (k != null) {
+      final kre = Helper.prefs.getStringList('product_kre') ?? [];
+
+      if (k) {
+        return cartProducts.where((e) => e.id == id).isNotEmpty && kre.contains(id);
+      } else {
+        return cartProducts.where((e) => e.id == id).isNotEmpty && !kre.contains(id);
+      }
+    }
+    
     return cartProducts.where((e) => e.id == id).isNotEmpty;
   }
 
@@ -227,9 +304,6 @@ class NavigationController extends GetxController {
   Future<bool> addChainCart(Map<String, dynamic> body) async {
     final api = await ProductApi.addChainCart(body);
     cartProducts.value = api;
-    final cart = Get.find<CartController>();
-    cart.cartProducts.value = api;
-    cart.update();
     return api.isNotEmpty;
   }
 
@@ -266,7 +340,7 @@ class NavigationController extends GetxController {
     Helper.closeKeyboard();
   }
 
-  Future<void> startListening() async {
+  Future<void> startListening(TextEditingController c, FocusNode f, BuildContext context) async {
     searchText.value = '';
     isSearch.value = true;
 
@@ -282,6 +356,7 @@ class NavigationController extends GetxController {
                 searchCategories.clear();
                 searchProducts.clear();
                 searchNews.clear();
+                Helper.snackBar(error: true, text: 'Текст не распознан, попробуйте еще раз');
                 return;
               }
 
@@ -291,9 +366,16 @@ class NavigationController extends GetxController {
                   searchProducts.value = api.products;
                   searchNews.value = api.news;
 
+                  if (context.mounted) {
+                    FocusScope.of(context).requestFocus(f);
+                    isSearch.value = false;
+                    c.text = searchText.value;
+                  }
+
                   Future.delayed(Duration(seconds: 2), () {
                     if (searchCategories.isEmpty && searchProducts.isEmpty && searchNews.isEmpty) {
                       searchText.value = '';
+                      c.text = '';
                     }
                   });
                 }
@@ -304,7 +386,7 @@ class NavigationController extends GetxController {
     }
   }
 
-  void stopListening() {
+  Future stopListening() async {
     speech.stop();
     isListening.value = false;
     isSearch.value = false;
@@ -322,13 +404,16 @@ class NavigationController extends GetxController {
   Future logout() async {
     ProfileApi.logout();
     user.value = null;
+    cartProducts.clear();
+    if (Get.isRegistered<CartController>()) {
+      Get.find<CartController>().cartProducts.clear();
+    }
     await Helper.prefs.setString('PHPSESSID', '');
     if (Get.isRegistered<HomeController>()) {
       final home = Get.find<HomeController>();
       home.initialize();
     }
     onItemTapped(0);
-    Get.back();
   }
 
   Future pickImage(ImageSource source) async {

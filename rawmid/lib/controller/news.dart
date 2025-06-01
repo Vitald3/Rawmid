@@ -8,7 +8,8 @@ import '../utils/helper.dart';
 class NewsController extends GetxController {
   String id;
   bool recipe;
-  NewsController(this.id, this.recipe);
+  bool survey;
+  NewsController(this.id, this.recipe, this.survey);
   final main = Get.find<NavigationController>();
   RxList<String> wishlist = (Helper.prefs.getStringList('wishlist') ?? <String>[]).obs;
 
@@ -28,7 +29,7 @@ class NewsController extends GetxController {
       await HomeApi.changeCity(fId);
     }
 
-    news.value = await BlogApi.getNew(id, recipe);
+    news.value = await BlogApi.getNew(id, recipe, survey);
     isLoading.value = true;
   }
 

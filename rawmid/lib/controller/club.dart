@@ -61,7 +61,7 @@ class ClubController extends GetxController {
     user.value = await ProfileApi.user();
 
     if (user.value == null) {
-      Get.toNamed('/login');
+      Get.toNamed('/login', parameters: {'tab': '4'});
       return;
     }
 
@@ -103,16 +103,16 @@ class ClubController extends GetxController {
         'image': 'assets/image/vil.png',
         'index': 1,
         'link': '/blog',
-        'parameters': {'my_recipes': '1'}
+        'parameters': {'my_recipes': '1', 'my': '0'}
       },
       {
-        'title': 'Мои статьи',
+        'title': 'Мои обзоры',
         'count': news.length,
         'icon': 'assets/icon/stat.png',
         'image': 'assets/image/tet.png',
         'index': 2,
         'link': '/blog',
-        'parameters': {'my_survey': '1'}
+        'parameters': {'my_survey': '1', 'my': '1'}
       }
     ];
 

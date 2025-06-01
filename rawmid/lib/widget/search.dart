@@ -234,7 +234,7 @@ class SearchWidget extends GetView<NavigationController> {
                                               });
                                             } else {
                                               Get.delete<NewsController>();
-                                              Get.put(NewsController(suggestion.id, suggestion.recipe ?? false));
+                                              Get.put(NewsController(suggestion.id, suggestion.recipe ?? false, false));
                                               Get.to(() => NewsView());
                                             }
 

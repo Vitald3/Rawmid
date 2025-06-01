@@ -226,7 +226,7 @@ class AddProductView extends GetView<MyProductController> {
                                             },
                                             keyboardType: TextInputType.number,
                                             textInputAction: TextInputAction.next,
-                                            decoration: decorationInput(hint: 'Укажите дату', contentPadding: const EdgeInsets.symmetric(horizontal: 20), suffixIcon: InkWell(
+                                            decoration: decorationInput(hint: 'Укажите дату покупки', contentPadding: const EdgeInsets.symmetric(horizontal: 20), suffixIcon: InkWell(
                                                 onTap: () {
                                                   Helper.snackBar(title: '', text: 'Дата должна совпадать с датой указанной в чеке, при наступлении гарантийного случая потребуются оригиналы чеков!');
                                                 },

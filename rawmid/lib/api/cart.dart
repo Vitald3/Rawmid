@@ -14,6 +14,7 @@ class CartApi {
         'Content-Type': 'application/json',
         'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
       });
+
       final json = jsonDecode(response.body);
 
       if (json['products'] != null) {

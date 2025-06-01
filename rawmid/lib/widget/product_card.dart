@@ -1,9 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_inner_shadow/flutter_inner_shadow.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/controller/product.dart';
 import 'package:rawmid/screen/product/product.dart';
 import 'package:rawmid/utils/constant.dart';
+import 'package:rawmid/utils/extension.dart';
 import 'package:rawmid/widget/primary_button.dart';
 import '../../widget/h.dart';
 import '../model/home/product.dart';
@@ -100,6 +103,22 @@ class ProductCard extends GetView<NavigationController> {
                     overflow: TextOverflow.ellipsis
                 ),
                 h(4),
+                if ((product.hdd ?? '').isNotEmpty) Html(
+                    data: product.hdd!,
+                    style: {
+                      '*': Style(
+                          margin: Margins.all(0),
+                          fontSize: FontSize(11),
+                          padding: HtmlPaddings.zero
+                      )
+                    },
+                    onLinkTap: (val, map, element) {
+                      if ((val ?? '').isNotEmpty) {
+                        Helper.openLink(val!);
+                      }
+                    }
+                ),
+                if ((product.hdd ?? '').isNotEmpty) Spacer(),
                 if ((product.colors ?? []).isNotEmpty) Row(
                   spacing: 4,
                   children: [
@@ -132,14 +151,22 @@ class ProductCard extends GetView<NavigationController> {
                                         Get.to(() => ProductView(id: item.productId));
                                       }
                                     },
-                                    child: Container(
-                                        decoration: BoxDecoration(
-                                            color: Color(color),
-                                            border: Border.all(color: color == 4294967295 ? primaryColor : Colors.transparent),
-                                            borderRadius: BorderRadius.circular(20)
-                                        ),
-                                        width: 20,
-                                        height: 20
+                                    child: InnerShadow(
+                                        shadows: [
+                                          Shadow(
+                                              color: Colors.black.withOpacityX(0.2),
+                                              offset: Offset(0, 3.56),
+                                              blurRadius: 7.65
+                                          )
+                                        ],
+                                        child: Container(
+                                            decoration: BoxDecoration(
+                                                color: Color(color),
+                                                borderRadius: BorderRadius.circular(20)
+                                            ),
+                                            width: 20,
+                                            height: 20
+                                        )
                                     )
                                 );
                               })

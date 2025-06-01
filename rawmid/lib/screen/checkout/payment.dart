@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/controller/checkout.dart';
 import 'package:rawmid/utils/constant.dart';
+import 'package:rawmid/utils/helper.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../model/checkout/order.dart';
 import '../../widget/h.dart';
@@ -12,6 +14,8 @@ class PaymentView extends GetView<CheckoutController> {
   final OrderModel order;
 
   Future<void> _initializeWebView() async {
+    final url = '$paymentUrl&app_pay=1&order_id=${order.orderId}';
+
     controller.webController = WebViewController()
       ..addJavaScriptChannel(
           'ErrorChannel',
@@ -24,18 +28,39 @@ class PaymentView extends GetView<CheckoutController> {
               onPageFinished: (String url) {
                 _injectErrorCatcher();
               },
-              onNavigationRequest: (NavigationRequest request) {
+              onNavigationRequest: (NavigationRequest request) async {
                 if (request.url.contains('checkout/success')) {
                   controller.setSuccess();
                   return NavigationDecision.prevent;
                 }
 
-                return NavigationDecision.navigate;
+                if (request.url.contains('tinkof_url_app=')) {
+                  final uri = Uri.parse(request.url);
+                  controller.webController?.loadRequest(Uri.parse(uri.queryParameters['tinkof_url_app'] ?? ''));
+                  return NavigationDecision.prevent;
+                }
+
+                if (request.url.startsWith('http') || request.url.startsWith('https')) {
+                  controller.getPayStatus('${order.orderId}');
+                  return NavigationDecision.navigate;
+                } else {
+                  final uri = Uri.parse(request.url);
+
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri);
+                  } else {
+                    Helper.snackBar(error: true, text: 'Приложение выбранного банка не найдено на вашем устройстве', callback: () {
+                      Get.back();
+                    });
+                  }
+
+                  return NavigationDecision.prevent;
+                }
               }
           )
       )
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse('$paymentUrl&order_id=${order.orderId}'));
+      ..loadRequest(Uri.parse(url));
   }
 
   void _injectErrorCatcher() async {

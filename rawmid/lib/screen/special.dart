@@ -39,8 +39,11 @@ class SpecialView extends GetView<NavigationController> {
                           ),
                           if (controller.city.value.isNotEmpty) w(10),
                           if (controller.city.value.isNotEmpty) Expanded(
-                              child: InkWell(
+                              child: GestureDetector(
                                   onTap: () {
+                                    final nav = Get.find<NavigationController>();
+                                    final city = nav.city.value;
+
                                     showModalBottomSheet(
                                         context: Get.context!,
                                         isScrollControlled: true,
@@ -56,6 +59,7 @@ class SpecialView extends GetView<NavigationController> {
                                     ).then((_) {
                                       controller.filteredCities.value = controller.cities;
                                       controller.filteredLocation.clear();
+                                      if (city == nav.city.value) return;
                                       special.initialize();
                                       controller.initialize();
                                     });

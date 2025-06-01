@@ -80,7 +80,7 @@ class AddNewsView extends StatelessWidget {
                                             textInputAction: TextInputAction.next
                                         ),
                                         h(20),
-                                        Text('Обложка статьи:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                        Text('Обложка обзора:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                                         h(10),
                                         Stack(
                                             alignment: Alignment.center,
@@ -145,6 +145,7 @@ class AddNewsView extends StatelessWidget {
                                             borderRadius: BorderRadius.circular(8)
                                         ),
                                         padding: EdgeInsets.all(20),
+                                        margin: EdgeInsets.only(bottom: 20),
                                         child: Stack(
                                             children: [
                                               Row(
