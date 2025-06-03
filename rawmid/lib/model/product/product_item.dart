@@ -14,10 +14,14 @@ class ProductItemModel {
   late String text;
   late String color;
   late String special;
+  late String currency;
   late String price;
   late String schema;
+  late String text2;
   late String url;
   late String textKvcproPeriod;
+  late double price2;
+  late double special2;
   late double kvcproPrice;
   late double sbcreditPrice;
   late List<String> video;
@@ -48,10 +52,14 @@ class ProductItemModel {
     required this.text,
     required this.color,
     required this.special,
+    required this.currency,
     required this.price,
     required this.schema,
+    required this.text2,
     required this.url,
     required this.textKvcproPeriod,
+    required this.price2,
+    required this.special2,
     required this.kvcproPrice,
     required this.sbcreditPrice,
     required this.video,
@@ -83,10 +91,14 @@ class ProductItemModel {
     text = json['text'];
     color = json['color'];
     special = json['special'];
+    currency = json['currency'];
     price = json['price'];
     schema = json['schema'];
+    text2 = json['text2'];
     url = json['url'];
     textKvcproPeriod = json['text_kvcpro_period'];
+    price2 = double.tryParse('${json['price2']}') ?? 0;
+    special2 = double.tryParse('${json['special2']}') ?? 0;
     kvcproPrice = double.tryParse('${json['kvcpro_price']}') ?? 0;
     sbcreditPrice = double.tryParse('${json['sbcredit_price']}') ?? 0;
     video = json['video'] != null ? json['video'].cast<String>() : [];
@@ -178,10 +190,14 @@ class ProductItemModel {
     data['text'] = text;
     data['color'] = color;
     data['special'] = special;
+    data['currency'] = currency;
     data['price'] = price;
     data['schema'] = schema;
+    data['text2'] = text2;
     data['url'] = url;
     data['text_kvcpro_period'] = textKvcproPeriod;
+    data['price2'] = price2;
+    data['special2'] = special2;
     data['kvcpro_price'] = kvcproPrice;
     data['sbcredit_price'] = sbcreditPrice;
     data['video'] = video;

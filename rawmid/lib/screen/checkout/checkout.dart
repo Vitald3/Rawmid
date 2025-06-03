@@ -6,6 +6,7 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/controller/checkout.dart';
+import 'package:rawmid/model/city.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/utils/extension.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -65,12 +66,12 @@ class CheckoutView extends StatelessWidget {
                                           return CitySearch();
                                         }
                                     ).then((_) {
-                                      controller.controllersAddress['city']?.clear();
                                       controller.controllersAddress['postcode']?.clear();
                                       controller.controllersAddress['address_1']?.clear();
                                       controller.navController.filteredCities.value = controller.navController.cities;
                                       controller.navController.filteredLocation.clear();
                                       if (city == controller.navController.city.value) return;
+                                      controller.controllersAddress['city']!.text = controller.navController.city.value;
                                       controller.initialize(update: true);
                                       controller.country.value = controller.navController.countryId.value;
                                       controller.setCountry(controller.country.value).then((_) {
@@ -568,6 +569,14 @@ class CheckoutView extends StatelessWidget {
                                                                 controller.controllersAddress['city']!.text = e.label;
                                                                 controller.searchC.value = e.label;
 
+                                                                controller.navController.changeCity(CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', '')), not: false).then((e) {
+                                                                  controller.initialize(update: true);
+                                                                  controller.country.value = controller.navController.countryId.value;
+                                                                  controller.setCountry(controller.country.value).then((_) {
+                                                                    controller.region.value = controller.navController.zoneId.value;
+                                                                  });
+                                                                });
+
                                                                 Future.delayed(Duration(milliseconds: 100), () {
                                                                   controller.controllersAddress['city']!.clear();
                                                                   controller.controllersAddress['city']!.text = e.label;
@@ -579,6 +588,14 @@ class CheckoutView extends StatelessWidget {
                                                               onSelected: (e) {
                                                                 controller.controllersAddress['city']!.text = e.label;
                                                                 controller.searchC.value = e.label;
+
+                                                                controller.navController.changeCity(CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', '')), not: false).then((e) {
+                                                                  controller.initialize(update: true);
+                                                                  controller.country.value = controller.navController.countryId.value;
+                                                                  controller.setCountry(controller.country.value).then((_) {
+                                                                    controller.region.value = controller.navController.zoneId.value;
+                                                                  });
+                                                                });
 
                                                                 Future.delayed(Duration(milliseconds: 100), () {
                                                                   controller.controllersAddress['city']!.clear();
@@ -1319,6 +1336,14 @@ class CheckoutView extends StatelessWidget {
                                       controller.controllersAddress['city']!.text = e.label;
                                       controller.searchC.value = e.label;
 
+                                      controller.navController.changeCity(CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', '')), not: false).then((e) {
+                                        controller.initialize(update: true);
+                                        controller.country.value = controller.navController.countryId.value;
+                                        controller.setCountry(controller.country.value).then((_) {
+                                          controller.region.value = controller.navController.zoneId.value;
+                                        });
+                                      });
+
                                       Future.delayed(Duration(milliseconds: 100), () {
                                         controller.controllersAddress['city']!.clear();
                                         controller.controllersAddress['city']!.text = e.label;
@@ -1330,6 +1355,14 @@ class CheckoutView extends StatelessWidget {
                                     onSelected: (e) {
                                       controller.controllersAddress['city']!.text = e.label;
                                       controller.searchC.value = e.label;
+
+                                      controller.navController.changeCity(CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', '')), not: false).then((e) {
+                                        controller.initialize(update: true);
+                                        controller.country.value = controller.navController.countryId.value;
+                                        controller.setCountry(controller.country.value).then((_) {
+                                          controller.region.value = controller.navController.zoneId.value;
+                                        });
+                                      });
 
                                       Future.delayed(Duration(milliseconds: 100), () {
                                         controller.controllersAddress['city']!.clear();

@@ -366,6 +366,7 @@ class CheckoutController extends GetxController {
         selectedShipping.value = e.shippingMethod;
         selectedPayment.value = e.paymentMethod;
         usePrepayment.value = e.usePrepayment;
+        controllersAddress['city']?.text = navController.city.value;
 
         if (e.zoneId.isNotEmpty) {
           region.value = e.zoneId;
@@ -949,7 +950,7 @@ class CheckoutController extends GetxController {
 
   Future<List<Location>> suggestionsCallback(String pattern) async {
     if (pattern.isEmpty || suggestionSelected.value) return [];
-    return await HomeApi.searchCity(pattern, countryId: country.value ?? navController.countryId.value);
+    return await HomeApi.searchCity(pattern, countryId: country.value ?? navController.countryId.value, level: 1);
   }
 
   Future getPayStatus(String id) async {

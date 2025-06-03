@@ -102,6 +102,7 @@ const getCheckoutUrl = '$apiUrl/checkout';
 const getPayStatusUrl = '$apiUrl/getPayStatus';
 const setCheckoutUrl = '$apiUrl/setCheckout';
 const checkoutUrl = '$apiUrl/order';
+const checkout2Url = '$apiUrl/order2';
 const changeRegionUrl = '$apiUrl/changeRegion';
 const bbPvzUrl = '$siteUrl/index.php?route=checkout/bb/select_pvz';
 const getBbPvzUrl = '$siteUrl/index.php?route=checkout/bb/getPvzMapPoints';

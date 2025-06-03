@@ -158,6 +158,29 @@ class CheckoutApi {
     return null;
   }
 
+  static Future<OrderModel?> checkout2(Map<String, dynamic> body) async {
+    try {
+      final response = await http.post(Uri.parse(checkout2Url), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: jsonEncode(body));
+
+      final json = jsonDecode(response.body);
+
+      if (json['error'] != null) {
+        Helper.snackBar(error: true, text: json['error']);
+      }
+
+      if (json['order_id'] != null) {
+        return OrderModel.fromJson(json);
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return null;
+  }
+
   static Future<BbLocationModel?> setBbPvz(String pvzId) async {
     try {
       final response = await http.get(Uri.parse('$bbPvzUrl&pvz_id=$pvzId'), headers: {

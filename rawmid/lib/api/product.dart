@@ -110,6 +110,29 @@ class ProductApi {
     return items;
   }
 
+  static Future<String> yPay(Map<String, dynamic> body) async {
+    try {
+      final response = await http.post(Uri.parse('https://sandbox.pay.yandex.ru/api/merchant/v1/orders'), headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Api-Key 2c8f4476-a851-429e-89c6-f5ffef02a3f1'
+      }, body: jsonEncode(body));
+      final json = jsonDecode(response.body);
+
+      if (json['status'] == 'fail') {
+        Helper.snackBar(error: true, text: json['reason'] ?? json['reasonCode']);
+        return '';
+      }
+
+      if ((json['data']?['paymentUrl'] ?? '').isNotEmpty) {
+        return json['data']['paymentUrl'];
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return '';
+  }
+
   static Future<List<CartModel>> addChainCart(Map<String, dynamic> body) async {
     List<CartModel> items = [];
 

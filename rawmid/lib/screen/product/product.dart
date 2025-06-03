@@ -473,7 +473,7 @@ class ProductView extends StatelessWidget {
                                       child: Row(
                                           children: [
                                             Expanded(
-                                                child: PrimaryButton(text: controller.navController.isCart(controller.selectChild.isNotEmpty ? controller.selectChild.value : id, k: true) ? 'В корзине' : 'В рассрочку', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () async {
+                                                child: PrimaryButton(text: controller.navController.isCart(controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty ? controller.selectChild.value : id, k: true) ? 'В корзине' : 'В рассрочку', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () async {
                                                   String idNew = id;
 
                                                   if (controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) {
@@ -485,7 +485,7 @@ class ProductView extends StatelessWidget {
                                             ),
                                             w(10),
                                             Expanded(
-                                                child: PrimaryButton(text: controller.navController.isCart(controller.selectChild.isNotEmpty ? controller.selectChild.value : id, k: false) ? 'В корзине' : controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? 'Предзаказ' : 'Купить', height: 40, onPressed: () async {
+                                                child: PrimaryButton(text: controller.navController.isCart(controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty ? controller.selectChild.value : id, k: false) ? 'В корзине' : controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? 'Предзаказ' : 'Купить', height: 40, onPressed: () async {
                                                   String idNew = id;
 
                                                   if (controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) {
@@ -500,6 +500,16 @@ class ProductView extends StatelessWidget {
                                   )
                                 ]
                             ),
+                            h(6),
+                            PrimaryButton(text: 'ypay', height: 42, loader: true, onPressed: () async {
+                              String idNew = id;
+
+                              if (controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) {
+                                idNew = controller.selectChild.value;
+                              }
+
+                              await controller.yPay(idNew);
+                            }),
                             if ((controller.product.value?.allowCredit ?? false) || (controller.product.value?.allowCreditKz ?? false)) h(6),
                             if (controller.product.value?.allowCredit ?? false) Row(
                               children: [

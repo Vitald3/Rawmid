@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:rawmid/api/product.dart';
@@ -9,11 +10,15 @@ import 'package:rawmid/model/product/product_item.dart';
 import 'package:rawmid/model/product/question.dart';
 import 'package:rawmid/model/product/review.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:ypay/ypay.dart';
 import '../api/cart.dart';
+import '../api/checkout.dart';
 import '../api/login.dart';
+import '../model/cart.dart';
 import '../model/home/news.dart';
 import '../screen/product/zap.dart';
 import '../utils/helper.dart';
+import 'cart.dart';
 import 'navigation.dart';
 
 class ProductController extends GetxController {
@@ -88,6 +93,7 @@ class ProductController extends GetxController {
   WebViewController? webController;
   WebViewController? webPersonalController;
   var viewed = (Helper.prefs.getStringList('viewed') ?? <String>[]).obs;
+  final yPlugin = YPay.instance;
 
   @override
   void onInit() {
@@ -202,11 +208,11 @@ class ProductController extends GetxController {
               onNavigationRequest: (request) {
                 final url = request.url;
 
-                if (url.endsWith(".jpg") ||
-                    url.endsWith(".jpeg") ||
-                    url.endsWith(".png") ||
-                    url.endsWith(".webp") ||
-                    url.endsWith(".gif")) {
+                if (url.endsWith('.jpg') ||
+                    url.endsWith('.jpeg') ||
+                    url.endsWith('.png') ||
+                    url.endsWith('.webp') ||
+                    url.endsWith('.gif')) {
 
                   Navigator.push(
                       Get.context!,
@@ -236,6 +242,14 @@ class ProductController extends GetxController {
         });
       }
 
+      yPlugin.init(
+        configuration: const Configuration(
+          merchantId: '2c8f4476-a851-429e-89c6-f5ffef02a3f1',
+          merchantName: 'RAWMID',
+          merchantUrl: 'https://madeindream.com/'
+        )
+      );
+
       isLoading.value = true;
     } else {
       Helper.snackBar(error: true, text: 'Не удалось загрузить данные, попробуйте позже', callback2: Get.back);
@@ -252,7 +266,112 @@ class ProductController extends GetxController {
     String month = months[date.month - 1];
     int year = date.year;
 
-    return "$day $month $year";
+    return '$day $month $year';
+  }
+
+  Future yPay(String id) async {
+    List<CartModel> carts = navController.cartProducts;
+    await navController.clear();
+
+    final api = await CartApi.addCart({
+      'product_id': id
+    });
+
+    if (api.isEmpty) {
+      Helper.snackBar(error: true, text: 'Ошибка добавления товара в корзину');
+      return;
+    }
+
+    final bodyCheckout = <String, dynamic>{};
+    bodyCheckout.putIfAbsent('country_id', () => navController.countryId.value);
+    bodyCheckout.putIfAbsent('city', () => navController.city.value);
+
+    if (navController.user.value != null) {
+      final user = navController.user.value;
+
+      bodyCheckout.putIfAbsent('firstname', () => user!.firstname);
+      bodyCheckout.putIfAbsent('lastname', () => user!.lastname);
+      bodyCheckout.putIfAbsent('email', () => user!.email);
+      bodyCheckout.putIfAbsent('telephone', () => '+${navController.user.value!.phone.replaceAll(RegExp(r'[^0-9]'), '')}'.replaceAll('+8', ''));
+    }
+
+    final checkout = await CheckoutApi.checkout2(bodyCheckout);
+
+    if (checkout != null) {
+      final body = {
+        'availablePaymentMethods': [
+          'CARD', 'SPLIT'
+        ],
+        'cart': {
+          'items': [
+            {
+              'description': product.value!.text2,
+              'discountedUnitPrice': '${product.value!.special2}',
+              'productId': id,
+              'quantity': {
+                'count': '1'
+              },
+              'receipt': {
+                'tax': 1
+              },
+              'skuId': product.value!.sku,
+              'subtotal': '${product.value!.price2}',
+              'title': product.value!.name,
+              'total': '${product.value!.special2 > 0 ? product.value!.special2 : product.value!.price2}',
+              'unitPrice': '${product.value!.price2}'
+            }
+          ],
+          'total': {
+            'amount': '${product.value!.special2 > 0 ? product.value!.special2 : product.value!.price2}'
+          }
+        },
+        "redirectUrls": {
+          "onError": "https://yandex.madeindream.com/yandex-pay/prod/v1/webhook/index.php",
+          "onSuccess": "https://yandex.madeindream.com/yandex-pay/prod/v1/webhook/index.php"
+        },
+        'orderId': '${checkout.orderId}',
+        'currencyCode': product.value?.currency ?? 'RUB'
+      };
+
+      if (navController.user.value != null) {
+        body.putIfAbsent('billingPhone', () => '+${navController.user.value!.phone.replaceAll(RegExp(r'[^0-9]'), '')}'.replaceAll('+8', ''));
+      }
+
+      final api = await ProductApi.yPay(body);
+
+      if (api.isNotEmpty) {
+        yPlugin.startPayment(url: api);
+
+        yPlugin.paymentResultStream().listen((e) {
+          if (e == 'Finished with success') {
+            Helper.snackBar(text: 'Ваш заказ успешно оформлен');
+          } else if (e == 'Finished with cancelled event') {
+            Helper.snackBar(text: 'Ваш заказ отменен');
+          } else if (e == 'Finished with domain error') {
+            Helper.snackBar(text: 'Произошла ошибка оплаты');
+          } else {
+            Helper.snackBar(text: 'Произошла ошибка оплаты');
+          }
+
+          if (carts.isNotEmpty) {
+            CartApi.addCart({
+              'ids': carts.map((e) => e.id).join(','),
+              'qwe': carts.map((e) => e.quantity).join(','),
+            }).then((api) {
+              navController.cartProducts.value = api;
+
+              if (Get.isRegistered<CartController>()) {
+                final cart = Get.find<CartController>();
+                cart.cartProducts.value = api;
+                cart.update();
+              }
+            });
+
+            carts = <CartModel>[];
+          }
+        });
+      }
+    }
   }
 
   Future addWishlist(String id) async {

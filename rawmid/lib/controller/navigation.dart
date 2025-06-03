@@ -88,8 +88,8 @@ class NavigationController extends GetxController {
     reset.value = true;
   }
 
-  Future changeCity(CityModel val) async {
-    if (fId.value == val.id) {
+  Future changeCity(CityModel val, {bool not = true}) async {
+    if (fId.value == val.id && not) {
       Get.back();
       return;
     }
@@ -114,6 +114,7 @@ class NavigationController extends GetxController {
     Helper.prefs.setString('city', val.name);
     Helper.prefs.setInt('fias_id', val.id);
     fId.value = val.id;
+    city.value = val.name;
 
     if (Get.isRegistered<HomeController>()) {
       Get.find<HomeController>().initialize();
@@ -135,7 +136,9 @@ class NavigationController extends GetxController {
       Get.find<ClubController>().initialize();
     }
 
-    Get.back();
+    if (not) {
+      Get.back();
+    }
   }
 
   Future filterCities(String val) async {
@@ -256,7 +259,6 @@ class NavigationController extends GetxController {
         return;
       }
     }
-
 
     final api = await CartApi.addCart({
       'product_id': id
