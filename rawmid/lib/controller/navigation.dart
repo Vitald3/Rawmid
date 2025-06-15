@@ -146,7 +146,7 @@ class NavigationController extends GetxController {
 
     if (val.isNotEmpty) {
       final query = val.toLowerCase();
-      final api = await HomeApi.searchCity(query, countryId: countryId.value, level: 1);
+      final api = await HomeApi.searchCity(query, level: 1);
       filteredLocation.value = api;
       filteredCities.value = [];
     } else {
@@ -221,6 +221,15 @@ class NavigationController extends GetxController {
 
     user.value = await ProfileApi.user();
 
+    if (user.value != null) {
+      CartApi.getWishlist().then((e) {
+        if (e.isNotEmpty || wishlist.isEmpty) {
+          wishlist.value = e;
+          Helper.prefs.setStringList('wishlist', e);
+        }
+      });
+    }
+
     if (Get.isRegistered<HomeController>()) {
       final home = Get.find<HomeController>();
 
@@ -250,8 +259,8 @@ class NavigationController extends GetxController {
     }
   }
 
-  Future addCart(String id, {bool k = false}) async {
-    if (Get.currentRoute != '/ProductView') {
+  Future addCart(String id, {bool k = false, bool c = false}) async {
+    if (Get.currentRoute != '/ProductView' && !c) {
       final colors = await CartApi.getColors(id);
 
       if (colors) {
@@ -294,11 +303,11 @@ class NavigationController extends GetxController {
 
   Future clear() async {
     await CartApi.clear();
-    cartProducts.value = [];
+    cartProducts.clear();
 
     if (Get.isRegistered<CartController>()) {
       final cart = Get.find<CartController>();
-      cart.cartProducts.value = [];
+      cart.cartProducts.clear();
       cart.update();
     }
   }

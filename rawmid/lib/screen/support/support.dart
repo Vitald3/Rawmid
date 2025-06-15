@@ -416,6 +416,13 @@ class SupportView extends GetView<NavigationController> {
                                                                   cursorHeight: 15,
                                                                   readOnly: [0, 1, 6].contains(support.type.value),
                                                                   controller: support.subjectField,
+                                                                  validator: (value) {
+                                                                    String? item;
+
+                                                                    if (value == null || value.isEmpty) item = 'Введите тему';
+
+                                                                    return item;
+                                                                  },
                                                                   decoration: decorationInput(hint: 'Тема*', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
                                                                   autovalidateMode: AutovalidateMode.onUserInteraction,
                                                                   textInputAction: TextInputAction.next

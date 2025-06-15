@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:rawmid/api/blog.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/model/home/news.dart';
+import '../api/cart.dart';
 import '../api/home.dart';
 import '../utils/helper.dart';
 
@@ -54,5 +55,8 @@ class NewsController extends GetxController {
     Helper.wishlist.value = wishlist;
     Helper.trigger.value++;
     main.wishlist.value = wishlist;
+    if (main.user.value != null) {
+      CartApi.addWishlist(wishlist);
+    }
   }
 }

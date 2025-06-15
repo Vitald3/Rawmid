@@ -4,6 +4,7 @@ import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/model/home/news.dart';
 import 'package:rawmid/model/home/rank.dart';
 import 'package:rawmid/utils/helper.dart';
+import '../api/cart.dart';
 import '../api/club.dart';
 import '../model/club/achievement.dart';
 import '../model/home/achieviment.dart';
@@ -113,5 +114,8 @@ class HomeController extends GetxController {
     Helper.wishlist.value = wishlist;
     Helper.trigger.value++;
     navController.wishlist.value = wishlist;
+    if (navController.user.value != null) {
+      CartApi.addWishlist(wishlist);
+    }
   }
 }

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:email_validator/email_validator.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:phone_form_field/phone_form_field.dart';
@@ -9,15 +8,20 @@ import 'package:rawmid/model/home/product.dart';
 import 'package:rawmid/model/product/product_item.dart';
 import 'package:rawmid/model/product/question.dart';
 import 'package:rawmid/model/product/review.dart';
+import 'package:rawmid/utils/constant.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:ypay/ypay.dart';
 import '../api/cart.dart';
 import '../api/checkout.dart';
+import '../api/home.dart';
 import '../api/login.dart';
+import '../api/profile.dart';
 import '../model/cart.dart';
 import '../model/home/news.dart';
 import '../screen/product/zap.dart';
 import '../utils/helper.dart';
+import '../utils/notifications.dart';
+import '../widget/h.dart';
 import 'cart.dart';
 import 'navigation.dart';
 
@@ -30,6 +34,7 @@ class ProductController extends GetxController {
   RxBool emailValidate = false.obs;
   RxBool isAgree = true.obs;
   RxBool isPreAgree = true.obs;
+  RxBool isLoad = true.obs;
   RxString isComment = ''.obs;
   RxString isQuestionComment = ''.obs;
   RxInt isChecked = (-1).obs;
@@ -246,7 +251,8 @@ class ProductController extends GetxController {
         configuration: const Configuration(
           merchantId: '2c8f4476-a851-429e-89c6-f5ffef02a3f1',
           merchantName: 'RAWMID',
-          merchantUrl: 'https://madeindream.com/'
+          merchantUrl: 'https://madeindream.com/',
+          testMode: false
         )
       );
 
@@ -270,6 +276,121 @@ class ProductController extends GetxController {
   }
 
   Future yPay(String id) async {
+    if (navController.user.value == null) {
+      isLoad.value = false;
+
+      webController = WebViewController()
+        ..setNavigationDelegate(
+            NavigationDelegate(
+                onPageFinished: (val) {
+                  Future.delayed(Duration(seconds: 2), () {
+                    isLoad.value = true;
+                  });
+                },
+                onNavigationRequest: (NavigationRequest request) async {
+                  if (request.url.contains('redirect_yandex=')) {
+                    final uri = Uri.parse(request.url);
+                    final code = uri.queryParameters['redirect_yandex'];
+
+                    if (code != null) {
+                      await Helper.prefs.setString('PHPSESSID', code);
+
+                      ProfileApi.user().then((user) {
+                        if (user != null) {
+                          NotificationsService.getToken().then((token) {
+                            if (token.isNotEmpty) {
+                              HomeApi.saveToken(token);
+                            }
+                          });
+
+                          final wishlist = Helper.prefs.getStringList('wishlist') ?? [];
+
+                          if (wishlist.isNotEmpty) {
+                            CartApi.addWishlist(wishlist);
+                          }
+
+                          final carts = navController.cartProducts;
+                          List<CartModel> copy = List.from(carts);
+
+                          navController.clear().then((_) {
+                            if (copy.isNotEmpty) {
+                              for (var cart in copy) {
+                                navController.addCart(cart.id, c: true);
+                              }
+                            }
+                          });
+
+                          navController.user.value = user;
+                          update();
+                          Get.back();
+                          yPay(id);
+                        } else {
+                          Helper.snackBar(error: true, text: 'Пользователь не найден');
+                        }
+                      });
+                    }
+
+                    return NavigationDecision.prevent;
+                  }
+
+                  return NavigationDecision.navigate;
+                }
+            )
+        )
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..loadRequest(Uri.parse('https://oauth.yandex.ru/authorize?response_type=code&client_id=f9b68e69aabb4dcd90720917835dbd7c&redirect_uri=https://madeindream.com/index.php?route=api/app/yandex&lang=ru'));
+
+      showDialog(
+          context: Get.context!,
+          barrierDismissible: false,
+          builder: (context) => Dialog(
+              insetPadding: EdgeInsets.symmetric(horizontal: 20),
+              backgroundColor: Colors.white,
+              child: Container(
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12)
+                  ),
+                  height: Get.height * 0.8,
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                      'Яндекс ID',
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                                  ),
+                                  IconButton(
+                                      icon: const Icon(Icons.close),
+                                      onPressed: Get.back
+                                  )
+                                ]
+                            )
+                        ),
+                        const Divider(height: 1),
+                        h(16),
+                        if (webController != null) Expanded(
+                            child: Obx(() => !isLoad.value ? Center(child: CircularProgressIndicator(color: primaryColor)) : Container(
+                                color: Colors.transparent,
+                                child: WebViewWidget(
+                                    controller: webController!
+                                )
+                            ))
+                        )
+                      ]
+                  )
+              )
+          )
+      );
+
+      return;
+    }
+
     List<CartModel> carts = navController.cartProducts;
     await navController.clear();
 
@@ -292,7 +413,7 @@ class ProductController extends GetxController {
       bodyCheckout.putIfAbsent('firstname', () => user!.firstname);
       bodyCheckout.putIfAbsent('lastname', () => user!.lastname);
       bodyCheckout.putIfAbsent('email', () => user!.email);
-      bodyCheckout.putIfAbsent('telephone', () => '+${navController.user.value!.phone.replaceAll(RegExp(r'[^0-9]'), '')}'.replaceAll('+8', ''));
+      bodyCheckout.putIfAbsent('telephone', () => '+${navController.user.value!.phone.replaceAll(RegExp(r'[^0-9]'), '')}'.replaceAll('+8', '8'));
     }
 
     final checkout = await CheckoutApi.checkout2(bodyCheckout);
@@ -325,17 +446,17 @@ class ProductController extends GetxController {
             'amount': '${product.value!.special2 > 0 ? product.value!.special2 : product.value!.price2}'
           }
         },
-        "redirectUrls": {
-          "onError": "https://yandex.madeindream.com/yandex-pay/prod/v1/webhook/index.php",
-          "onSuccess": "https://yandex.madeindream.com/yandex-pay/prod/v1/webhook/index.php"
+        'redirectUrls': {
+          'onError': 'https://madeindream.com/index.php?route=api/app/yandex_callback',
+          'onSuccess': 'https://madeindream.com/index.php?route=api/app/yandex_callback',
+          'onAbort': 'https://madeindream.com/index.php?route=api/app/yandex_callback'
         },
+        'orderSource': 'APP',
+        'preferredPaymentMethod': 'FULLPAYMENT',
         'orderId': '${checkout.orderId}',
+        'billingPhone': '${checkout.phone}',
         'currencyCode': product.value?.currency ?? 'RUB'
       };
-
-      if (navController.user.value != null) {
-        body.putIfAbsent('billingPhone', () => '+${navController.user.value!.phone.replaceAll(RegExp(r'[^0-9]'), '')}'.replaceAll('+8', ''));
-      }
 
       final api = await ProductApi.yPay(body);
 
@@ -346,11 +467,11 @@ class ProductController extends GetxController {
           if (e == 'Finished with success') {
             Helper.snackBar(text: 'Ваш заказ успешно оформлен');
           } else if (e == 'Finished with cancelled event') {
-            Helper.snackBar(text: 'Ваш заказ отменен');
+            Helper.snackBar(error: true, text: 'Ваш заказ отменен');
           } else if (e == 'Finished with domain error') {
-            Helper.snackBar(text: 'Произошла ошибка оплаты');
+            Helper.snackBar(error: true, text: 'Произошла ошибка оплаты');
           } else {
-            Helper.snackBar(text: 'Произошла ошибка оплаты');
+            Helper.snackBar(error: true, text: 'Произошла ошибка оплаты');
           }
 
           if (carts.isNotEmpty) {
@@ -385,6 +506,9 @@ class ProductController extends GetxController {
     Helper.wishlist.value = wishlist;
     Helper.trigger.value++;
     navController.wishlist.value = wishlist;
+    if (navController.user.value != null) {
+      CartApi.addWishlist(wishlist);
+    }
   }
 
   Future addChainCart(String id) async {

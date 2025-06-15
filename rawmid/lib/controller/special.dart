@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/model/catalog/category.dart';
+import '../api/cart.dart';
 import '../api/catalog.dart';
 import '../api/home.dart';
 import '../model/home/banner.dart';
@@ -143,5 +144,8 @@ class SpecialController extends GetxController {
     Helper.wishlist.value = wishlist;
     Helper.trigger.value++;
     navController.wishlist.value = wishlist;
+    if (navController.user.value != null) {
+      CartApi.addWishlist(wishlist);
+    }
   }
 }

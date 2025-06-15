@@ -1,9 +1,11 @@
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/widget/primary_button.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../../controller/login.dart';
 import '../../utils/utils.dart';
 import '../../widget/h.dart';
@@ -161,6 +163,164 @@ class LoginView extends StatelessWidget {
                                           height: 40,
                                           borderRadius: 8,
                                           onPressed: controller.login
+                                      ),
+                                      h(12),
+                                      Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          spacing: 8,
+                                          children: [
+                                            Checkbox(
+                                                value: controller.agree.value,
+                                                onChanged: (value) {
+                                                  controller.agree.value = value!;
+                                                },
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                side: const BorderSide(color: Colors.lightBlue, width: 2),
+                                                activeColor: Colors.lightBlue,
+                                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                visualDensity: VisualDensity.compact
+                                            ),
+                                            Expanded(
+                                                child: Text.rich(
+                                                    TextSpan(
+                                                        children: [
+                                                          TextSpan(
+                                                              text: 'Я прочитал ',
+                                                              style: TextStyle(
+                                                                  color: const Color(0xFF8A95A8),
+                                                                  fontSize: 12,
+                                                                  fontWeight: FontWeight.w700
+                                                              )
+                                                          ),
+                                                          TextSpan(
+                                                              recognizer: TapGestureRecognizer()..onTap = () {
+                                                                showAdaptiveDialog(
+                                                                    context: Get.context!,
+                                                                    useRootNavigator: true,
+                                                                    useSafeArea: true,
+                                                                    builder: (c) {
+                                                                      controller.webPersonalController ??= WebViewController()
+                                                                        ..setJavaScriptMode(
+                                                                            JavaScriptMode.unrestricted)
+                                                                        ..loadRequest(Uri.parse('https://madeindream.com/informatsija/usloviya-rashirennoj-garantii.html?ajax=1'));
+
+                                                                      return Scaffold(
+                                                                          backgroundColor: Colors.black45,
+                                                                          body: Align(
+                                                                              alignment: Alignment.center,
+                                                                              child: Container(
+                                                                                  padding: EdgeInsets.all(20),
+                                                                                  height: Get.height * 0.7,
+                                                                                  child: Container(
+                                                                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                                      clipBehavior: Clip.antiAlias,
+                                                                                      child: Stack(
+                                                                                          children: [
+                                                                                            Padding(
+                                                                                                padding: EdgeInsets.all(20),
+                                                                                                child: Column(
+                                                                                                    children: [
+                                                                                                      Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                                    ]
+                                                                                                )
+                                                                                            ),
+                                                                                            Positioned(
+                                                                                                right: 0,
+                                                                                                top: 0,
+                                                                                                child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                                            )
+                                                                                          ]
+                                                                                      )
+                                                                                  )
+                                                                              )
+                                                                          )
+                                                                      );
+                                                                    }
+                                                                );
+                                                              },
+                                                              text: 'Условия предоставления расширенной гарантии',
+                                                              style: TextStyle(
+                                                                  color: const Color(0xFF14BFFF),
+                                                                  fontSize: 12,
+                                                                  fontWeight: FontWeight.w700
+                                                              )
+                                                          ),
+                                                          TextSpan(
+                                                              text: ' и ',
+                                                              style: TextStyle(
+                                                                  color: const Color(0xFF8A95A8),
+                                                                  fontSize: 12,
+                                                                  fontWeight: FontWeight.w700
+                                                              )
+                                                          ),
+                                                          TextSpan(
+                                                              recognizer: TapGestureRecognizer()..onTap = () {
+                                                                showAdaptiveDialog(
+                                                                    context: Get.context!,
+                                                                    useRootNavigator: true,
+                                                                    useSafeArea: true,
+                                                                    builder: (c) {
+                                                                      controller.webPersonalController ??= WebViewController()
+                                                                        ..setJavaScriptMode(
+                                                                            JavaScriptMode.unrestricted)
+                                                                        ..loadRequest(Uri.parse('https://madeindream.com/informatsija/politika-obrabotki.html?ajax=1'));
+
+                                                                      return Scaffold(
+                                                                          backgroundColor: Colors.black45,
+                                                                          body: Align(
+                                                                              alignment: Alignment.center,
+                                                                              child: Container(
+                                                                                  padding: EdgeInsets.all(20),
+                                                                                  height: Get.height * 0.7,
+                                                                                  child: Container(
+                                                                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                                      clipBehavior: Clip.antiAlias,
+                                                                                      child: Stack(
+                                                                                          children: [
+                                                                                            Padding(
+                                                                                                padding: EdgeInsets.all(20),
+                                                                                                child: Column(
+                                                                                                    children: [
+                                                                                                      Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                                    ]
+                                                                                                )
+                                                                                            ),
+                                                                                            Positioned(
+                                                                                                right: 0,
+                                                                                                top: 0,
+                                                                                                child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                                            )
+                                                                                          ]
+                                                                                      )
+                                                                                  )
+                                                                              )
+                                                                          )
+                                                                      );
+                                                                    }
+                                                                );
+                                                              },
+                                                              text: 'Политику обработки персональных даных',
+                                                              style: TextStyle(
+                                                                  color: const Color(0xFF14BFFF),
+                                                                  fontSize: 12,
+                                                                  fontWeight: FontWeight.w700
+                                                              )
+                                                          ),
+                                                          TextSpan(
+                                                              text: ' и согласен с условиями.',
+                                                              style: TextStyle(
+                                                                  color: const Color(0xFF8A95A8),
+                                                                  fontSize: 12,
+                                                                  fontWeight: FontWeight.w700
+                                                              )
+                                                          )
+                                                        ]
+                                                    )
+                                                )
+                                            )
+                                          ]
                                       ),
                                       h(24),
                                       Center(

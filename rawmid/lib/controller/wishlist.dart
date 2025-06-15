@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:rawmid/api/wishlist.dart';
 import 'package:rawmid/controller/navigation.dart';
+import '../api/cart.dart';
 import '../api/home.dart';
 import '../model/home/product.dart';
 import '../utils/helper.dart';
@@ -50,5 +51,6 @@ class WishlistController extends GetxController {
     Helper.wishlist.value = wishlist;
     products.removeWhere((e) => e.id == id);
     navController.wishlist.value = wishlist;
+    CartApi.addWishlist(wishlist);
   }
 }

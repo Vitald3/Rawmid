@@ -48,7 +48,7 @@ class CompareView extends StatelessWidget {
                               children: [
                                 h(16),
                                 ModuleTitle(title: 'Сравнение товаров', type: true),
-                                if (controller.search.isNotEmpty) Transform.translate(
+                                if (controller.search.length > 1) Transform.translate(
                                   offset: Offset(-10, 0),
                                   child: GestureDetector(
                                     onTap: controller.setCompares,
@@ -138,7 +138,15 @@ class CompareView extends StatelessWidget {
                                                                     }),
                                                                     PrimaryButton(text: 'Удалить', background: dangerColor, height: 40, onPressed: () {
                                                                       Helper.addCompare(controller.search[index3].id);
-                                                                      controller.search.removeAt(index3);
+
+                                                                      controller.filteredCompares.removeAt(index3);
+                                                                      controller.compares.removeAt(index3);
+
+                                                                      if (controller.isC.value) {
+                                                                        controller.search.value = controller.filteredCompares;
+                                                                      } else {
+                                                                        controller.search.value = controller.compares;
+                                                                      }
                                                                     })
                                                                   ]
                                                                 )

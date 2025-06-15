@@ -26,6 +26,7 @@ import 'package:rawmid/utils/constant.dart';
 import 'package:rawmid/utils/helper.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:rawmid/utils/notifications.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -96,21 +97,29 @@ class App extends StatelessWidget {
           final scaleHeight = availableHeight / mobileHeight;
           final scale = scaleWidth < scaleHeight ? scaleWidth : scaleHeight;
 
-          final isTablet = width >= 600;
-
-          if (!isTablet) {
-            return child!;
-          }
-
-          return Center(
-            child: Transform.scale(
-              scale: scale,
-              child: SizedBox(
-                width: mobileWidth,
-                height: mobileHeight,
-                child: child
+          final other = Center(
+              child: Transform.scale(
+                  scale: scale,
+                  child: SizedBox(
+                      width: mobileWidth,
+                      height: mobileHeight,
+                      child: child
+                  )
               )
-            )
+          );
+
+          return ResponsiveBuilder(
+              builder: (context, sizingInformation) {
+                if (sizingInformation.deviceScreenType == DeviceScreenType.desktop) {
+                  return other;
+                }
+
+                if (sizingInformation.deviceScreenType == DeviceScreenType.tablet) {
+                  return other;
+                }
+
+                return child!;
+              }
           );
         },
         theme: theme,

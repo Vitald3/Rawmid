@@ -44,6 +44,8 @@ dependencies:
   share_plus: ^11.0.0
   path_provider: ^2.1.5
   ypay: ^1.0.3
+  responsive_builder: ^0.7.1
+  app_links: ^6.4.0
 
 dev_dependencies:
   flutter_test:

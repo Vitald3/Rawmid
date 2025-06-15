@@ -8,13 +8,17 @@ import 'package:rawmid/controller/club.dart';
 import 'package:rawmid/controller/home.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/screen/main.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../../utils/helper.dart';
+import '../api/cart.dart';
 import '../api/login.dart';
+import '../model/cart.dart';
 import '../model/profile/profile.dart';
 import '../utils/notifications.dart';
 
 class LoginController extends GetxController {
   RxBool valid = false.obs;
+  RxBool agree = false.obs;
   RxBool isPasswordVisible = false.obs;
   final TextEditingController emailField = TextEditingController();
   final TextEditingController passwordField = TextEditingController();
@@ -23,6 +27,7 @@ class LoginController extends GetxController {
   RxString verificationCode = ''.obs;
   final navController = Get.find<NavigationController>();
   RxBool validateEmail = false.obs;
+  WebViewController? webPersonalController;
 
   @override
   void dispose() {
@@ -32,6 +37,11 @@ class LoginController extends GetxController {
   }
 
   Future login() async {
+    if (!agree.value) {
+      Helper.snackBar(error: true, text: 'Необходимо принять условия и политику обработки');
+      return;
+    }
+
     if (valid.value) {
       Helper.closeKeyboard();
 
@@ -47,15 +57,25 @@ class LoginController extends GetxController {
           HomeApi.saveToken(token);
         }
 
-        final carts = navController.cartProducts;
-        navController.cartProducts.clear();
+        final wishlist = Helper.prefs.getStringList('wishlist') ?? [];
 
-        for (var cart in carts) {
-          navController.addCart(cart.id);
+        if (wishlist.isNotEmpty) {
+          CartApi.addWishlist(wishlist);
+        }
+
+        final carts = navController.cartProducts;
+        List<CartModel> copy = List.from(carts);
+        await navController.clear();
+
+        if (copy.isNotEmpty) {
+          for (var cart in copy) {
+            navController.addCart(cart.id, c: true);
+          }
+
+          update();
         }
 
         navController.user.value = user;
-        update();
 
         final param = Get.parameters;
         if (Get.isRegistered<HomeController>()) {
@@ -93,6 +113,11 @@ class LoginController extends GetxController {
   }
 
   Future loginCode() async {
+    if (!agree.value) {
+      Helper.snackBar(error: true, text: 'Необходимо принять условия и политику обработки');
+      return;
+    }
+
     if (valid.value && verificationCode.isNotEmpty && verificationCode.value.length == 4) {
       Helper.closeKeyboard();
 

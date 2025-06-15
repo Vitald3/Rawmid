@@ -118,7 +118,7 @@ class RewardView extends StatelessWidget {
                                                                   ),
                                                                 ),
                                                                 if (!item.text.contains('достижени')) Text(
-                                                                    item.text,
+                                                                    item.text.replaceAll('№ заказа', 'Заказ'),
                                                                     style: TextStyle(
                                                                         color: Colors.black,
                                                                         fontSize: 20,

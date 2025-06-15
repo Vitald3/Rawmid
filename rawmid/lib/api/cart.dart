@@ -29,6 +29,40 @@ class CartApi {
     return items;
   }
 
+  static Future<List<String>> getWishlist() async {
+    List<String> items = [];
+
+    try {
+      final response = await http.get(Uri.parse(getWishlistStrUrl), headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      });
+
+      final json = jsonDecode(response.body);
+
+      if (json['wishlist'] != null) {
+        for (var i in json['wishlist']) {
+          items.add(i);
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return items;
+  }
+
+  static Future addWishlist(List<String> items) async {
+    try {
+      await http.post(Uri.parse(addWishlistUrl), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'PHPSESSID=${Helper.prefs.getString('PHPSESSID')}'
+      }, body: {'wishlist': items.join(',')});
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
   static Future<bool> getColors(String id) async {
     try {
       final response = await http.post(Uri.parse(checkColorsUrl), headers: {

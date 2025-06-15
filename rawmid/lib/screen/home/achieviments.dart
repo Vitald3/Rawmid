@@ -347,7 +347,7 @@ class AchievementsSection extends StatelessWidget {
           ),
           if (item.achievements.isNotEmpty) h(30),
           if (item.achievements.isNotEmpty) SizedBox(
-            height: 206,
+            height: 256,
             child: PageView.builder(
               controller: PageController(viewportFraction: 0.5, initialPage: rIndex),
               itemCount: item.achievements.length,
@@ -515,7 +515,7 @@ class AchievementsSection extends StatelessWidget {
         },
         child: Container(
             width: 206,
-            height: 250,
+            height: 256,
             margin: EdgeInsets.symmetric(horizontal: 6),
             decoration: BoxDecoration(
               color: colors[colorIndex % colors.length],
@@ -526,12 +526,11 @@ class AchievementsSection extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 children: [
                   Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
+                      top: 20,
+                      left: 20,
+                      right: 20,
                       child: CachedNetworkImage(
                           imageUrl: e.image,
-                          width: 206,
                           errorWidget: (c, e, i) {
                             return Image.asset('assets/image/no_image.png');
                           }

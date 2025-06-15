@@ -67,5 +67,8 @@ class CartController extends GetxController {
     Helper.wishlist.value = wishlist;
     Helper.trigger.value++;
     navController.wishlist.value = wishlist;
+    if (navController.user.value != null) {
+      CartApi.addWishlist(wishlist);
+    }
   }
 }

@@ -20,14 +20,30 @@ class OpenWebView extends StatefulWidget {
 class OpenWebViewState extends State<OpenWebView> {
   WebViewController? webController;
   bool isPayLoad = false;
+  bool initV = false;
+
+  @override
+  void initState() {
+    super.initState();
+    init();
+  }
+
+  Future init() async {
+    if (widget.url.contains('order_id')) {
+      final u = Uri.parse(widget.url);
+      await getPayStatus(u.queryParameters['order_id'] ?? '', fix: true);
+    }
+  }
 
   Future<void> _initializeWebView() async {
+    if (initV) return;
     var url = widget.url;
     var orderId = '';
 
     if (url.contains('order_id')) {
       final u = Uri.parse(url);
       orderId = u.queryParameters['order_id'] ?? '';
+      getPayStatus(orderId);
       url = '$paymentUrl&app_pay=1&order_id=$orderId';
     }
 
@@ -78,11 +94,21 @@ class OpenWebViewState extends State<OpenWebView> {
       ..loadRequest(Uri.parse(url));
   }
 
-  Future getPayStatus(String id) async {
+  Future getPayStatus(String id, {bool fix = false}) async {
+    if (fix) {
+      initV = true;
+    }
+
     final api = await CheckoutApi.getPayStatus(id);
 
     if (api) {
+      if (fix) {
+        Get.back();
+      }
+
       Helper.snackBar(text: 'Ваш заказ успешно оплачен');
+    } else if (fix) {
+      _initializeWebView();
     }
   }
 

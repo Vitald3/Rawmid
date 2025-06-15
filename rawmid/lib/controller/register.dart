@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../../utils/helper.dart';
 import '../api/home.dart';
 import '../api/login.dart';
@@ -11,6 +12,7 @@ import 'navigation.dart';
 class RegisterController extends GetxController {
   RxBool submit = false.obs;
   RxBool valid = false.obs;
+  RxBool agree = false.obs;
   RxBool isPasswordVisible = false.obs;
   RxBool isPasswordConfirmVisible = false.obs;
   final TextEditingController emailField = TextEditingController();
@@ -18,8 +20,14 @@ class RegisterController extends GetxController {
   final TextEditingController confirmField = TextEditingController();
   final navController = Get.find<NavigationController>();
   RxBool validateEmail = false.obs;
+  WebViewController? webPersonalController;
 
   Future register() async {
+    if (!agree.value) {
+      Helper.snackBar(error: true, text: 'Необходимо принять условия и политику обработки');
+      return;
+    }
+
     if (valid.value && !submit.value) {
       submit.value = true;
       Helper.closeKeyboard();

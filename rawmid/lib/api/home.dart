@@ -77,7 +77,7 @@ class HomeApi {
     return {};
   }
 
-  static Future<List<String>> searchAddress(String query) async {
+  static Future<List<String>> searchAddress(String query, String city, String country) async {
     List<String> items = [];
 
     try {
@@ -94,6 +94,9 @@ class HomeApi {
         body: jsonEncode({
           'query': query,
           'count': 5,
+          "locations": [
+            { "country": country, "city": city }
+          ],
           'restrict_value': false,
           'language': 'ru'
         })

@@ -5,6 +5,7 @@ import 'package:rawmid/model/catalog/category.dart';
 import 'package:rawmid/model/home/banner.dart';
 import 'package:rawmid/model/home/product.dart';
 import 'package:rawmid/utils/helper.dart';
+import '../api/cart.dart';
 import '../api/catalog.dart';
 import '../api/home.dart';
 
@@ -63,5 +64,8 @@ class CatalogController extends GetxController {
     Helper.trigger.value++;
     final navController = Get.find<NavigationController>();
     navController.wishlist.value = wishlist;
+    if (navController.user.value != null) {
+      CartApi.addWishlist(wishlist);
+    }
   }
 }

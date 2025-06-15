@@ -165,8 +165,8 @@ class AddProductView extends GetView<MyProductController> {
                                               }
                                             }
                                         ),
-                                        h(8),
-                                        if (controller.place.value == 'madeindream.com') DropdownButtonFormField<String?>(
+                                        if (!controller.noOrderId.value) h(8),
+                                        if (controller.place.value == 'madeindream.com' && !controller.noOrderId.value) DropdownButtonFormField<String?>(
                                             value: controller.orderId.value,
                                             isExpanded: true,
                                             validator: (val) {
@@ -485,7 +485,7 @@ class AddProductView extends GetView<MyProductController> {
                                                                 )
                                                             ),
                                                             TextSpan(
-                                                                text: ' \nи ',
+                                                                text: ' и ',
                                                                 style: TextStyle(
                                                                     color: const Color(0xFF8A95A8),
                                                                     fontSize: 12,
@@ -546,7 +546,7 @@ class AddProductView extends GetView<MyProductController> {
                                                                 )
                                                             ),
                                                             TextSpan(
-                                                                text: ' и согласен \nс условиями.',
+                                                                text: ' и согласен с условиями.',
                                                                 style: TextStyle(
                                                                     color: const Color(0xFF8A95A8),
                                                                     fontSize: 12,

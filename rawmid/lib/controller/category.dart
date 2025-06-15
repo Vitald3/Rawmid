@@ -8,6 +8,7 @@ import 'package:rawmid/model/catalog/attribute.dart';
 import 'package:rawmid/model/home/banner.dart';
 import 'package:rawmid/model/home/product.dart';
 import 'package:rawmid/utils/helper.dart';
+import '../api/cart.dart';
 import '../model/catalog/category.dart';
 import '../model/catalog/manufacturer.dart';
 
@@ -274,5 +275,9 @@ class CategoryController extends GetxController {
     Helper.wishlist.value = wishlist;
     Helper.trigger.value++;
     navController.wishlist.value = wishlist;
+
+    if (navController.user.value != null) {
+      CartApi.addWishlist(wishlist);
+    }
   }
 }

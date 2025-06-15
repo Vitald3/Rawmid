@@ -38,10 +38,11 @@ class CheckoutController extends GetxController {
   RxBool cDek = false.obs;
   RxString searchC = ''.obs;
   RxBool success = false.obs;
+  RxBool agree = false.obs;
   RxBool suggestionSelected = false.obs;
   RxBool isLoading2 = false.obs;
   RxBool courier = false.obs;
-  RxInt prepayment = 0.obs;
+  RxInt prepayment = (Helper.prefs.getInt('prepayment') ?? 0).obs;
   final GlobalKey<FormState> formKeyAddress = GlobalKey<FormState>();
   RxList<ProductModel> acc = <ProductModel>[].obs;
   RxList<ShippingModel> shipping = <ShippingModel>[].obs;
@@ -135,7 +136,7 @@ class CheckoutController extends GetxController {
   Future addCartAcc(String id, int index) async {
     if (accAdd[id] == null) {
       accAdd.putIfAbsent(id, () => index);
-      await navController.addCart(id);
+      await navController.addCart(id, c: true);
 
       if (navController.cartProducts.where((e) => e.id == id).isNotEmpty) {
         acc.removeWhere((e) => e.id == id);
@@ -273,8 +274,6 @@ class CheckoutController extends GetxController {
   saveField(String key, String val) {
     if (key == 'city') {
       searchC.value = val;
-    } else {
-      searchC.value = '';
     }
 
     final fields = Helper.prefs.getString('checkout_fields') ?? '';
@@ -296,6 +295,8 @@ class CheckoutController extends GetxController {
   }
 
   Future initialize({bool update = false}) async {
+    country.value = navController.countryId.value;
+
     if (update) {
       preload.value = true;
     }
@@ -504,6 +505,10 @@ class CheckoutController extends GetxController {
         acc.insert(accAdd[cart.id] ?? 0, ProductModel(id: cart.id, title: cart.name, image: cart.image, category: '', model: '', color: cart.color));
         accAdd.remove(cart.id);
       }
+
+      if (e.isEmpty) {
+        Get.back();
+      }
     });
   }
 
@@ -518,6 +523,9 @@ class CheckoutController extends GetxController {
     Helper.wishlist.value = wishlist;
     Helper.trigger.value++;
     navController.wishlist.value = wishlist;
+    if (navController.user.value != null) {
+      CartApi.addWishlist(wishlist);
+    }
   }
 
   setTab(int index) {
@@ -612,6 +620,7 @@ class CheckoutController extends GetxController {
 
     preload.value = true;
     prepayment.value = val;
+    Helper.prefs.setInt('prepayment', val);
 
     CheckoutApi.setCheckout({
       'payment_method': selectedPayment.value,
@@ -842,6 +851,11 @@ class CheckoutController extends GetxController {
   }
 
   Future checkout() async {
+    if (!agree.value) {
+      Helper.snackBar(error: true, text: 'Необходимо принять условия и политику обработки');
+      return;
+    }
+
     if (formKey.currentState?.validate() ?? false) {
       if (cDek.value && selectedPvz.value == null && selectedBBPvz.value == null) {
         Helper.snackBar(error: true, text: 'Выберите ПВЗ');
@@ -962,10 +976,18 @@ class CheckoutController extends GetxController {
   }
 
   Future<List<String>> suggestionsCallback2(String pattern) async {
+    var c = '';
+
     if (controllersAddress['city'] != null && controllersAddress['city']!.text.isNotEmpty) {
-      pattern = '${controllersAddress['city']!.text} $pattern'.trim();
+      c = controllersAddress['city']!.text;
+
+      if (c.contains(', ')) {
+        c = c.split(',').first.trim();
+      }
+
+      pattern = '$c $pattern'.trim();
     }
 
-    return await HomeApi.searchAddress(pattern);
+    return await HomeApi.searchAddress(pattern, c, countries.firstWhereOrNull((e) => e.countryId == (country.value ?? navController.countryId.value))?.name ?? 'Россия');
   }
 }

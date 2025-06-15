@@ -6,6 +6,7 @@ import 'package:rawmid/api/club.dart';
 import 'package:rawmid/controller/navigation.dart';
 import 'package:rawmid/model/home/news.dart';
 import 'package:rawmid/model/product/review.dart';
+import '../api/cart.dart';
 import '../api/home.dart';
 import '../api/login.dart';
 import '../api/product.dart';
@@ -143,6 +144,9 @@ class ClubController extends GetxController {
     Helper.trigger.value++;
     final main = Get.find<NavigationController>();
     main.wishlist.value = wishlist;
+    if (main.user.value != null) {
+      CartApi.addWishlist(wishlist);
+    }
   }
 
   String formatDateCustom(DateTime date) {

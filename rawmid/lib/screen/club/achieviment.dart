@@ -762,7 +762,7 @@ class AchievimentView extends StatelessWidget {
                                   )
                               ),
                               if (items.isNotEmpty && auth) SizedBox(
-                                  height: 206,
+                                  height: 256,
                                   child: ListView.builder(
                                     scrollDirection: Axis.horizontal,
                                     itemCount: items.length,
@@ -789,7 +789,7 @@ class AchievimentView extends StatelessWidget {
                                   )
                               ),
                               if (items2.isNotEmpty && auth) SizedBox(
-                                  height: 206,
+                                  height: 256,
                                   child: ListView.builder(
                                       scrollDirection: Axis.horizontal,
                                       itemCount: items2.length,
@@ -979,7 +979,7 @@ class AchievimentView extends StatelessWidget {
       },
       child: Container(
           width: 206,
-          height: 206,
+          height: 256,
           margin: EdgeInsets.symmetric(horizontal: 6),
           decoration: BoxDecoration(
             color: colors[colorIndex % colors.length],
@@ -990,13 +990,12 @@ class AchievimentView extends StatelessWidget {
             alignment: Alignment.centerLeft,
             children: [
               Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
+                  top: 20,
+                  left: 20,
+                  right: 20,
                   child: CachedNetworkImage(
                       imageUrl: e.image,
-                      fit: BoxFit.cover,
-                      width: 206,
+                      fit: BoxFit.contain,
                       errorWidget: (c, e, i) {
                         return Image.asset('assets/image/no_image.png');
                       }

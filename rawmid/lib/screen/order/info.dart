@@ -212,7 +212,7 @@ class OrderInfoView extends GetView<OrderController> {
                               )
                             )
                           ),
-                          child: OrderStatusWidget(currentStatus: order.history.last.id, history: order.history)
+                          child: OrderStatusWidget(currentStatus: order.history.isNotEmpty ? order.history.first.status : '', history: order.history)
                       ),
                       Container(
                           width: double.infinity,
@@ -229,7 +229,7 @@ class OrderInfoView extends GetView<OrderController> {
                           child: Column(
                             children: List.generate(order.history.length, (index) {
                               final history = order.history.reversed.toList()[index];
-                              final isActive = index == 0;
+                              final isActive = index == order.history.length-1;
 
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -786,7 +786,8 @@ class OrderStatusWidget extends StatelessWidget {
         iconComplete: 's8',
         isFinal: true,
         subStatuses: [
-          'Завершен'
+          'Завершен',
+          'Отменен'
         ]
       )
     ];
@@ -796,8 +797,14 @@ class OrderStatusWidget extends StatelessWidget {
 
     for (int i = 0; i < statusSteps.length; i++) {
       final step = statusSteps[i];
-      final isCompleted = completedStatuses.contains(step.title);
-      final isCurrent = step.title == currentStatus;
+      var isCompleted = completedStatuses.contains(step.title);
+      var isCurrent = step.title == currentStatus;
+
+      if (currentStatus == 'Отменен') {
+        isCompleted = true;
+        isCurrent = true;
+      }
+
       final iconFile = isCompleted || isCurrent ? step.iconComplete : step.icon;
 
       Widget iconWidget = Image.asset(
@@ -807,7 +814,11 @@ class OrderStatusWidget extends StatelessWidget {
       );
 
       final matchedSubStatuses = step.subStatuses.where((sub) => completedStatuses.contains(sub)).length;
-      final progress = step.subStatuses.isEmpty ? 0.0 : matchedSubStatuses / step.subStatuses.length;
+      var progress = step.subStatuses.isEmpty ? 0.0 : matchedSubStatuses / step.subStatuses.length;
+
+      if (currentStatus == 'Отменен') {
+        progress = 1;
+      }
 
       final progressBar = Container(
         width: 22,

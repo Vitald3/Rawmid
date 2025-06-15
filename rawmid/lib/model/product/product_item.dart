@@ -30,6 +30,7 @@ class ProductItemModel {
   late String uCen;
   late String hdd;
   late bool allowCredit;
+  late bool isZap;
   late bool allowCreditKz;
   DateTime? dateEnd;
   late List<String> images;
@@ -68,6 +69,7 @@ class ProductItemModel {
     required this.uCen,
     required this.hdd,
     required this.allowCredit,
+    required this.isZap,
     required this.allowCreditKz,
     required this.dateEnd,
     required this.images,
@@ -96,6 +98,7 @@ class ProductItemModel {
     schema = json['schema'];
     text2 = json['text2'];
     url = json['url'];
+    isZap = json['isZap'];
     textKvcproPeriod = json['text_kvcpro_period'];
     price2 = double.tryParse('${json['price2']}') ?? 0;
     special2 = double.tryParse('${json['special2']}') ?? 0;
@@ -195,6 +198,7 @@ class ProductItemModel {
     data['schema'] = schema;
     data['text2'] = text2;
     data['url'] = url;
+    data['isZap'] = isZap;
     data['text_kvcpro_period'] = textKvcproPeriod;
     data['price2'] = price2;
     data['special2'] = special2;

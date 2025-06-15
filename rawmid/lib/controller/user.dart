@@ -580,18 +580,34 @@ class UserController extends GetxController {
   }
 
   Future<List<String>> suggestionsCallback2(String pattern) async {
+    var c = '';
+
     if (controllersAddress['city'] != null && controllersAddress['city']!.text.isNotEmpty) {
-      pattern = '${controllersAddress['city']!.text} $pattern'.trim();
+      c = controllersAddress['city']!.text;
+
+      if (c.contains(', ')) {
+        c = c.split(',').first.trim();
+      }
+
+      pattern = '$c $pattern'.trim();
     }
 
-    return await HomeApi.searchAddress(pattern);
+    return await HomeApi.searchAddress(pattern, c, countries.firstWhereOrNull((e) => e.countryId == country.value)?.name ?? 'Россия');
   }
 
   Future<List<String>> suggestionsCallback3(String pattern, String id) async {
+    var c = '';
+
     if (controllersAddress2[id]?['city'] != null && controllersAddress2[id]!['city']!.text.isNotEmpty) {
-      pattern = '${controllersAddress2[id]!['city']!.text} $pattern'.trim();
+      c = controllersAddress2[id]!['city']!.text;
+
+      if (c.contains(', ')) {
+        c = c.split(',').first.trim();
+      }
+
+      pattern = '$c $pattern'.trim();
     }
 
-    return await HomeApi.searchAddress(pattern);
+    return await HomeApi.searchAddress(pattern, c, countries.firstWhereOrNull((e) => e.countryId == country.value)?.name ?? 'Россия');
   }
 }

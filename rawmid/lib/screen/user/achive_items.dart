@@ -48,7 +48,7 @@ class AchiveItemsView extends StatelessWidget {
                         crossAxisCount: 2,
                         crossAxisSpacing: 0,
                         mainAxisSpacing: 8,
-                        mainAxisExtent: 190
+                        mainAxisExtent: 256
                     ),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
@@ -201,7 +201,7 @@ class AchiveItemsView extends StatelessWidget {
                           },
                           child: Container(
                               width: 206,
-                              height: 190,
+                              height: 256,
                               margin: EdgeInsets.symmetric(horizontal: 6),
                               decoration: BoxDecoration(
                                 color: colors[colorIndex % colors.length],
@@ -212,13 +212,11 @@ class AchiveItemsView extends StatelessWidget {
                                   alignment: Alignment.centerLeft,
                                   children: [
                                     Positioned(
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
+                                        top: 20,
+                                        left: 20,
+                                        right: 20,
                                         child: CachedNetworkImage(
                                             imageUrl: e.image,
-                                            fit: BoxFit.cover,
-                                            width: 206,
                                             errorWidget: (c, e, i) {
                                               return Image.asset('assets/image/no_image.png');
                                             }

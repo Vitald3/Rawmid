@@ -569,12 +569,17 @@ class CheckoutView extends StatelessWidget {
                                                                 controller.controllersAddress['city']!.text = e.label;
                                                                 controller.searchC.value = e.label;
 
-                                                                controller.navController.changeCity(CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', '')), not: false).then((e) {
-                                                                  controller.initialize(update: true);
-                                                                  controller.country.value = controller.navController.countryId.value;
-                                                                  controller.setCountry(controller.country.value).then((_) {
-                                                                    controller.region.value = controller.navController.zoneId.value;
-                                                                  });
+                                                                final city = CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', ''));
+                                                                final cityStr = controller.navController.city.value;
+
+                                                                controller.navController.changeCity(city, not: false).then((e) {
+                                                                  if (cityStr != city.name) {
+                                                                    controller.initialize(update: true);
+                                                                    controller.country.value = controller.navController.countryId.value;
+                                                                    controller.setCountry(controller.country.value).then((_) {
+                                                                      controller.region.value = controller.navController.zoneId.value;
+                                                                    });
+                                                                  }
                                                                 });
 
                                                                 Future.delayed(Duration(milliseconds: 100), () {
@@ -589,12 +594,17 @@ class CheckoutView extends StatelessWidget {
                                                                 controller.controllersAddress['city']!.text = e.label;
                                                                 controller.searchC.value = e.label;
 
-                                                                controller.navController.changeCity(CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', '')), not: false).then((e) {
-                                                                  controller.initialize(update: true);
-                                                                  controller.country.value = controller.navController.countryId.value;
-                                                                  controller.setCountry(controller.country.value).then((_) {
-                                                                    controller.region.value = controller.navController.zoneId.value;
-                                                                  });
+                                                                final city = CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', ''));
+                                                                final cityStr = controller.navController.city.value;
+
+                                                                controller.navController.changeCity(city, not: false).then((e) {
+                                                                  if (cityStr != city.name) {
+                                                                    controller.initialize(update: true);
+                                                                    controller.country.value = controller.navController.countryId.value;
+                                                                    controller.setCountry(controller.country.value).then((_) {
+                                                                      controller.region.value = controller.navController.zoneId.value;
+                                                                    });
+                                                                  }
                                                                 });
 
                                                                 Future.delayed(Duration(milliseconds: 100), () {
@@ -804,6 +814,7 @@ class CheckoutView extends StatelessWidget {
                                                                   activeColor: primaryColor,
                                                                   onChanged: (value) {
                                                                     controller.prepayment.value = value ?? 0;
+                                                                    Helper.prefs.setInt('prepayment', value ?? 0);
                                                                   }
                                                               )
                                                           ),
@@ -840,6 +851,7 @@ class CheckoutView extends StatelessWidget {
                                                                   activeColor: primaryColor,
                                                                   onChanged: (value) {
                                                                     controller.prepayment.value = value ?? 1;
+                                                                    Helper.prefs.setInt('prepayment', value ?? 1);
                                                                   }
                                                               )
                                                           ),
@@ -868,141 +880,162 @@ class CheckoutView extends StatelessWidget {
                                         h(20),
                                         Divider(color: Color(0xFFDDE8EA), thickness: 1, height: 0.1),
                                         h(32),
-                                        Text.rich(
-                                            TextSpan(
-                                                children: [
-                                                  TextSpan(
-                                                      text: 'Я прочитал ',
-                                                      style: TextStyle(
-                                                          color: Color(0xFF8A95A8),
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.w500
-                                                      )
+                                        Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            spacing: 8,
+                                            children: [
+                                              Checkbox(
+                                                  value: controller.agree.value,
+                                                  onChanged: (value) {
+                                                    controller.agree.value = value!;
+                                                  },
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(4),
                                                   ),
-                                                  TextSpan(
-                                                      recognizer: TapGestureRecognizer()..onTap = () {
-                                                        showAdaptiveDialog(
-                                                            context: Get.context!,
-                                                            useRootNavigator: true,
-                                                            useSafeArea: true,
-                                                            builder: (c) {
-                                                              controller.webPersonalController = WebViewController()
-                                                                ..setJavaScriptMode(
-                                                                    JavaScriptMode.unrestricted)
-                                                                ..loadRequest(Uri.parse(uslUrl));
+                                                  side: const BorderSide(color: Colors.lightBlue, width: 2),
+                                                  activeColor: Colors.lightBlue,
+                                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                  visualDensity: VisualDensity.compact
+                                              ),
+                                              Expanded(
+                                                  child: Text.rich(
+                                                      TextSpan(
+                                                          children: [
+                                                            TextSpan(
+                                                                text: 'Я прочитал ',
+                                                                style: TextStyle(
+                                                                    color: const Color(0xFF8A95A8),
+                                                                    fontSize: 12,
+                                                                    fontWeight: FontWeight.w700
+                                                                )
+                                                            ),
+                                                            TextSpan(
+                                                                recognizer: TapGestureRecognizer()..onTap = () {
+                                                                  showAdaptiveDialog(
+                                                                      context: Get.context!,
+                                                                      useRootNavigator: true,
+                                                                      useSafeArea: true,
+                                                                      builder: (c) {
+                                                                        controller.webPersonalController ??= WebViewController()
+                                                                          ..setJavaScriptMode(
+                                                                              JavaScriptMode.unrestricted)
+                                                                          ..loadRequest(Uri.parse('https://madeindream.com/informatsija/usloviya-rashirennoj-garantii.html?ajax=1'));
 
-                                                              return Scaffold(
-                                                                  backgroundColor: Colors.black45,
-                                                                  body: Align(
-                                                                      alignment: Alignment.center,
-                                                                      child: Container(
-                                                                          padding: EdgeInsets.all(20),
-                                                                          height: Get.height * 0.7,
-                                                                          child: Container(
-                                                                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
-                                                                              clipBehavior: Clip.antiAlias,
-                                                                              child: Stack(
-                                                                                  children: [
-                                                                                    Padding(
-                                                                                        padding: EdgeInsets.all(20),
-                                                                                        child: Column(
+                                                                        return Scaffold(
+                                                                            backgroundColor: Colors.black45,
+                                                                            body: Align(
+                                                                                alignment: Alignment.center,
+                                                                                child: Container(
+                                                                                    padding: EdgeInsets.all(20),
+                                                                                    height: Get.height * 0.7,
+                                                                                    child: Container(
+                                                                                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                                        clipBehavior: Clip.antiAlias,
+                                                                                        child: Stack(
                                                                                             children: [
-                                                                                              Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                              Padding(
+                                                                                                  padding: EdgeInsets.all(20),
+                                                                                                  child: Column(
+                                                                                                      children: [
+                                                                                                        Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                                      ]
+                                                                                                  )
+                                                                                              ),
+                                                                                              Positioned(
+                                                                                                  right: 0,
+                                                                                                  top: 0,
+                                                                                                  child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                                              )
                                                                                             ]
                                                                                         )
-                                                                                    ),
-                                                                                    Positioned(
-                                                                                        right: 0,
-                                                                                        top: 0,
-                                                                                        child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
                                                                                     )
-                                                                                  ]
-                                                                              )
-                                                                          )
-                                                                      )
-                                                                  )
-                                                              );
-                                                            }
-                                                        );
-                                                      },
-                                                      text: 'Условия соглашения сторон',
-                                                      style: TextStyle(
-                                                          color: Color(0xFF14BFFF),
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.w500
-                                                      )
-                                                  ),
-                                                  TextSpan(
-                                                      text: ' и ',
-                                                      style: TextStyle(
-                                                          color: Color(0xFF8A95A8),
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.w500
-                                                      )
-                                                  ),
-                                                  TextSpan(
-                                                      recognizer: TapGestureRecognizer()..onTap = () {
-                                                        showAdaptiveDialog(
-                                                            context: Get.context!,
-                                                            useRootNavigator: true,
-                                                            useSafeArea: true,
-                                                            builder: (c) {
-                                                              controller.webPersonalController = WebViewController()
-                                                                ..setJavaScriptMode(
-                                                                    JavaScriptMode.unrestricted)
-                                                                ..loadRequest(Uri.parse(personalDataUrl));
+                                                                                )
+                                                                            )
+                                                                        );
+                                                                      }
+                                                                  );
+                                                                },
+                                                                text: 'Условия предоставления расширенной гарантии',
+                                                                style: TextStyle(
+                                                                    color: const Color(0xFF14BFFF),
+                                                                    fontSize: 12,
+                                                                    fontWeight: FontWeight.w700
+                                                                )
+                                                            ),
+                                                            TextSpan(
+                                                                text: ' и ',
+                                                                style: TextStyle(
+                                                                    color: const Color(0xFF8A95A8),
+                                                                    fontSize: 12,
+                                                                    fontWeight: FontWeight.w700
+                                                                )
+                                                            ),
+                                                            TextSpan(
+                                                                recognizer: TapGestureRecognizer()..onTap = () {
+                                                                  showAdaptiveDialog(
+                                                                      context: Get.context!,
+                                                                      useRootNavigator: true,
+                                                                      useSafeArea: true,
+                                                                      builder: (c) {
+                                                                        controller.webPersonalController ??= WebViewController()
+                                                                          ..setJavaScriptMode(
+                                                                              JavaScriptMode.unrestricted)
+                                                                          ..loadRequest(Uri.parse('https://madeindream.com/informatsija/politika-obrabotki.html?ajax=1'));
 
-                                                              return Scaffold(
-                                                                  backgroundColor: Colors.black45,
-                                                                  body: Align(
-                                                                      alignment: Alignment.center,
-                                                                      child: Container(
-                                                                          padding: EdgeInsets.all(20),
-                                                                          height: Get.height * 0.7,
-                                                                          child: Container(
-                                                                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
-                                                                              clipBehavior: Clip.antiAlias,
-                                                                              child: Stack(
-                                                                                  children: [
-                                                                                    Padding(
-                                                                                        padding: EdgeInsets.all(20),
-                                                                                        child: Column(
+                                                                        return Scaffold(
+                                                                            backgroundColor: Colors.black45,
+                                                                            body: Align(
+                                                                                alignment: Alignment.center,
+                                                                                child: Container(
+                                                                                    padding: EdgeInsets.all(20),
+                                                                                    height: Get.height * 0.7,
+                                                                                    child: Container(
+                                                                                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: Colors.white),
+                                                                                        clipBehavior: Clip.antiAlias,
+                                                                                        child: Stack(
                                                                                             children: [
-                                                                                              Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                              Padding(
+                                                                                                  padding: EdgeInsets.all(20),
+                                                                                                  child: Column(
+                                                                                                      children: [
+                                                                                                        Expanded(child: WebViewWidget(controller: controller.webPersonalController!))
+                                                                                                      ]
+                                                                                                  )
+                                                                                              ),
+                                                                                              Positioned(
+                                                                                                  right: 0,
+                                                                                                  top: 0,
+                                                                                                  child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
+                                                                                              )
                                                                                             ]
                                                                                         )
-                                                                                    ),
-                                                                                    Positioned(
-                                                                                        right: 0,
-                                                                                        top: 0,
-                                                                                        child: IconButton(onPressed: Get.back, icon: Icon(Icons.close, size: 20, color: Colors.black))
                                                                                     )
-                                                                                  ]
-                                                                              )
-                                                                          )
-                                                                      )
-                                                                  )
-                                                              );
-                                                            }
-                                                        );
-                                                      },
-                                                      text: 'Обработки персональных данных',
-                                                      style: TextStyle(
-                                                          color: Color(0xFF14BFFF),
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.w500
-                                                      )
-                                                  ),
-                                                  TextSpan(
-                                                      text: ' и согласен с условиями',
-                                                      style: TextStyle(
-                                                          color: Color(0xFF8A95A8),
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.w500
+                                                                                )
+                                                                            )
+                                                                        );
+                                                                      }
+                                                                  );
+                                                                },
+                                                                text: 'Политику обработки персональных даных',
+                                                                style: TextStyle(
+                                                                    color: const Color(0xFF14BFFF),
+                                                                    fontSize: 12,
+                                                                    fontWeight: FontWeight.w700
+                                                                )
+                                                            ),
+                                                            TextSpan(
+                                                                text: ' и согласен с условиями.',
+                                                                style: TextStyle(
+                                                                    color: const Color(0xFF8A95A8),
+                                                                    fontSize: 12,
+                                                                    fontWeight: FontWeight.w700
+                                                                )
+                                                            )
+                                                          ]
                                                       )
                                                   )
-                                                ]
-                                            )
+                                              )
+                                            ]
                                         ),
                                         h(20),
                                         PrimaryButton(text: 'Оформить', height: 50, loader: true, onPressed: controller.checkout)
@@ -1074,6 +1107,10 @@ class CheckoutView extends StatelessWidget {
           break;
         }
       }
+    }
+
+    if ((controller.controllersAddress['city']?.text ?? '').isEmpty) {
+      controller.controllersAddress['city']?.text = controller.navController.city.value;
     }
 
     return Column(
@@ -1335,13 +1372,17 @@ class CheckoutView extends StatelessWidget {
                                     itemBuilder: (context, e) => ListTile(title: Text(e.label), onTap: () {
                                       controller.controllersAddress['city']!.text = e.label;
                                       controller.searchC.value = e.label;
+                                      final city = CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', ''));
+                                      final cityStr = controller.navController.city.value;
 
-                                      controller.navController.changeCity(CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', '')), not: false).then((e) {
-                                        controller.initialize(update: true);
-                                        controller.country.value = controller.navController.countryId.value;
-                                        controller.setCountry(controller.country.value).then((_) {
-                                          controller.region.value = controller.navController.zoneId.value;
-                                        });
+                                      controller.navController.changeCity(city, not: false).then((e) {
+                                        if (cityStr != city.name) {
+                                          controller.initialize(update: true);
+                                          controller.country.value = controller.navController.countryId.value;
+                                          controller.setCountry(controller.country.value).then((_) {
+                                            controller.region.value = controller.navController.zoneId.value;
+                                          });
+                                        }
                                       });
 
                                       Future.delayed(Duration(milliseconds: 100), () {
@@ -1356,12 +1397,17 @@ class CheckoutView extends StatelessWidget {
                                       controller.controllersAddress['city']!.text = e.label;
                                       controller.searchC.value = e.label;
 
-                                      controller.navController.changeCity(CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', '')), not: false).then((e) {
-                                        controller.initialize(update: true);
-                                        controller.country.value = controller.navController.countryId.value;
-                                        controller.setCountry(controller.country.value).then((_) {
-                                          controller.region.value = controller.navController.zoneId.value;
-                                        });
+                                      final city = CityModel(id: int.tryParse(e.fiasId) ?? 0, name: e.value.replaceAll('г. ', ''));
+                                      final cityStr = controller.navController.city.value;
+
+                                      controller.navController.changeCity(city, not: false).then((e) {
+                                        if (cityStr != city.name) {
+                                          controller.initialize(update: true);
+                                          controller.country.value = controller.navController.countryId.value;
+                                          controller.setCountry(controller.country.value).then((_) {
+                                            controller.region.value = controller.navController.zoneId.value;
+                                          });
+                                        }
                                       });
 
                                       Future.delayed(Duration(milliseconds: 100), () {

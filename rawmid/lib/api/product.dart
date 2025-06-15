@@ -44,7 +44,7 @@ class ProductApi {
       final json = jsonDecode(response.body);
 
       if ((json['error'] ?? '').isNotEmpty) {
-        Helper.snackBar(error: true, text: json['error'], callback: Get.back);
+        Helper.snackBar(error: true, html: json['error'], callback: Get.back);
         return false;
       } else {
         return true;
@@ -112,9 +112,9 @@ class ProductApi {
 
   static Future<String> yPay(Map<String, dynamic> body) async {
     try {
-      final response = await http.post(Uri.parse('https://sandbox.pay.yandex.ru/api/merchant/v1/orders'), headers: {
+      final response = await http.post(Uri.parse('https://pay.yandex.ru/api/merchant/v1/orders'), headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Api-Key 2c8f4476-a851-429e-89c6-f5ffef02a3f1'
+        'Authorization': 'Api-Key 2c8f4476a851429e89c6f5ffef02a3f1.UektewWGq_SauUCWSSMz0JJe3b6L-1LO'
       }, body: jsonEncode(body));
       final json = jsonDecode(response.body);
 

@@ -476,6 +476,11 @@ class ProductView extends StatelessWidget {
                                                 child: PrimaryButton(text: controller.navController.isCart(controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty ? controller.selectChild.value : id, k: true) ? 'В корзине' : 'В рассрочку', height: 40, background: Colors.white, borderColor: primaryColor, textStyle: TextStyle(color: primaryColor), onPressed: () async {
                                                   String idNew = id;
 
+                                                  if (controller.product.value?.isZap ?? false) {
+                                                    sernumPop(controller, idNew);
+                                                    return;
+                                                  }
+
                                                   if (controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) {
                                                     idNew = controller.selectChild.value;
                                                   }
@@ -487,6 +492,11 @@ class ProductView extends StatelessWidget {
                                             Expanded(
                                                 child: PrimaryButton(text: controller.navController.isCart(controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty ? controller.selectChild.value : id, k: false) ? 'В корзине' : controller.product.value!.status.contains('редзаказ') || controller.product.value!.quantity <= 0 ? 'Предзаказ' : 'Купить', height: 40, onPressed: () async {
                                                   String idNew = id;
+
+                                                  if (controller.product.value?.isZap ?? false) {
+                                                    sernumPop(controller, idNew);
+                                                    return;
+                                                  }
 
                                                   if (controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) {
                                                     idNew = controller.selectChild.value;
@@ -501,7 +511,7 @@ class ProductView extends StatelessWidget {
                                 ]
                             ),
                             h(6),
-                            PrimaryButton(text: 'ypay', height: 42, loader: true, onPressed: () async {
+                            PrimaryButton(height: 42, loader: true, onPressed: () async {
                               String idNew = id;
 
                               if (controller.selectChild.isNotEmpty && controller.product.value!.childProducts.where((e) => e.color.isNotEmpty).isNotEmpty) {
@@ -509,7 +519,21 @@ class ProductView extends StatelessWidget {
                               }
 
                               await controller.yPay(idNew);
-                            }),
+                            }, child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              spacing: 8,
+                              children: [
+                                Text(
+                                  'Оплатить с',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600
+                                  )
+                                ),
+                                Image.asset('assets/icon/yandex_pay.png', width: 40)
+                              ]
+                            )),
                             if ((controller.product.value?.allowCredit ?? false) || (controller.product.value?.allowCreditKz ?? false)) h(6),
                             if (controller.product.value?.allowCredit ?? false) Row(
                               children: [
@@ -2938,83 +2962,7 @@ class ProductView extends StatelessWidget {
                                           ),
                                           w(8),
                                           PrimaryButton(text: controller.navController.isCart(zap[productIndex].id) ? 'В корзине' : 'Купить', width: 97, height: 44, onPressed: () async {
-                                            showDialog(
-                                                context: Get.context!,
-                                                barrierDismissible: false,
-                                                builder: (context) => Dialog(
-                                                    insetPadding: EdgeInsets.zero,
-                                                    backgroundColor: Colors.white,
-                                                    child: Container(
-                                                        decoration: BoxDecoration(
-                                                            color: Colors.white,
-                                                            borderRadius: BorderRadius.circular(12)
-                                                        ),
-                                                        height: Get.height * 0.8,
-                                                        clipBehavior: Clip.antiAlias,
-                                                        child: Stack(
-                                                            children: [
-                                                              Column(
-                                                                  children: [
-                                                                    Padding(
-                                                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                                                        child: Row(
-                                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                            children: [
-                                                                              const Text(
-                                                                                  'Серийный номер',
-                                                                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
-                                                                              ),
-                                                                              IconButton(
-                                                                                  icon: const Icon(Icons.close),
-                                                                                  onPressed: Get.back
-                                                                              )
-                                                                            ]
-                                                                        )
-                                                                    ),
-                                                                    const Divider(height: 1),
-                                                                    h(16),
-                                                                    Padding(
-                                                                      padding: EdgeInsets.symmetric(horizontal: 20),
-                                                                      child: Column(
-                                                                          spacing: 15,
-                                                                          children: [
-                                                                            TextFormField(
-                                                                                controller: controller.serNumField,
-                                                                                cursorHeight: 15,
-                                                                                validator: (value) {
-                                                                                  if ((value ?? '').isEmpty) {
-                                                                                    return 'Заполните серийный номер';
-                                                                                  }
-
-                                                                                  return null;
-                                                                                },
-                                                                                decoration: decorationInput(hint: 'Серийный номер *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
-                                                                                autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                                                textInputAction: TextInputAction.next,
-                                                                                onChanged: (val) {
-
-                                                                                }
-                                                                            ),
-                                                                            PrimaryButton(text: 'Купить', height: 44, loader: true, onPressed: () async {
-                                                                              final serNum = controller.serNumField.text.trim();
-
-                                                                              if (serNum.isEmpty) {
-                                                                                Helper.snackBar(error: true, text: 'Укажите серийный номер товара для которого покупаете запчасть');
-                                                                                return;
-                                                                              }
-
-                                                                              await controller.getSerNum(serNum, zap[productIndex].id);
-                                                                            })
-                                                                          ]
-                                                                      )
-                                                                    )
-                                                                  ]
-                                                              )
-                                                            ]
-                                                        )
-                                                    )
-                                                )
-                                            );
+                                            sernumPop(controller, zap[productIndex].id);
                                           })
                                         ]
                                     );
@@ -3190,10 +3138,8 @@ class ProductView extends StatelessWidget {
                             h(8),
                             InkWell(
                                 onTap: () async {
-                                  final file = await Helper.downloadFileAsXFile(controller.product.value!.image, 'Share');
-
                                   SharePlus.instance.share(
-                                    ShareParams(uri: Uri.parse(controller.product.value!.url), title: controller.product.value!.name, previewThumbnail: file),
+                                    ShareParams(uri: Uri.parse(controller.product.value!.url), title: controller.product.value!.name),
                                   );
                                 },
                                 child: Icon(Icons.share)
@@ -3364,6 +3310,86 @@ class ProductView extends StatelessWidget {
           )
         ]
       )
+    );
+  }
+
+  void sernumPop(ProductController controller, String id) {
+    showDialog(
+        context: Get.context!,
+        barrierDismissible: false,
+        builder: (context) => Dialog(
+            insetPadding: EdgeInsets.symmetric(horizontal: 20),
+            backgroundColor: Colors.white,
+            child: Container(
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12)
+                ),
+                height: Get.height * 0.8,
+                clipBehavior: Clip.antiAlias,
+                child: Stack(
+                    children: [
+                      Column(
+                          children: [
+                            Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                          'Серийный номер',
+                                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                                      ),
+                                      IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: Get.back
+                                      )
+                                    ]
+                                )
+                            ),
+                            const Divider(height: 1),
+                            h(16),
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20),
+                                child: Column(
+                                    spacing: 15,
+                                    children: [
+                                      TextFormField(
+                                          controller: controller.serNumField,
+                                          cursorHeight: 15,
+                                          validator: (value) {
+                                            if ((value ?? '').isEmpty) {
+                                              return 'Заполните серийный номер';
+                                            }
+
+                                            return null;
+                                          },
+                                          decoration: decorationInput(hint: 'Серийный номер *', contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          textInputAction: TextInputAction.next,
+                                          onChanged: (val) {
+
+                                          }
+                                      ),
+                                      PrimaryButton(text: 'Купить', height: 44, loader: true, onPressed: () async {
+                                        final serNum = controller.serNumField.text.trim();
+
+                                        if (serNum.isEmpty) {
+                                          Helper.snackBar(error: true, text: 'Укажите серийный номер товара для которого покупаете запчасть');
+                                          return;
+                                        }
+
+                                        await controller.getSerNum(serNum, id);
+                                      })
+                                    ]
+                                )
+                            )
+                          ]
+                      )
+                    ]
+                )
+            )
+        )
     );
   }
 }

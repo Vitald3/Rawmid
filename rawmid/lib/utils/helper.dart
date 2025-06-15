@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:app_links/app_links.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../controller/news.dart';
 import '../model/catalog/category.dart';
 import '../screen/product/product.dart';
+import '../widget/h.dart';
 import '../widget/open_web.dart';
 import 'constant.dart';
 import 'package:get/get.dart';
@@ -32,6 +35,18 @@ class Helper {
 
     wishlist.value = Helper.prefs.getStringList('wishlist') ?? [];
     compares.value = Helper.prefs.getStringList('compares') ?? [];
+
+    final appLinks = AppLinks();
+
+    appLinks.uriLinkStream.listen((uri) {
+      if (uri.host == 'success') {
+        Helper.snackBar(text: 'Ваш заказ успешно оформлен');
+      } else if (uri.host == 'error') {
+        Helper.snackBar(error: true, text: 'Произошла ошибка оплаты');
+      } else if (uri.host == 'abort') {
+        Helper.snackBar(error: true, text: 'Ваш заказ отменен');
+      }
+    });
   }
 
   static late final SharedPreferences prefs;
@@ -40,7 +55,7 @@ class Helper {
   static bool compareAlert = Helper.prefs.getBool('compareAlert') ?? false;
   static ValueNotifier<int> trigger = ValueNotifier(0);
 
-  static void snackBar({String text = '', String title = '', String yes = 'OK', bool notTitle = false, bool hide = false, bool error = false, bool prev = false, Function? callback, Function? callback2}) {
+  static void snackBar({String text = '', String html = '', String title = '', String yes = 'OK', bool notTitle = false, bool hide = false, bool error = false, bool prev = false, Function? callback, Function? callback2}) {
     showDialog(context: Get.context!, builder: (_) {
       return CupertinoAlertDialog(
         title: notTitle ? null : Text(error ? 'Внимание!' : (title != '' ? title : 'Успешно')),
@@ -60,7 +75,14 @@ class Helper {
             }
           }, child: Text(yes, style: const TextStyle(color: firstColor))),
         ],
-        content: SelectableText(text),
+        content: html.isNotEmpty ? Html(
+            data: html,
+            onLinkTap: (val, map, element) {
+              if ((val ?? '').isNotEmpty) {
+                Helper.openLink(val!);
+              }
+            }
+        ) : SelectableText(text),
       );
     }).then((value) {
       if (callback != null) {
@@ -112,6 +134,12 @@ class Helper {
   static Future openLink(String link) async {
     if (link == '[states]') {
       Get.toNamed('/blog');
+      return;
+    } else if (link == '[reg]') {
+      Get.toNamed('/register');
+      return;
+    } else if (link == '[sup]') {
+      Get.toNamed('/support');
       return;
     }
 
@@ -170,7 +198,84 @@ class Helper {
     if (!compareAlert) {
       Helper.prefs.setBool('compareAlert', true);
       compareAlert = true;
-      Helper.snackBar(title: '', text: 'Для просмотра списка товаров, перейдите в меню -> Сравнение товаров');
+
+      showDialog(
+          context: Get.context!,
+          barrierDismissible: false,
+          builder: (context) => Dialog(
+              insetPadding: EdgeInsets.symmetric(horizontal: 20),
+              backgroundColor: Colors.transparent,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12)
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                          children: [
+                            Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                                'Товар добавлен в сравнения',
+                                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                                            ),
+                                            IconButton(
+                                                icon: const Icon(Icons.close),
+                                                onPressed: Get.back
+                                            )
+                                          ]
+                                      )
+                                  ),
+                                  const Divider(height: 1),
+                                  h(16),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                            'Чтобы сравнить товары:',
+                                            style: TextStyle(fontSize: 16)
+                                        ),
+                                        h(20),
+                                        Row(
+                                            spacing: 6,
+                                            children: [
+                                              Text(
+                                                  'Откройте меню',
+                                                  style: TextStyle(fontSize: 14)
+                                              ),
+                                              Image.asset('assets/icon/burger.png')
+                                            ]
+                                        ),
+                                        h(8),
+                                        Text(
+                                            'Перейдите в раздел “Сравнение товаров”',
+                                            style: TextStyle(fontSize: 14)
+                                        ),
+                                        h(20)
+                                      ]
+                                    )
+                                  )
+                                ]
+                            )
+                          ]
+                      )
+                  )
+                ]
+              )
+          )
+      );
     }
 
     if (compares.value.contains(id)) {
