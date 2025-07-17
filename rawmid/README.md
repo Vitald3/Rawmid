@@ -1,16 +1,57 @@
-# rawmid
+# Rawmid Flutter App
 
-Rawmid
+Flutter-приложение **Rawmid**
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+### Установка зависимостей
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+cd путь/к/твоему/flutter-проекту
+flutter pub get
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Запуск на устройстве / эмуляторе
+
+1. Посмотреть подключённые устройства:
+   ```bash
+   flutter devices
+   ```
+
+2. Список доступных эмуляторов:
+   ```bash
+   flutter emulators
+   ```
+
+3. Запустить эмулятор по имени:
+   ```bash
+   flutter emulators --launch имя_эмулятора
+   ```
+
+4. Запустить проект:
+   ```bash
+   flutter run
+   ```
+
+---
+
+## Firebase (если используется)
+
+Если используется Firebase, нужно сгенерировать `firebase_options.dart`:
+```bash
+flutterfire configure
+```
+
+---
+
+## Полезные ссылки
+
+- [Flutter Getting Started](https://docs.flutter.dev/get-started)
+- [Flutter Cookbook](https://docs.flutter.dev/cookbook)
+- [Flutter Packages](https://pub.dev)
+
+---
+
+> ©2025 Rawmid Dev Team
